@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 
@@ -11,9 +11,16 @@ const form = reactive({
   password: '123456'
 });
 
-function submit() {
-  auth.login(form.username, form.password);
-  router.push('/dashboard');
+const submitting = ref(false);
+
+async function submit() {
+  submitting.value = true;
+  try {
+    await auth.login(form.username, form.password);
+    router.push('/dashboard');
+  } finally {
+    submitting.value = false;
+  }
 }
 </script>
 
@@ -31,7 +38,7 @@ function submit() {
         <el-form-item label="密码">
           <el-input v-model="form.password" type="password" show-password />
         </el-form-item>
-        <el-button type="primary" size="large" class="login-button" @click="submit">进入后台</el-button>
+        <el-button type="primary" size="large" class="login-button" :loading="submitting" @click="submit">进入后台</el-button>
       </el-form>
     </section>
   </main>

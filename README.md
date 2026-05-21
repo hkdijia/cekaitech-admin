@@ -17,6 +17,7 @@
 ## 当前状态
 
 当前已初始化 Vue 3 + Vite + TypeScript + Element Plus 后台 MVP 壳，包含开发占位登录、后台布局、菜单、工作区切换、首页工作台和首批业务占位页面。
+登录已接入 `miniapp-backend` 的开发态后台认证接口，本地默认账号为 `admin/123456`。
 
 ## 本地开发
 
@@ -31,6 +32,8 @@ npm.cmd install
 ```powershell
 npm.cmd run dev
 ```
+
+开发服务会通过 Vite 将 `/api` 代理到 `http://127.0.0.1:8080`，联调登录前需要先启动 `miniapp-backend`。
 
 构建：
 
