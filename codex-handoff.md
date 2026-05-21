@@ -3,8 +3,8 @@
 ## 当前状态
 
 - 当前分支：`master`
-- 当前阶段：后台 MVP 壳已接入 `miniapp-backend` 开发态登录、工作区和工作区菜单接口，并具备动态菜单占位页
-- 最近完成：Vue 3 工程、后台布局、登录占位、API 登录、token 本地保存、工作区 API 加载、工作区菜单加载、动态菜单路由、通用功能占位页、测试和构建验证
+- 当前阶段：后台 MVP 壳已接入 `miniapp-backend` 开发态登录、工作区、工作区菜单和用户分页接口，并具备动态菜单占位页
+- 最近完成：Vue 3 工程、后台布局、API 登录、token 本地保存、工作区 API 加载、工作区菜单加载、动态菜单路由、用户管理真实列表页、测试和构建验证
 - 未完成：生产级鉴权、数据库管理员、权限模型、数据导入真实流程
 
 ## 关键文件
@@ -21,8 +21,10 @@
 - `src/api/http.ts`
 - `src/api/adminAuth.ts`
 - `src/api/adminWorkspace.ts`
+- `src/api/adminUsers.ts`
 - `src/stores/auth.ts`
 - `src/stores/workspace.ts`
+- `src/pages/users/UsersPage.vue`
 - `src/pages/workspace-menu/WorkspaceMenuPage.vue`
 
 ## 关键命令
@@ -35,10 +37,11 @@
 
 ## 最近验证
 
-- `npm.cmd test`：通过，7 个 Vitest 测试通过。
-- `npm.cmd run quality`：通过，7 个 Vitest 测试通过，TypeScript 与 Vite 构建通过。
+- `npm.cmd test`：通过，8 个 Vitest 测试通过。
+- `npm.cmd run quality`：通过，8 个 Vitest 测试通过，TypeScript 与 Vite 构建通过。
 - `miniapp-backend` 联调：`POST /api/admin/auth/login` 通过，返回 `dev-admin-token`。
 - `miniapp-backend` 联调：`GET /api/admin/workspaces` 和 `GET /api/admin/workspaces/1/menus` 通过。
+- 用户管理 API 单测：`src/api/adminUsers.test.ts` 通过，覆盖 `POST /api/admin/users/page`。
 
 ## 注意事项
 
@@ -52,4 +55,4 @@
 
 1. 将后台开发态登录替换为生产级鉴权。
 2. 将动态工作区菜单占位页逐步替换为真实业务页面。
-3. 将用户管理、律师认证审核、黑名单等占位页逐步替换为真实 API 页面。
+3. 在用户管理页基础上继续补用户详情、用户限制和黑名单操作。
