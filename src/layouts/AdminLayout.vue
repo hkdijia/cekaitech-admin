@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Monitor, Setting, SwitchButton, UserFilled, Warning } from '@element-plus/icons-vue';
 import { adminMenuItems } from '../router/menu';
 import { useAuthStore } from '../stores/auth';
-import { useWorkspaceStore, workspaceOptions } from '../stores/workspace';
+import { useWorkspaceStore } from '../stores/workspace';
 
 const route = useRoute();
 const router = useRouter();
@@ -12,6 +12,10 @@ const auth = useAuthStore();
 const workspace = useWorkspaceStore();
 
 const activeMenu = computed(() => route.path);
+
+onMounted(() => {
+  workspace.loadWorkspaces();
+});
 
 function handleLogout() {
   auth.logout();
@@ -37,14 +41,25 @@ function handleLogout() {
           <span>{{ item.title }}</span>
         </el-menu-item>
       </el-menu>
+      <div v-if="workspace.currentMenus.length > 0" class="workspace-menu">
+        <div class="workspace-menu-title">工作区菜单</div>
+        <button v-for="item in workspace.currentMenus" :key="item.menuCode" class="workspace-menu-item" type="button">
+          {{ item.menuName }}
+        </button>
+      </div>
     </el-aside>
 
     <el-container>
       <el-header class="admin-header">
         <div>
           <div class="workspace-label">当前工作区</div>
-          <el-select v-model="workspace.currentCode" class="workspace-select" @change="workspace.switchWorkspace">
-            <el-option v-for="item in workspaceOptions" :key="item.code" :label="item.name" :value="item.code" />
+          <el-select
+            v-model="workspace.currentCode"
+            class="workspace-select"
+            :loading="workspace.loading"
+            @change="workspace.switchWorkspace"
+          >
+            <el-option v-for="item in workspace.options" :key="item.code" :label="item.name" :value="item.code" />
           </el-select>
         </div>
         <div class="operator">
@@ -100,6 +115,38 @@ function handleLogout() {
 
 .sidebar-menu :deep(.el-menu-item.is-active) {
   background: #1d2939;
+  color: #fff;
+}
+
+.workspace-menu {
+  padding: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.workspace-menu-title {
+  padding: 8px 8px 10px;
+  color: #98a2b3;
+  font-size: 12px;
+}
+
+.workspace-menu-item {
+  width: 100%;
+  min-height: 34px;
+  display: block;
+  margin-bottom: 4px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #d0d5dd;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: default;
+}
+
+.workspace-menu-item:hover {
+  background: rgba(255, 255, 255, 0.06);
   color: #fff;
 }
 
