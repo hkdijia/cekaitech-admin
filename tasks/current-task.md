@@ -2,7 +2,7 @@
 
 ## 当前任务
 
-- 名称：用户限制管理第一阶段
+- 名称：用户主状态调整
 - OpenSpec 变更：无
 
 ## 当前状态
@@ -37,20 +37,25 @@
 - 限制与黑名单页面支持按用户ID、小程序、限制类型和状态筛选。
 - 限制与黑名单页面支持新增限制和取消生效中限制。
 - 新增 `src/api/adminUserRestrictions.test.ts`。
+- 新增用户状态调整 API 封装：`updateAdminUserStatus`。
+- 用户管理列表和详情抽屉支持打开“调整状态”弹窗。
+- 状态调整支持设为正常、受限、黑名单，并要求填写原因。
+- 状态调整成功后刷新用户列表和当前详情。
 
 ## 未完成
 
 - 生产级鉴权。
 - 工作区菜单真实业务页面。
-- 黑名单等级、用户主状态联动和操作审计。
+- 黑名单等级。
+- 用户状态调整操作审计。
 - 权限模型。
 - 数据导入真实流程。
 
 ## 最近验证
 
-- `npm.cmd test`：通过，12 个 Vitest 测试通过。
-- `npm.cmd run quality`：通过，12 个 Vitest 测试通过，TypeScript 与 Vite 构建通过。
-- `src/api/adminUsers.test.ts`：3 个测试通过。
+- `npm.cmd test`：通过，13 个 Vitest 测试通过。
+- `npm.cmd run quality`：通过，13 个 Vitest 测试通过，TypeScript 与 Vite 构建通过。
+- `src/api/adminUsers.test.ts`：4 个测试通过。
 - `src/api/adminUserRestrictions.test.ts`：2 个测试通过。
 - `POST /api/admin/auth/login`：通过，后端返回 `dev-admin-token`。
 - `GET /api/admin/workspaces`：通过，后端返回工作区列表。
@@ -59,4 +64,4 @@
 ## 下一步
 
 1. 提交并推送 `cekaitech-admin`。
-2. 后续补黑名单等级、用户主状态联动和操作审计。
+2. 后续补黑名单等级、操作审计和更细的后台权限控制。

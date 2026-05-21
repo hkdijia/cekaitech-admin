@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
-import { DataLine, Refresh, Search, View } from '@element-plus/icons-vue';
+import { DataLine, EditPen, Refresh, Search, View } from '@element-plus/icons-vue';
 import {
   getAdminUserDetail,
   pageAdminUsers,
   seedAdminUsers,
+  updateAdminUserStatus,
   type AdminUserDetail,
   type AdminUserItem
 } from '../../api/adminUsers';
@@ -16,6 +17,9 @@ const totalCount = ref(0);
 const detailDrawerVisible = ref(false);
 const detailLoading = ref(false);
 const detail = ref<AdminUserDetail | null>(null);
+const statusDialogVisible = ref(false);
+const statusUpdating = ref(false);
+const statusTarget = ref<AdminUserItem | AdminUserDetail | null>(null);
 
 const query = reactive({
   pageNo: 1,
@@ -25,6 +29,11 @@ const query = reactive({
   keywords: '',
   status: '',
   appCode: ''
+});
+
+const statusForm = reactive({
+  status: '',
+  reason: ''
 });
 
 const statusOptions = [
@@ -149,6 +158,38 @@ async function seedUsers() {
   }
 }
 
+function openStatusDialog(row: AdminUserItem | AdminUserDetail) {
+  statusTarget.value = row;
+  statusForm.status = row.status;
+  statusForm.reason = '';
+  statusDialogVisible.value = true;
+}
+
+async function submitStatusUpdate() {
+  if (!statusTarget.value || !statusForm.status || !statusForm.reason.trim()) {
+    loadError.value = '请选择目标状态并填写调整原因';
+    return;
+  }
+  statusUpdating.value = true;
+  loadError.value = '';
+  try {
+    const updated = await updateAdminUserStatus({
+      userId: statusTarget.value.id,
+      status: statusForm.status,
+      reason: statusForm.reason.trim()
+    });
+    statusDialogVisible.value = false;
+    if (detail.value && detail.value.id === updated.id) {
+      detail.value = updated;
+    }
+    await loadUsers();
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '用户状态调整失败';
+  } finally {
+    statusUpdating.value = false;
+  }
+}
+
 onMounted(() => {
   loadUsers();
 });
@@ -217,9 +258,10 @@ onMounted(() => {
             {{ formatTime(row.createdAt) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="96" fixed="right">
+        <el-table-column label="操作" width="176" fixed="right">
           <template #default="{ row }">
             <el-button :icon="View" text type="primary" @click="openDetail(row)">详情</el-button>
+            <el-button :icon="EditPen" text type="warning" @click="openStatusDialog(row)">状态</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -248,6 +290,9 @@ onMounted(() => {
             <el-descriptions-item label="UnionID">{{ detail.unionId || '-' }}</el-descriptions-item>
             <el-descriptions-item label="状态">
               <el-tag :type="statusType(detail.status)" effect="plain">{{ statusText(detail.status) }}</el-tag>
+              <el-button class="drawer-status-button" :icon="EditPen" text type="warning" @click="openStatusDialog(detail)">
+                调整
+              </el-button>
             </el-descriptions-item>
             <el-descriptions-item label="创建时间">{{ formatTime(detail.createdAt) }}</el-descriptions-item>
           </el-descriptions>
@@ -271,6 +316,31 @@ onMounted(() => {
         </template>
       </div>
     </el-drawer>
+
+    <el-dialog v-model="statusDialogVisible" title="调整用户状态" width="520px">
+      <el-form label-width="88px">
+        <el-form-item label="用户ID">
+          <span>{{ statusTarget?.id ?? '-' }}</span>
+        </el-form-item>
+        <el-form-item label="当前状态">
+          <el-tag v-if="statusTarget" :type="statusType(statusTarget.status)" effect="plain">
+            {{ statusText(statusTarget.status) }}
+          </el-tag>
+        </el-form-item>
+        <el-form-item label="目标状态">
+          <el-select v-model="statusForm.status" class="dialog-input">
+            <el-option v-for="item in statusOptions.slice(1)" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="原因">
+          <el-input v-model="statusForm.reason" type="textarea" :rows="3" maxlength="120" show-word-limit />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="statusDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="statusUpdating" @click="submitStatusUpdate">保存</el-button>
+      </template>
+    </el-dialog>
   </section>
 </template>
 
@@ -316,5 +386,13 @@ onMounted(() => {
   color: #344054;
   font-size: 15px;
   font-weight: 600;
+}
+
+.drawer-status-button {
+  margin-left: 8px;
+}
+
+.dialog-input {
+  width: 100%;
 }
 </style>

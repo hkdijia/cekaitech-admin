@@ -56,6 +56,12 @@ export interface AdminSeedUsersResult {
   seededAt: string;
 }
 
+export interface AdminUserStatusUpdateRequest {
+  userId: number;
+  status: string;
+  reason: string;
+}
+
 export interface PageResult<T> {
   dataList: T[];
   totalCount: number;
@@ -75,5 +81,12 @@ export function getAdminUserDetail(userId: number): Promise<AdminUserDetail> {
 export function seedAdminUsers(): Promise<AdminSeedUsersResult> {
   return request<AdminSeedUsersResult>('/api/admin/dev/seed-users', {
     method: 'POST'
+  });
+}
+
+export function updateAdminUserStatus(requestBody: AdminUserStatusUpdateRequest): Promise<AdminUserDetail> {
+  return request<AdminUserDetail>('/api/admin/users/update-status', {
+    method: 'POST',
+    body: JSON.stringify(requestBody)
   });
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { getAdminUserDetail, pageAdminUsers, seedAdminUsers } from './adminUsers';
+import { getAdminUserDetail, pageAdminUsers, seedAdminUsers, updateAdminUserStatus } from './adminUsers';
 
 describe('admin user api', () => {
   it('posts page query to backend admin users endpoint', async () => {
@@ -109,5 +109,43 @@ describe('admin user api', () => {
     });
     expect(result.createdCount).toBe(5);
     expect(result.totalCount).toBe(5);
+  });
+
+  it('posts user status update request', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        code: '0',
+        msg: '',
+        data: {
+          id: 1,
+          primaryPhone: '13800000001',
+          unionId: 'union-001',
+          status: 'blacklisted',
+          identities: [],
+          phones: []
+        }
+      })
+    } as Response);
+
+    const result = await updateAdminUserStatus({
+      userId: 1,
+      status: 'blacklisted',
+      reason: '多次恶意提交'
+    });
+
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/admin/users/update-status', {
+      method: 'POST',
+      body: JSON.stringify({
+        userId: 1,
+        status: 'blacklisted',
+        reason: '多次恶意提交'
+      }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    expect(result.status).toBe('blacklisted');
   });
 });
