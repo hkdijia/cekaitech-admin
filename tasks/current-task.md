@@ -2,33 +2,31 @@
 
 ## 当前任务
 
-- 名称：cekaitech-admin MVP 设计
+- 名称：cekaitech-admin MVP 实现计划
 - OpenSpec 变更：无
 
 ## 当前状态
 
-- 设计文档已完成，待用户复核后再进入实现计划。
+- 实现计划已完成，待选择执行方式。
 
 ## 已完成
 
-- 确认首版方向：后台框架优先。
-- 确认技术栈：Vue 3 + Vite + TypeScript + Element Plus。
-- 确认首批页面范围：登录页占位、主布局、左侧菜单、应用/租户切换、首页工作台、用户管理、用户限制/黑名单、律师认证审核、数据导入、系统设置。
-- 新增 `docs/admin-mvp-design.md`。
+- 用户确认 `docs/admin-mvp-design.md`。
+- 新增 `docs/superpowers/plans/2026-05-21-admin-mvp-shell.md`。
+- 实现计划覆盖 Vue 3 工程脚手架、路由、mock 登录、工作区切换、后台布局、占位页面、测试、构建和文档更新。
 
 ## 未完成
 
 - 前端工程脚手架初始化。
 - 页面实现。
 - mock 数据实现。
-- 与 `miniapp-backend` 的真实 API 对接。
+- 构建和测试验证。
 
 ## 最近验证
 
-- 文档阶段，无自动化测试。
+- 计划文档阶段，无自动化测试。
 
 ## 下一步
 
-1. 用户复核 `docs/admin-mvp-design.md`。
-2. 复核通过后编写实现计划。
-3. 按计划初始化 Vue 3 + Vite + TypeScript + Element Plus 工程。
+1. 选择执行方式：Subagent-Driven 或 Inline Execution。
+2. 按实现计划初始化 Vue 3 + Vite + TypeScript + Element Plus 工程。
