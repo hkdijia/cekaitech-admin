@@ -21,6 +21,16 @@ function handleLogout() {
   auth.logout();
   router.push('/login');
 }
+
+function openWorkspaceMenu(menuCode: string) {
+  router.push({
+    name: 'workspace-menu',
+    params: {
+      workspaceCode: workspace.currentCode,
+      menuCode
+    }
+  });
+}
 </script>
 
 <template>
@@ -43,7 +53,13 @@ function handleLogout() {
       </el-menu>
       <div v-if="workspace.currentMenus.length > 0" class="workspace-menu">
         <div class="workspace-menu-title">工作区菜单</div>
-        <button v-for="item in workspace.currentMenus" :key="item.menuCode" class="workspace-menu-item" type="button">
+        <button
+          v-for="item in workspace.currentMenus"
+          :key="item.menuCode"
+          class="workspace-menu-item"
+          type="button"
+          @click="openWorkspaceMenu(item.menuCode)"
+        >
           {{ item.menuName }}
         </button>
       </div>
@@ -142,7 +158,7 @@ function handleLogout() {
   font: inherit;
   font-size: 13px;
   text-align: left;
-  cursor: default;
+  cursor: pointer;
 }
 
 .workspace-menu-item:hover {

@@ -10,4 +10,8 @@ describe('admin routes', () => {
       expect(routePaths).toContain(item.path);
     }
   });
+
+  it('has a dynamic route for backend workspace menu entries', () => {
+    expect(routes.some((route) => route.path === '/workspace-menu/:workspaceCode/:menuCode')).toBe(true);
+  });
 });

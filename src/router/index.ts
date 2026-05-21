@@ -33,6 +33,11 @@ export const routes: RouteRecordRaw[] = [
     path: '/settings',
     component: () => import('../layouts/AdminLayout.vue'),
     children: [{ path: '', component: () => import('../pages/settings/SettingsPage.vue') }]
+  },
+  {
+    path: '/workspace-menu/:workspaceCode/:menuCode',
+    component: () => import('../layouts/AdminLayout.vue'),
+    children: [{ path: '', name: 'workspace-menu', component: () => import('../pages/workspace-menu/WorkspaceMenuPage.vue') }]
   }
 ];
 
