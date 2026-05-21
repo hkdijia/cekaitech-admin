@@ -2,7 +2,7 @@
 
 ## 当前任务
 
-- 名称：用户管理基础页面接入
+- 名称：用户管理联调闭环
 - OpenSpec 变更：无
 
 ## 当前状态
@@ -29,26 +29,28 @@
 - 新增后台用户分页 API 封装：`src/api/adminUsers.ts`。
 - 用户管理页接入 `POST /api/admin/users/page`，展示统一用户、小程序身份和手机号授权摘要。
 - 用户管理页支持关键词、状态和来源小程序筛选。
+- 用户管理页新增“生成演示数据”按钮，便于本地空库联调。
+- 用户管理页新增详情抽屉，展示用户基础信息、小程序身份和手机号记录。
 - 新增 `src/api/adminUsers.test.ts`。
 
 ## 未完成
 
 - 生产级鉴权。
 - 工作区菜单真实业务页面。
-- 用户详情页、黑名单操作和用户限制操作。
+- 黑名单操作和用户限制操作。
 - 权限模型。
 - 数据导入真实流程。
 
 ## 最近验证
 
-- `npm.cmd test`：通过，8 个 Vitest 测试通过。
-- `npm.cmd run quality`：通过，8 个 Vitest 测试通过，TypeScript 与 Vite 构建通过。
-- `src/api/adminUsers.test.ts`：1 个测试通过。
+- `npm.cmd test`：通过，10 个 Vitest 测试通过。
+- `npm.cmd run quality`：通过，10 个 Vitest 测试通过，TypeScript 与 Vite 构建通过。
+- `src/api/adminUsers.test.ts`：3 个测试通过。
 - `POST /api/admin/auth/login`：通过，后端返回 `dev-admin-token`。
 - `GET /api/admin/workspaces`：通过，后端返回工作区列表。
 - `GET /api/admin/workspaces/1/menus`：通过，后端返回法律工作区菜单。
 
 ## 下一步
 
-1. 等待 `miniapp-backend` 完整验证后提交推送。
-2. 后续补用户详情、用户限制和黑名单操作。
+1. 提交并推送 `cekaitech-admin`。
+2. 后续补用户限制和黑名单操作。

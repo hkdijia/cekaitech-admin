@@ -1,12 +1,21 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
-import { Refresh, Search } from '@element-plus/icons-vue';
-import { pageAdminUsers, type AdminUserItem } from '../../api/adminUsers';
+import { DataLine, Refresh, Search, View } from '@element-plus/icons-vue';
+import {
+  getAdminUserDetail,
+  pageAdminUsers,
+  seedAdminUsers,
+  type AdminUserDetail,
+  type AdminUserItem
+} from '../../api/adminUsers';
 
 const loading = ref(false);
 const loadError = ref('');
 const users = ref<AdminUserItem[]>([]);
 const totalCount = ref(0);
+const detailDrawerVisible = ref(false);
+const detailLoading = ref(false);
+const detail = ref<AdminUserDetail | null>(null);
 
 const query = reactive({
   pageNo: 1,
@@ -113,6 +122,33 @@ function handleSizeChange(pageSize: number) {
   loadUsers();
 }
 
+async function openDetail(row: AdminUserItem) {
+  detailDrawerVisible.value = true;
+  detailLoading.value = true;
+  detail.value = null;
+  try {
+    detail.value = await getAdminUserDetail(row.id);
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '用户详情加载失败';
+  } finally {
+    detailLoading.value = false;
+  }
+}
+
+async function seedUsers() {
+  loading.value = true;
+  loadError.value = '';
+  try {
+    await seedAdminUsers();
+    query.pageNo = 1;
+    await loadUsers();
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '演示数据生成失败';
+  } finally {
+    loading.value = false;
+  }
+}
+
 onMounted(() => {
   loadUsers();
 });
@@ -147,6 +183,7 @@ onMounted(() => {
         <el-form-item>
           <el-button type="primary" :icon="Search" :loading="loading" @click="searchUsers">查询</el-button>
           <el-button :icon="Refresh" @click="resetFilters">重置</el-button>
+          <el-button :icon="DataLine" @click="seedUsers">生成演示数据</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -180,6 +217,11 @@ onMounted(() => {
             {{ formatTime(row.createdAt) }}
           </template>
         </el-table-column>
+        <el-table-column label="操作" width="96" fixed="right">
+          <template #default="{ row }">
+            <el-button :icon="View" text type="primary" @click="openDetail(row)">详情</el-button>
+          </template>
+        </el-table-column>
       </el-table>
 
       <div class="pagination-bar">
@@ -195,6 +237,40 @@ onMounted(() => {
         />
       </div>
     </el-card>
+
+    <el-drawer v-model="detailDrawerVisible" title="用户详情" size="560px">
+      <div v-loading="detailLoading">
+        <el-empty v-if="!detail && !detailLoading" description="暂无详情" />
+        <template v-if="detail">
+          <el-descriptions :column="1" border>
+            <el-descriptions-item label="用户ID">{{ detail.id }}</el-descriptions-item>
+            <el-descriptions-item label="手机号">{{ detail.primaryPhone || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="UnionID">{{ detail.unionId || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="状态">
+              <el-tag :type="statusType(detail.status)" effect="plain">{{ statusText(detail.status) }}</el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item label="创建时间">{{ formatTime(detail.createdAt) }}</el-descriptions-item>
+          </el-descriptions>
+
+          <h2 class="drawer-section-title">小程序身份</h2>
+          <el-table :data="detail.identities" size="small">
+            <el-table-column prop="appCode" label="小程序" min-width="170" show-overflow-tooltip />
+            <el-table-column prop="providerUserId" label="OpenID" min-width="170" show-overflow-tooltip />
+            <el-table-column prop="phoneBindingStatus" label="授权" width="88">
+              <template #default="{ row }">{{ phoneBindingText(row.phoneBindingStatus) }}</template>
+            </el-table-column>
+            <el-table-column prop="role" label="角色" width="120" />
+          </el-table>
+
+          <h2 class="drawer-section-title">手机号记录</h2>
+          <el-table :data="detail.phones" size="small">
+            <el-table-column prop="phone" label="手机号" min-width="140" />
+            <el-table-column prop="sourceAppCode" label="来源" min-width="170" show-overflow-tooltip />
+            <el-table-column prop="status" label="状态" width="100" />
+          </el-table>
+        </template>
+      </div>
+    </el-drawer>
   </section>
 </template>
 
@@ -233,5 +309,12 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   padding-top: 16px;
+}
+
+.drawer-section-title {
+  margin: 20px 0 10px;
+  color: #344054;
+  font-size: 15px;
+  font-weight: 600;
 }
 </style>

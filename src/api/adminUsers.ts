@@ -24,6 +24,38 @@ export interface AdminUserItem {
   updatedAt: string;
 }
 
+export interface AdminUserIdentity {
+  id: number;
+  provider: string;
+  appCode: string;
+  providerUserId: string;
+  unionId: string;
+  phoneSnapshot: string;
+  phoneBindingStatus: string;
+  role: string;
+  identityKey: string;
+}
+
+export interface AdminUserPhone {
+  id: number;
+  phone: string;
+  sourceProvider: string;
+  sourceAppCode: string;
+  verifiedAt: string;
+  status: string;
+}
+
+export interface AdminUserDetail extends AdminUserItem {
+  identities: AdminUserIdentity[];
+  phones: AdminUserPhone[];
+}
+
+export interface AdminSeedUsersResult {
+  createdCount: number;
+  totalCount: number;
+  seededAt: string;
+}
+
 export interface PageResult<T> {
   dataList: T[];
   totalCount: number;
@@ -33,5 +65,15 @@ export function pageAdminUsers(query: AdminUserPageQuery): Promise<PageResult<Ad
   return request<PageResult<AdminUserItem>>('/api/admin/users/page', {
     method: 'POST',
     body: JSON.stringify(query)
+  });
+}
+
+export function getAdminUserDetail(userId: number): Promise<AdminUserDetail> {
+  return request<AdminUserDetail>(`/api/admin/users/${userId}/detail`);
+}
+
+export function seedAdminUsers(): Promise<AdminSeedUsersResult> {
+  return request<AdminSeedUsersResult>('/api/admin/dev/seed-users', {
+    method: 'POST'
   });
 }
