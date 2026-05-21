@@ -1,0 +1,50 @@
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
+
+export const routes: RouteRecordRaw[] = [
+  { path: '/', redirect: '/dashboard' },
+  { path: '/login', component: () => import('../pages/login/LoginPage.vue'), meta: { public: true } },
+  {
+    path: '/dashboard',
+    component: () => import('../layouts/AdminLayout.vue'),
+    children: [{ path: '', component: () => import('../pages/dashboard/DashboardPage.vue') }]
+  },
+  {
+    path: '/users',
+    component: () => import('../layouts/AdminLayout.vue'),
+    children: [{ path: '', component: () => import('../pages/users/UsersPage.vue') }]
+  },
+  {
+    path: '/restrictions',
+    component: () => import('../layouts/AdminLayout.vue'),
+    children: [{ path: '', component: () => import('../pages/restrictions/RestrictionsPage.vue') }]
+  },
+  {
+    path: '/lawyer-audits',
+    component: () => import('../layouts/AdminLayout.vue'),
+    children: [{ path: '', component: () => import('../pages/lawyer-audits/LawyerAuditsPage.vue') }]
+  },
+  {
+    path: '/data-import',
+    component: () => import('../layouts/AdminLayout.vue'),
+    children: [{ path: '', component: () => import('../pages/data-import/DataImportPage.vue') }]
+  },
+  {
+    path: '/settings',
+    component: () => import('../layouts/AdminLayout.vue'),
+    children: [{ path: '', component: () => import('../pages/settings/SettingsPage.vue') }]
+  }
+];
+
+export const router = createRouter({
+  history: createWebHistory(),
+  routes
+});
+
+router.beforeEach((to) => {
+  const auth = useAuthStore();
+  if (to.meta.public || auth.isAuthenticated) {
+    return true;
+  }
+  return '/login';
+});

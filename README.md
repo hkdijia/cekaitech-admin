@@ -16,7 +16,39 @@
 
 ## 当前状态
 
-当前仅初始化占位仓库和项目接力文档，暂不选择前端框架，暂不实现业务页面。
+当前已初始化 Vue 3 + Vite + TypeScript + Element Plus 后台 MVP 壳，包含开发占位登录、后台布局、菜单、工作区切换、首页工作台和首批业务占位页面。
+
+## 本地开发
+
+安装依赖：
+
+```powershell
+npm.cmd install
+```
+
+启动开发服务：
+
+```powershell
+npm.cmd run dev
+```
+
+构建：
+
+```powershell
+npm.cmd run build
+```
+
+测试：
+
+```powershell
+npm.cmd test
+```
+
+完整质量检查：
+
+```powershell
+npm.cmd run quality
+```
 
 ## 事实来源
 
