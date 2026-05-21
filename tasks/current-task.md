@@ -2,32 +2,33 @@
 
 ## 当前任务
 
-- 名称：初始化 cekaitech-admin 占位仓库
+- 名称：cekaitech-admin MVP 设计
 - OpenSpec 变更：无
 
 ## 当前状态
 
-- 已完成未提交
+- 设计文档已完成，待用户复核后再进入实现计划。
 
 ## 已完成
 
-- 创建项目目录。
-- 新增 `AGENTS.md`、`README.md`、`docs/变更日志.md`。
-- 新增 `codex-handoff.md`、`codex-decisions.md`、`tasks/current-task.md`。
-- 明确项目边界和数据访问原则。
+- 确认首版方向：后台框架优先。
+- 确认技术栈：Vue 3 + Vite + TypeScript + Element Plus。
+- 确认首批页面范围：登录页占位、主布局、左侧菜单、应用/租户切换、首页工作台、用户管理、用户限制/黑名单、律师认证审核、数据导入、系统设置。
+- 新增 `docs/admin-mvp-design.md`。
 
 ## 未完成
 
-- 技术栈选择。
-- 后台页面设计。
-- 登录和权限方案。
-- 与 `miniapp-backend` 的后台 API 对接。
+- 前端工程脚手架初始化。
+- 页面实现。
+- mock 数据实现。
+- 与 `miniapp-backend` 的真实 API 对接。
 
 ## 最近验证
 
-- 文档初始化，无自动化测试。
+- 文档阶段，无自动化测试。
 
 ## 下一步
 
-1. 提交并推送占位仓库。
-2. 在外层 `miniapp/project-index.md` 中记录仓库位置和远程地址。
+1. 用户复核 `docs/admin-mvp-design.md`。
+2. 复核通过后编写实现计划。
+3. 按计划初始化 Vue 3 + Vite + TypeScript + Element Plus 工程。
