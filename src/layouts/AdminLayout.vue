@@ -2,7 +2,7 @@
 import { computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Monitor, Setting, SwitchButton, UserFilled, Warning } from '@element-plus/icons-vue';
-import { adminMenuItems } from '../router/menu';
+import { filterAdminMenuItems } from '../router/menu';
 import { useAuthStore } from '../stores/auth';
 import { useWorkspaceStore } from '../stores/workspace';
 
@@ -12,6 +12,7 @@ const auth = useAuthStore();
 const workspace = useWorkspaceStore();
 
 const activeMenu = computed(() => route.path);
+const visibleAdminMenuItems = computed(() => filterAdminMenuItems(auth.hasPermission));
 
 onMounted(() => {
   workspace.loadWorkspaces();
@@ -41,7 +42,7 @@ function openWorkspaceMenu(menuCode: string) {
         <span>管理后台</span>
       </div>
       <el-menu :default-active="activeMenu" router class="sidebar-menu">
-        <el-menu-item v-for="item in adminMenuItems" :key="item.path" :index="item.path">
+        <el-menu-item v-for="item in visibleAdminMenuItems" :key="item.path" :index="item.path">
           <el-icon>
             <Monitor v-if="item.path === '/dashboard'" />
             <UserFilled v-else-if="item.path === '/users'" />

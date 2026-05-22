@@ -10,7 +10,9 @@ import {
   type AdminUserDetail,
   type AdminUserItem
 } from '../../api/adminUsers';
+import { useAuthStore } from '../../stores/auth';
 
+const auth = useAuthStore();
 const loading = ref(false);
 const loadError = ref('');
 const users = ref<AdminUserItem[]>([]);
@@ -38,6 +40,10 @@ const statusForm = reactive({
   status: '',
   reason: ''
 });
+
+const canUpdateUserStatus = () => auth.hasPermission('admin:user:status:update');
+const canSeedUsers = () => auth.hasPermission('admin:dev:seed');
+const canViewOperationLogs = () => auth.hasPermission('admin:user-operation-log:view');
 
 const statusOptions = [
   { label: '全部状态', value: '' },
@@ -148,7 +154,9 @@ async function openDetail(row: AdminUserItem) {
   operationLogs.value = [];
   try {
     detail.value = await getAdminUserDetail(row.id);
-    await loadOperationLogs(row.id);
+    if (canViewOperationLogs()) {
+      await loadOperationLogs(row.id);
+    }
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : '用户详情加载失败';
   } finally {
@@ -177,6 +185,9 @@ async function loadOperationLogs(userId: number) {
 }
 
 async function seedUsers() {
+  if (!canSeedUsers()) {
+    return;
+  }
   loading.value = true;
   loadError.value = '';
   try {
@@ -191,6 +202,9 @@ async function seedUsers() {
 }
 
 function openStatusDialog(row: AdminUserItem | AdminUserDetail) {
+  if (!canUpdateUserStatus()) {
+    return;
+  }
   statusTarget.value = row;
   statusForm.status = row.status;
   statusForm.reason = '';
@@ -213,7 +227,9 @@ async function submitStatusUpdate() {
     statusDialogVisible.value = false;
     if (detail.value && detail.value.id === updated.id) {
       detail.value = updated;
-      await loadOperationLogs(updated.id);
+      if (canViewOperationLogs()) {
+        await loadOperationLogs(updated.id);
+      }
     }
     await loadUsers();
   } catch (error) {
@@ -257,7 +273,7 @@ onMounted(() => {
         <el-form-item>
           <el-button type="primary" :icon="Search" :loading="loading" @click="searchUsers">查询</el-button>
           <el-button :icon="Refresh" @click="resetFilters">重置</el-button>
-          <el-button :icon="DataLine" @click="seedUsers">生成演示数据</el-button>
+          <el-button v-if="canSeedUsers()" :icon="DataLine" @click="seedUsers">生成演示数据</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -294,7 +310,7 @@ onMounted(() => {
         <el-table-column label="操作" width="176" fixed="right">
           <template #default="{ row }">
             <el-button :icon="View" text type="primary" @click="openDetail(row)">详情</el-button>
-            <el-button :icon="EditPen" text type="warning" @click="openStatusDialog(row)">状态</el-button>
+            <el-button v-if="canUpdateUserStatus()" :icon="EditPen" text type="warning" @click="openStatusDialog(row)">状态</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -323,7 +339,14 @@ onMounted(() => {
             <el-descriptions-item label="UnionID">{{ detail.unionId || '-' }}</el-descriptions-item>
             <el-descriptions-item label="状态">
               <el-tag :type="statusType(detail.status)" effect="plain">{{ statusText(detail.status) }}</el-tag>
-              <el-button class="drawer-status-button" :icon="EditPen" text type="warning" @click="openStatusDialog(detail)">
+              <el-button
+                v-if="canUpdateUserStatus()"
+                class="drawer-status-button"
+                :icon="EditPen"
+                text
+                type="warning"
+                @click="openStatusDialog(detail)"
+              >
                 调整
               </el-button>
             </el-descriptions-item>
@@ -347,8 +370,8 @@ onMounted(() => {
             <el-table-column prop="status" label="状态" width="100" />
           </el-table>
 
-          <h2 class="drawer-section-title">操作记录</h2>
-          <el-table v-loading="operationLogLoading" :data="operationLogs" size="small">
+          <h2 v-if="canViewOperationLogs()" class="drawer-section-title">操作记录</h2>
+          <el-table v-if="canViewOperationLogs()" v-loading="operationLogLoading" :data="operationLogs" size="small">
             <el-table-column label="操作" width="116">
               <template #default="{ row }">{{ operationTypeText(row.operationType) }}</template>
             </el-table-column>

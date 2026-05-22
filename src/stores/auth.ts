@@ -9,7 +9,13 @@ export const useAuthStore = defineStore('auth', {
     token: localStorage.getItem(TOKEN_STORAGE_KEY)
   }),
   getters: {
-    isAuthenticated: (state) => Boolean(state.operator && state.token)
+    isAuthenticated: (state) => Boolean(state.operator && state.token),
+    hasPermission: (state) => (permissionCode: string) => {
+      if (!permissionCode) {
+        return true;
+      }
+      return Boolean(state.operator?.permissions.includes(permissionCode));
+    }
   },
   actions: {
     async login(username: string, password: string) {

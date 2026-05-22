@@ -61,4 +61,19 @@ describe('useAuthStore', () => {
     await expect(auth.login('admin', 'wrong')).rejects.toThrow('账号或密码错误');
     expect(auth.isAuthenticated).toBe(false);
   });
+  it('checks current operator permissions by permission code', () => {
+    const auth = useAuthStore();
+    auth.operator = {
+      id: 'limited-admin',
+      name: 'limited-admin',
+      roleCode: 'operator',
+      roleName: '',
+      permissions: ['admin:user:view']
+    };
+    auth.token = 'limited-token';
+
+    expect(auth.hasPermission('admin:user:view')).toBe(true);
+    expect(auth.hasPermission('admin:user:status:update')).toBe(false);
+    expect(auth.hasPermission('')).toBe(true);
+  });
 });

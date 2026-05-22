@@ -1,6 +1,7 @@
 import { setActivePinia, createPinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useWorkspaceStore } from './workspace';
+import { useAuthStore } from './auth';
+import { filterWorkspaceMenus, useWorkspaceStore } from './workspace';
 
 describe('useWorkspaceStore', () => {
   beforeEach(() => {
@@ -82,6 +83,15 @@ describe('useWorkspaceStore', () => {
       } as Response);
 
     const workspace = useWorkspaceStore();
+    const auth = useAuthStore();
+    auth.operator = {
+      id: 'workspace-admin',
+      name: 'workspace-admin',
+      roleCode: 'operator',
+      roleName: '',
+      permissions: ['legal:verification:review']
+    };
+    auth.token = 'workspace-token';
 
     await workspace.loadWorkspaces();
 
@@ -100,5 +110,29 @@ describe('useWorkspaceStore', () => {
     expect(workspace.options.length).toBeGreaterThan(0);
     expect(workspace.currentWorkspace.name).toBe('全局后台');
     expect(workspace.loadError).toBe('network down');
+  });
+  it('filters workspace menus by permission code', () => {
+    const visibleMenus = filterWorkspaceMenus(
+      [
+        {
+          menuCode: 'lawyer-verifications',
+          menuName: '律师认证审核',
+          route: '/legal/lawyer-verifications',
+          permissionCode: 'legal:verification:review',
+          sortOrder: 30
+        },
+        {
+          menuCode: 'professional-query-permissions',
+          menuName: '高阶查询权限',
+          route: '/legal/professional-permissions',
+          permissionCode: 'legal:professional-permission:view',
+          sortOrder: 60
+        }
+      ],
+      (permissionCode) => permissionCode === 'legal:verification:review'
+    );
+
+    expect(visibleMenus).toHaveLength(1);
+    expect(visibleMenus[0].menuCode).toBe('lawyer-verifications');
   });
 });

@@ -5,6 +5,7 @@ import {
   type BackendWorkspace,
   type BackendWorkspaceMenu
 } from '../api/adminWorkspace';
+import { useAuthStore } from './auth';
 
 export interface WorkspaceOption {
   id: number;
@@ -72,7 +73,8 @@ export const useWorkspaceStore = defineStore('workspace', {
       }
       this.menuLoading = true;
       try {
-        this.currentMenus = await listWorkspaceMenus(workspace.id);
+        const auth = useAuthStore();
+        this.currentMenus = filterWorkspaceMenus(await listWorkspaceMenus(workspace.id), auth.hasPermission);
       } catch (error) {
         this.menuLoadError = error instanceof Error ? error.message : '菜单加载失败';
       } finally {
@@ -90,4 +92,11 @@ function toWorkspaceOption(item: BackendWorkspace): WorkspaceOption {
     appCode: item.appCode,
     status: item.status
   };
+}
+
+export function filterWorkspaceMenus(
+  menus: BackendWorkspaceMenu[],
+  hasPermission: (permissionCode: string) => boolean
+): BackendWorkspaceMenu[] {
+  return menus.filter((item) => hasPermission(item.permissionCode));
 }

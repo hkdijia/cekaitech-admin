@@ -7,7 +7,9 @@ import {
   pageUserRestrictions,
   type UserRestrictionItem
 } from '../../api/adminUserRestrictions';
+import { useAuthStore } from '../../stores/auth';
 
+const auth = useAuthStore();
 const loading = ref(false);
 const loadError = ref('');
 const restrictions = ref<UserRestrictionItem[]>([]);
@@ -32,6 +34,7 @@ const createForm = reactive({
   restrictionType: 'all_disabled',
   reason: ''
 });
+const canManageRestrictions = () => auth.hasPermission('admin:user-restriction:manage');
 
 const statusOptions = [
   { label: '全部状态', value: '' },
@@ -136,6 +139,9 @@ function resetFilters() {
 }
 
 function openCreateDialog() {
+  if (!canManageRestrictions()) {
+    return;
+  }
   createForm.userId = undefined;
   createForm.appCode = '';
   createForm.restrictionType = 'all_disabled';
@@ -169,6 +175,9 @@ async function submitCreate() {
 }
 
 async function cancelRestriction(row: UserRestrictionItem) {
+  if (!canManageRestrictions()) {
+    return;
+  }
   loading.value = true;
   loadError.value = '';
   try {
@@ -225,7 +234,7 @@ onMounted(() => {
         <el-form-item>
           <el-button type="primary" :icon="Search" :loading="loading" @click="searchRestrictions">查询</el-button>
           <el-button :icon="Refresh" @click="resetFilters">重置</el-button>
-          <el-button :icon="Plus" type="success" @click="openCreateDialog">新增限制</el-button>
+          <el-button v-if="canManageRestrictions()" :icon="Plus" type="success" @click="openCreateDialog">新增限制</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -257,7 +266,7 @@ onMounted(() => {
         <el-table-column label="操作" width="110" fixed="right">
           <template #default="{ row }">
             <el-button
-              v-if="row.status === 'active'"
+              v-if="row.status === 'active' && canManageRestrictions()"
               :icon="CircleClose"
               text
               type="danger"
