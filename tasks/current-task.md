@@ -2,7 +2,7 @@
 
 ## 当前任务
 
-- 名称：管理后台生产部署准备
+- 名称：管理后台当前管理员改密
 - OpenSpec 变更：无
 
 ## 当前状态
@@ -53,6 +53,11 @@
 - 新增 `.env.production.example`，生产构建默认指向 `https://api.cekaitech.cn`。
 - 新增 `docs/production-runbook.md`，记录 `admin.cekaitech.cn` 静态部署、Nginx、验证、回滚和安全边界。
 - README 补充生产部署入口。
+- 新增 `changeAdminPassword` API 封装，调用 `POST /api/admin/auth/change-password`。
+- 新增 `src/api/adminAuth.test.ts`，覆盖改密请求携带 Bearer token。
+- 系统设置页新增当前管理员改密表单，包含旧密码、新密码、确认密码校验。
+- 改密成功后清理本地 token 并跳转登录页。
+- 更新 `codex-decisions.md` 和 `docs/变更日志.md`。
 
 ## 未完成
 
@@ -71,11 +76,14 @@
 - `src/api/adminUsers.test.ts`：4 个测试通过。
 - `src/api/adminUserRestrictions.test.ts`：2 个测试通过。
 - `src/api/adminUserOperationLogs.test.ts`：1 个测试通过。
+- `src/api/adminAuth.test.ts`：1 个测试通过。
+- `npm.cmd run quality`：通过，17 个 Vitest 测试通过，TypeScript 与 Vite 构建通过。
 - `POST /api/admin/auth/login`：通过，后端返回 `dev-admin-token`。
 - `GET /api/admin/workspaces`：通过，后端返回工作区列表。
 - `GET /api/admin/workspaces/1/menus`：通过，后端返回法律工作区菜单。
 
 ## 下一步
 
-1. 提交并推送 `cekaitech-admin`。
-2. 后续补黑名单等级、更细的后台权限控制和生产级操作者身份来源。
+1. 执行 `npm.cmd run quality` 全量验证。
+2. 提交并推送 `cekaitech-admin`。
+3. 后续补黑名单等级、更细的后台权限控制和生产级操作者身份来源。

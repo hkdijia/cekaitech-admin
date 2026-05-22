@@ -3,8 +3,8 @@
 ## 当前状态
 
 - 当前分支：`master`
-- 当前阶段：后台 MVP 壳已接入 `miniapp-backend` 数据库管理员登录、工作区、工作区菜单、用户分页/详情、开发态演示数据、用户限制管理、用户主状态调整接口和用户操作日志查询；已适配后端 `/api/admin/**` 全局鉴权和登录失效处理；已补充 `admin.cekaitech.cn` 静态部署运行手册。
-- 最近完成：Vue 3 工程、后台布局、API 登录、token 本地保存、请求自动携带 Bearer token、401 登录失效清理 token 并跳转登录页、工作区 API 加载、工作区菜单加载、动态菜单路由、用户管理真实列表页、详情抽屉、演示数据生成、用户状态调整、操作记录展示、限制管理页面、生产构建模板、部署手册、测试和构建验证
+- 当前阶段：后台 MVP 壳已接入 `miniapp-backend` 数据库管理员登录、工作区、工作区菜单、用户分页/详情、开发态演示数据、用户限制管理、用户主状态调整接口和用户操作日志查询；已适配后端 `/api/admin/**` 全局鉴权和登录失效处理；系统设置页已接入当前管理员改密；已补充 `admin.cekaitech.cn` 静态部署运行手册。
+- 最近完成：Vue 3 工程、后台布局、API 登录、token 本地保存、请求自动携带 Bearer token、401 登录失效清理 token 并跳转登录页、工作区 API 加载、工作区菜单加载、动态菜单路由、用户管理真实列表页、详情抽屉、演示数据生成、用户状态调整、操作记录展示、限制管理页面、当前管理员改密、生产构建模板、部署手册、测试和构建验证
 - 未完成：全局权限模型、数据导入真实流程、Redis/JWT 等生产级 session 机制
 
 ## 关键文件
@@ -24,6 +24,7 @@
 - `src/api/http.test.ts`
 - `src/main.ts`
 - `src/api/adminAuth.ts`
+- `src/api/adminAuth.test.ts`
 - `src/api/adminWorkspace.ts`
 - `src/api/adminUsers.ts`
 - `src/api/adminUserRestrictions.ts`
@@ -32,6 +33,7 @@
 - `src/stores/workspace.ts`
 - `src/pages/users/UsersPage.vue`
 - `src/pages/restrictions/RestrictionsPage.vue`
+- `src/pages/settings/SettingsPage.vue`
 - `src/pages/workspace-menu/WorkspaceMenuPage.vue`
 
 ## 关键命令
@@ -53,6 +55,8 @@
 - 用户管理 API 单测：`src/api/adminUsers.test.ts` 通过，覆盖分页、详情、演示数据生成和状态调整接口。
 - 用户状态调整请求已覆盖 Authorization 头自动注入。
 - 用户操作日志 API 单测：`src/api/adminUserOperationLogs.test.ts` 通过，覆盖分页接口。
+- 管理员认证 API 单测：`src/api/adminAuth.test.ts` 通过，覆盖改密请求携带 Bearer token。
+- `npm.cmd run quality`：通过，17 个 Vitest 测试通过，TypeScript 与 Vite 构建通过。
 
 ## 注意事项
 
@@ -65,6 +69,7 @@
 - 非登录接口收到 HTTP 401 时会清理本地 token，并通过全局事件跳转登录页。
 - 生产构建时 `VITE_API_BASE_URL` 应指向 `https://api.cekaitech.cn`，前端环境变量不能保存 secret。
 - `admin.cekaitech.cn` 上线早期建议增加 Nginx Basic Auth 或 IP 白名单。
+- 系统设置页改密成功后会清理本地 token 并跳转登录页；当前轻量 token 没有服务端主动失效能力。
 - 用户详情抽屉会加载最近操作记录；当前主要展示状态调整审计。
 - 后续真实业务数据只能通过 `miniapp-backend` 受控 API 获取和修改。
 - 不直连数据库，不直接控制本地 `crawler`。
