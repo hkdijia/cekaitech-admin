@@ -3,8 +3,8 @@
 ## 当前状态
 
 - 当前分支：`master`
-- 当前阶段：后台 MVP 壳已接入 `miniapp-backend` 数据库管理员登录、工作区、工作区菜单、用户分页/详情、开发态演示数据、用户限制管理、用户主状态调整接口和用户操作日志查询，并具备动态菜单占位页
-- 最近完成：Vue 3 工程、后台布局、API 登录、token 本地保存、请求自动携带 Bearer token、工作区 API 加载、工作区菜单加载、动态菜单路由、用户管理真实列表页、详情抽屉、演示数据生成、用户状态调整、操作记录展示、限制管理页面、测试和构建验证
+- 当前阶段：后台 MVP 壳已接入 `miniapp-backend` 数据库管理员登录、工作区、工作区菜单、用户分页/详情、开发态演示数据、用户限制管理、用户主状态调整接口和用户操作日志查询；已适配后端 `/api/admin/**` 全局鉴权和登录失效处理。
+- 最近完成：Vue 3 工程、后台布局、API 登录、token 本地保存、请求自动携带 Bearer token、401 登录失效清理 token 并跳转登录页、工作区 API 加载、工作区菜单加载、动态菜单路由、用户管理真实列表页、详情抽屉、演示数据生成、用户状态调整、操作记录展示、限制管理页面、测试和构建验证
 - 未完成：全局权限模型、数据导入真实流程、Redis/JWT 等生产级 session 机制
 
 ## 关键文件
@@ -19,6 +19,8 @@
 - `src/router/index.ts`
 - `src/layouts/AdminLayout.vue`
 - `src/api/http.ts`
+- `src/api/http.test.ts`
+- `src/main.ts`
 - `src/api/adminAuth.ts`
 - `src/api/adminWorkspace.ts`
 - `src/api/adminUsers.ts`
@@ -40,8 +42,9 @@
 
 ## 最近验证
 
-- `npm.cmd test`：通过，14 个 Vitest 测试通过。
-- `npm.cmd run quality`：通过，14 个 Vitest 测试通过，TypeScript 与 Vite 构建通过。
+- `npm.cmd test`：通过，16 个 Vitest 测试通过。
+- `npm.cmd run quality`：通过，16 个 Vitest 测试通过，TypeScript 与 Vite 构建通过。
+- 登录失效 API 单测：`src/api/http.test.ts` 通过，覆盖受保护接口 401 清 token 和登录接口 401 不触发全局失效。
 - 用户限制 API 单测：`src/api/adminUserRestrictions.test.ts` 通过，覆盖分页、创建和取消接口。
 - `miniapp-backend` 联调：`POST /api/admin/auth/login` 通过，返回 `dev-admin-token`。
 - `miniapp-backend` 联调：`GET /api/admin/workspaces` 和 `GET /api/admin/workspaces/1/menus` 通过。
@@ -57,6 +60,7 @@
 - “生成演示数据”按钮仅用于本地开发 profile 的空库联调。
 - 用户管理页可调整用户主状态；后端会联动账号级全局限制，前端不直接操作限制表。
 - 通用请求会自动读取 `cekaitech-admin-token` 并附加 Bearer token；登录接口本身不附加旧 token。
+- 非登录接口收到 HTTP 401 时会清理本地 token，并通过全局事件跳转登录页。
 - 用户详情抽屉会加载最近操作记录；当前主要展示状态调整审计。
 - 后续真实业务数据只能通过 `miniapp-backend` 受控 API 获取和修改。
 - 不直连数据库，不直接控制本地 `crawler`。

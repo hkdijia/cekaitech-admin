@@ -2,7 +2,7 @@
 
 ## 当前任务
 
-- 名称：后台请求携带真实管理员 token
+- 名称：后台全局鉴权前端适配
 - OpenSpec 变更：无
 
 ## 当前状态
@@ -47,6 +47,9 @@
 - 新增 `src/api/adminUserOperationLogs.test.ts`。
 - 通用请求封装自动从 `cekaitech-admin-token` 读取 token，并对非登录接口附加 `Authorization: Bearer <token>`。
 - 用户状态调整 API 测试覆盖 Authorization 头，确保后端可以写入真实后台操作者。
+- 通用请求封装在非登录接口收到 HTTP 401 时清理 `cekaitech-admin-token`。
+- 应用入口监听 `cekaitech-admin:unauthorized` 事件，并在非登录页跳转 `/login`。
+- 新增 `src/api/http.test.ts`，覆盖受保护接口登录失效和登录接口凭证错误的边界。
 
 ## 未完成
 
@@ -58,7 +61,8 @@
 ## 最近验证
 
 - `npm.cmd test`：通过，14 个 Vitest 测试通过。
-- `npm.cmd run quality`：通过，14 个 Vitest 测试通过，TypeScript 与 Vite 构建通过。
+- `npm.cmd run quality`：通过，16 个 Vitest 测试通过，TypeScript 与 Vite 构建通过。
+- `src/api/http.test.ts`：2 个测试通过。
 - `src/api/adminUsers.test.ts`：4 个测试通过。
 - `src/api/adminUserRestrictions.test.ts`：2 个测试通过。
 - `src/api/adminUserOperationLogs.test.ts`：1 个测试通过。

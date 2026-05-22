@@ -9,6 +9,7 @@ export interface ApiResponse<T> {
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? '';
 const tokenStorageKey = 'cekaitech-admin-token';
+export const unauthorizedEventName = 'cekaitech-admin:unauthorized';
 
 export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem(tokenStorageKey);
@@ -25,6 +26,11 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
     headers
   });
   const body = (await response.json()) as Partial<ApiResponse<T>>;
+
+  if (response.status === 401 && path !== '/api/admin/auth/login') {
+    localStorage.removeItem(tokenStorageKey);
+    window.dispatchEvent(new CustomEvent(unauthorizedEventName));
+  }
 
   if (!response.ok || body.success === false) {
     throw new Error(body.msg || `请求失败：${response.status}`);
