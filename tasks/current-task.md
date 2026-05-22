@@ -2,7 +2,7 @@
 
 ## 当前任务
 
-- 名称：用户主状态调整
+- 名称：用户状态调整操作记录展示
 - OpenSpec 变更：无
 
 ## 当前状态
@@ -41,22 +41,26 @@
 - 用户管理列表和详情抽屉支持打开“调整状态”弹窗。
 - 状态调整支持设为正常、受限、黑名单，并要求填写原因。
 - 状态调整成功后刷新用户列表和当前详情。
+- 新增用户操作日志 API 封装：`fetchAdminUserOperationLogs`。
+- 用户详情抽屉新增操作记录表，展示最近状态调整的变更前后状态、原因、操作者和时间。
+- 状态调整成功后同步刷新详情抽屉内的操作记录。
+- 新增 `src/api/adminUserOperationLogs.test.ts`。
 
 ## 未完成
 
 - 生产级鉴权。
 - 工作区菜单真实业务页面。
 - 黑名单等级。
-- 用户状态调整操作审计。
 - 权限模型。
 - 数据导入真实流程。
 
 ## 最近验证
 
-- `npm.cmd test`：通过，13 个 Vitest 测试通过。
-- `npm.cmd run quality`：通过，13 个 Vitest 测试通过，TypeScript 与 Vite 构建通过。
+- `npm.cmd test`：通过，14 个 Vitest 测试通过。
+- `npm.cmd run quality`：通过，14 个 Vitest 测试通过，TypeScript 与 Vite 构建通过。
 - `src/api/adminUsers.test.ts`：4 个测试通过。
 - `src/api/adminUserRestrictions.test.ts`：2 个测试通过。
+- `src/api/adminUserOperationLogs.test.ts`：1 个测试通过。
 - `POST /api/admin/auth/login`：通过，后端返回 `dev-admin-token`。
 - `GET /api/admin/workspaces`：通过，后端返回工作区列表。
 - `GET /api/admin/workspaces/1/menus`：通过，后端返回法律工作区菜单。
@@ -64,4 +68,4 @@
 ## 下一步
 
 1. 提交并推送 `cekaitech-admin`。
-2. 后续补黑名单等级、操作审计和更细的后台权限控制。
+2. 后续补黑名单等级、更细的后台权限控制和生产级操作者身份来源。

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { DataLine, EditPen, Refresh, Search, View } from '@element-plus/icons-vue';
+import { pageUserOperationLogs, type UserOperationLogItem } from '../../api/adminUserOperationLogs';
 import {
   getAdminUserDetail,
   pageAdminUsers,
@@ -17,6 +18,8 @@ const totalCount = ref(0);
 const detailDrawerVisible = ref(false);
 const detailLoading = ref(false);
 const detail = ref<AdminUserDetail | null>(null);
+const operationLogs = ref<UserOperationLogItem[]>([]);
+const operationLogLoading = ref(false);
 const statusDialogVisible = ref(false);
 const statusUpdating = ref(false);
 const statusTarget = ref<AdminUserItem | AdminUserDetail | null>(null);
@@ -64,6 +67,13 @@ function statusType(status: string) {
 function statusText(status: string) {
   const found = statusOptions.find((item) => item.value === status);
   return found?.label ?? status;
+}
+
+function operationTypeText(value: string) {
+  if (value === 'user_status_update') {
+    return '用户状态调整';
+  }
+  return value;
 }
 
 function phoneBindingText(status: string) {
@@ -135,12 +145,34 @@ async function openDetail(row: AdminUserItem) {
   detailDrawerVisible.value = true;
   detailLoading.value = true;
   detail.value = null;
+  operationLogs.value = [];
   try {
     detail.value = await getAdminUserDetail(row.id);
+    await loadOperationLogs(row.id);
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : '用户详情加载失败';
   } finally {
     detailLoading.value = false;
+  }
+}
+
+async function loadOperationLogs(userId: number) {
+  operationLogLoading.value = true;
+  try {
+    const result = await pageUserOperationLogs({
+      pageNo: 1,
+      pageSize: 5,
+      orderBy: 'createdAt',
+      order: 'desc',
+      userId,
+      operationType: ''
+    });
+    operationLogs.value = result.dataList;
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '操作记录加载失败';
+    operationLogs.value = [];
+  } finally {
+    operationLogLoading.value = false;
   }
 }
 
@@ -181,6 +213,7 @@ async function submitStatusUpdate() {
     statusDialogVisible.value = false;
     if (detail.value && detail.value.id === updated.id) {
       detail.value = updated;
+      await loadOperationLogs(updated.id);
     }
     await loadUsers();
   } catch (error) {
@@ -312,6 +345,23 @@ onMounted(() => {
             <el-table-column prop="phone" label="手机号" min-width="140" />
             <el-table-column prop="sourceAppCode" label="来源" min-width="170" show-overflow-tooltip />
             <el-table-column prop="status" label="状态" width="100" />
+          </el-table>
+
+          <h2 class="drawer-section-title">操作记录</h2>
+          <el-table v-loading="operationLogLoading" :data="operationLogs" size="small">
+            <el-table-column label="操作" width="116">
+              <template #default="{ row }">{{ operationTypeText(row.operationType) }}</template>
+            </el-table-column>
+            <el-table-column label="变更" min-width="150">
+              <template #default="{ row }">
+                {{ statusText(row.beforeValue) }} -> {{ statusText(row.afterValue) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="reason" label="原因" min-width="140" show-overflow-tooltip />
+            <el-table-column prop="operatorName" label="操作人" width="110" />
+            <el-table-column label="时间" width="160">
+              <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
+            </el-table-column>
           </el-table>
         </template>
       </div>
