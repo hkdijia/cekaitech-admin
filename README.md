@@ -35,6 +35,20 @@ npm.cmd run dev
 
 开发服务会通过 Vite 将 `/api` 代理到 `http://127.0.0.1:8080`，联调登录前需要先启动 `miniapp-backend`。
 
+生产构建 API 地址模板：
+
+```text
+.env.production.example
+```
+
+生产部署说明：
+
+```text
+docs/production-runbook.md
+```
+
+前端环境变量会写入构建产物，不要在 `.env.production` 中放任何 secret。
+
 构建：
 
 ```powershell

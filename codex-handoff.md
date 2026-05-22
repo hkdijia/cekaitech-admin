@@ -3,8 +3,8 @@
 ## 当前状态
 
 - 当前分支：`master`
-- 当前阶段：后台 MVP 壳已接入 `miniapp-backend` 数据库管理员登录、工作区、工作区菜单、用户分页/详情、开发态演示数据、用户限制管理、用户主状态调整接口和用户操作日志查询；已适配后端 `/api/admin/**` 全局鉴权和登录失效处理。
-- 最近完成：Vue 3 工程、后台布局、API 登录、token 本地保存、请求自动携带 Bearer token、401 登录失效清理 token 并跳转登录页、工作区 API 加载、工作区菜单加载、动态菜单路由、用户管理真实列表页、详情抽屉、演示数据生成、用户状态调整、操作记录展示、限制管理页面、测试和构建验证
+- 当前阶段：后台 MVP 壳已接入 `miniapp-backend` 数据库管理员登录、工作区、工作区菜单、用户分页/详情、开发态演示数据、用户限制管理、用户主状态调整接口和用户操作日志查询；已适配后端 `/api/admin/**` 全局鉴权和登录失效处理；已补充 `admin.cekaitech.cn` 静态部署运行手册。
+- 最近完成：Vue 3 工程、后台布局、API 登录、token 本地保存、请求自动携带 Bearer token、401 登录失效清理 token 并跳转登录页、工作区 API 加载、工作区菜单加载、动态菜单路由、用户管理真实列表页、详情抽屉、演示数据生成、用户状态调整、操作记录展示、限制管理页面、生产构建模板、部署手册、测试和构建验证
 - 未完成：全局权限模型、数据导入真实流程、Redis/JWT 等生产级 session 机制
 
 ## 关键文件
@@ -13,6 +13,8 @@
 - `tasks/current-task.md`
 - `codex-decisions.md`
 - `docs/变更日志.md`
+- `docs/production-runbook.md`
+- `.env.production.example`
 - `README.md`
 - `AGENTS.md`
 - `package.json`
@@ -61,6 +63,8 @@
 - 用户管理页可调整用户主状态；后端会联动账号级全局限制，前端不直接操作限制表。
 - 通用请求会自动读取 `cekaitech-admin-token` 并附加 Bearer token；登录接口本身不附加旧 token。
 - 非登录接口收到 HTTP 401 时会清理本地 token，并通过全局事件跳转登录页。
+- 生产构建时 `VITE_API_BASE_URL` 应指向 `https://api.cekaitech.cn`，前端环境变量不能保存 secret。
+- `admin.cekaitech.cn` 上线早期建议增加 Nginx Basic Auth 或 IP 白名单。
 - 用户详情抽屉会加载最近操作记录；当前主要展示状态调整审计。
 - 后续真实业务数据只能通过 `miniapp-backend` 受控 API 获取和修改。
 - 不直连数据库，不直接控制本地 `crawler`。

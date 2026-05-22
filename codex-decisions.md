@@ -1,5 +1,21 @@
 ﻿# Codex Decisions
 
+## 6. 管理后台首版按静态站部署
+
+**决定了什么：**
+
+`cekaitech-admin` 首版构建为 Vite 静态产物，部署到 `admin.cekaitech.cn`，由 Nginx 托管；生产 API 地址通过 `VITE_API_BASE_URL=https://api.cekaitech.cn` 在构建期注入。
+
+**为什么这么决定：**
+
+当前后台是纯前端管理壳，运行时只需要浏览器访问和调用 `miniapp-backend` 受控 API。静态部署成本低、回滚简单，也能与后端 `api.cekaitech.cn` 的服务进程边界保持清晰。
+
+**已否决方案：**
+
+- 将后台前端打包进 `miniapp-backend` 一起部署。
+- 在前端生产环境变量中保存 secret。
+- 让后台直连数据库或绕过后端 API。
+
 ## 5. 登录失效由 HTTP 层派发事件
 
 **决定了什么：**

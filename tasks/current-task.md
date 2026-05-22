@@ -2,7 +2,7 @@
 
 ## 当前任务
 
-- 名称：后台全局鉴权前端适配
+- 名称：管理后台生产部署准备
 - OpenSpec 变更：无
 
 ## 当前状态
@@ -50,6 +50,9 @@
 - 通用请求封装在非登录接口收到 HTTP 401 时清理 `cekaitech-admin-token`。
 - 应用入口监听 `cekaitech-admin:unauthorized` 事件，并在非登录页跳转 `/login`。
 - 新增 `src/api/http.test.ts`，覆盖受保护接口登录失效和登录接口凭证错误的边界。
+- 新增 `.env.production.example`，生产构建默认指向 `https://api.cekaitech.cn`。
+- 新增 `docs/production-runbook.md`，记录 `admin.cekaitech.cn` 静态部署、Nginx、验证、回滚和安全边界。
+- README 补充生产部署入口。
 
 ## 未完成
 
@@ -57,6 +60,8 @@
 - 工作区菜单真实业务页面。
 - 黑名单等级。
 - 数据导入真实流程。
+- `admin.cekaitech.cn` 尚未部署到云服务器。
+- 上线前需决定是否启用 Nginx Basic Auth 或 IP 白名单。
 
 ## 最近验证
 
