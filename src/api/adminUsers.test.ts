@@ -112,6 +112,7 @@ describe('admin user api', () => {
   });
 
   it('posts user status update request', async () => {
+    localStorage.setItem('cekaitech-admin-token', 'admin-token-from-login');
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -143,7 +144,8 @@ describe('admin user api', () => {
         reason: '多次恶意提交'
       }),
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer admin-token-from-login'
       }
     });
     expect(result.status).toBe('blacklisted');

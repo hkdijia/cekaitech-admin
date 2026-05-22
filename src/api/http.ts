@@ -8,14 +8,21 @@ export interface ApiResponse<T> {
 }
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? '';
+const tokenStorageKey = 'cekaitech-admin-token';
 
 export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = localStorage.getItem(tokenStorageKey);
+  const optionHeaders = (options.headers ?? {}) as Record<string, string>;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...optionHeaders
+  };
+  if (token && path !== '/api/admin/auth/login') {
+    headers.Authorization = `Bearer ${token}`;
+  }
   const response = await fetch(`${apiBaseUrl}${path}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers ?? {})
-    }
+    headers
   });
   const body = (await response.json()) as Partial<ApiResponse<T>>;
 
