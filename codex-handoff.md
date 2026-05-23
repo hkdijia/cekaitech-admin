@@ -3,6 +3,7 @@
 ## 当前状态
 
 - 当前分支：`master`
+- 当前 HEAD：`cf22873`
 - 当前阶段：后台 MVP 壳已接入 `miniapp-backend` 数据库管理员登录、工作区、工作区菜单、用户分页/详情、开发态演示数据、用户限制管理、用户主状态调整接口和用户操作日志查询；已适配后端 `/api/admin/**` 全局鉴权、细粒度权限码、登录失效处理和当前管理员改密。
 - 最近完成：全局菜单按 `permissionCode` 过滤，路由按 `meta.permissionCode` 拦截，工作区菜单按后端权限码过滤，用户管理和限制管理的高风险按钮按权限显示。
 - 未完成：权限配置页面、数据导入真实流程、Redis/JWT 等生产级 session 机制
@@ -58,6 +59,7 @@
 - 用户操作日志 API 单测：`src/api/adminUserOperationLogs.test.ts` 通过，覆盖分页接口。
 - 管理员认证 API 单测：`src/api/adminAuth.test.ts` 通过，覆盖改密请求携带 Bearer token。
 - `npm.cmd run quality`：通过，21 个 Vitest 测试通过，TypeScript 与 Vite 构建通过。
+- `npm.cmd run quality`：通过，8 个测试文件、21 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过，完成时间 2026-05-23 09:31 +08:00；构建保留 Vite chunk size warning。
 
 ## 注意事项
 
@@ -72,6 +74,7 @@
 - `admin.cekaitech.cn` 上线早期建议增加 Nginx Basic Auth 或 IP 白名单。
 - 系统设置页改密成功后会清理本地 token 并跳转登录页；当前轻量 token 没有服务端主动失效能力。
 - 当前权限控制以登录返回的 `operator.permissions` 为准；前端只负责隐藏入口和路由拦截，后端仍负责最终 403 校验。
+- 若新工作区缺少 `node_modules`，先执行 `npm.cmd ci` 按 `package-lock.json` 恢复依赖，再运行 `npm.cmd run quality`。
 - 用户详情抽屉会加载最近操作记录；当前主要展示状态调整审计。
 - 后续真实业务数据只能通过 `miniapp-backend` 受控 API 获取和修改。
 - 不直连数据库，不直接控制本地 `crawler`。

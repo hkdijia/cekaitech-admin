@@ -7,7 +7,7 @@
 
 ## 当前状态
 
-- 已完成未提交。
+- 已完成；本轮平台基线校验同步到 HEAD `cf22873`。
 
 ## 已完成
 
@@ -30,9 +30,9 @@
 
 - `npm.cmd run test -- --run src/stores/auth.test.ts src/router/router.test.ts src/stores/workspace.test.ts`：11 个测试通过。
 - `npm.cmd run quality`：21 个 Vitest 测试通过，TypeScript 与 Vite 构建通过。
+- `npm.cmd run quality`：通过，8 个测试文件、21 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过，完成时间 2026-05-23 09:31 +08:00；构建保留 Vite chunk size warning。
 
 ## 下一步
 
-1. 提交并推送 `cekaitech-admin`。
-2. 同步外层 `miniapp` 总账文档。
-3. 后续可补权限配置页、403 页面和服务端菜单过滤。
+1. 后续可补权限配置页、403 页面和服务端菜单过滤。
+2. 继续规划数据导入真实流程。
