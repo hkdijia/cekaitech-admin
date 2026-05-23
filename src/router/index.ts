@@ -65,10 +65,18 @@ export const router = createRouter({
   routes
 });
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const auth = useAuthStore();
   if (to.meta.public) {
     return true;
+  }
+  if (!auth.isAuthenticated && auth.token) {
+    try {
+      await auth.refreshCurrentOperator();
+    } catch {
+      auth.logout();
+      return '/login';
+    }
   }
   if (!auth.isAuthenticated) {
     return '/login';

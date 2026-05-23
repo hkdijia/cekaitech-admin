@@ -14,8 +14,10 @@ const query = reactive({
   orderBy: 'createdAt',
   order: 'desc' as const,
   appCode: '',
+  userId: '',
   formType: '',
   qualityStatus: '',
+  eventType: '',
   keywords: ''
 });
 
@@ -29,6 +31,11 @@ const formTypeOptions = [
   { label: '民间借贷', value: 'private_lending' },
   { label: '离婚协议', value: 'divorce_agreement' },
   { label: '通用模板', value: 'generic_template' }
+];
+
+const eventTypeOptions = [
+  { label: '全部事件', value: '' },
+  { label: '表单提交', value: 'form_submit' }
 ];
 
 const qualityStatusOptions = [
@@ -67,6 +74,25 @@ function formatTime(value: string) {
   return value.replace('T', ' ').replace(/\.\d+$/, '');
 }
 
+function normalizedText(value: string) {
+  const trimmedValue = value.trim();
+  if (!trimmedValue) {
+    return undefined;
+  }
+  return trimmedValue;
+}
+
+function normalizedUserId() {
+  const trimmedValue = query.userId.trim();
+  if (!trimmedValue) {
+    return undefined;
+  }
+  if (!/^[1-9]\d*$/.test(trimmedValue)) {
+    return undefined;
+  }
+  return Number(trimmedValue);
+}
+
 async function loadEvents() {
   loading.value = true;
   loadError.value = '';
@@ -76,10 +102,12 @@ async function loadEvents() {
       pageSize: query.pageSize,
       orderBy: query.orderBy,
       order: query.order,
-      appCode: query.appCode,
-      formType: query.formType,
-      qualityStatus: query.qualityStatus,
-      keywords: query.keywords.trim()
+      appCode: normalizedText(query.appCode),
+      userId: normalizedUserId(),
+      formType: normalizedText(query.formType),
+      qualityStatus: normalizedText(query.qualityStatus),
+      eventType: normalizedText(query.eventType),
+      keywords: normalizedText(query.keywords)
     });
     events.value = result.dataList;
     totalCount.value = result.totalCount;
@@ -100,8 +128,10 @@ function searchEvents() {
 function resetFilters() {
   query.pageNo = 1;
   query.appCode = '';
+  query.userId = '';
   query.formType = '';
   query.qualityStatus = '';
+  query.eventType = '';
   query.keywords = '';
   loadEvents();
 }
@@ -138,9 +168,17 @@ onMounted(() => {
             @keyup.enter="searchEvents"
           />
         </el-form-item>
+        <el-form-item label="用户ID">
+          <el-input v-model="query.userId" class="user-id-input" clearable placeholder="用户ID" @keyup.enter="searchEvents" />
+        </el-form-item>
         <el-form-item label="表单类型">
           <el-select v-model="query.formType" class="filter-select" filterable>
             <el-option v-for="item in formTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="事件类型">
+          <el-select v-model="query.eventType" class="filter-select" filterable>
+            <el-option v-for="item in eventTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="质量状态">
@@ -220,6 +258,10 @@ onMounted(() => {
 
 .keyword-input {
   width: 240px;
+}
+
+.user-id-input {
+  width: 120px;
 }
 
 .filter-select {

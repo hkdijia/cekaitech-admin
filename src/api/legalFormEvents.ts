@@ -6,8 +6,10 @@ export interface LegalFormEventPageQuery {
   orderBy: string;
   order: 'asc' | 'desc';
   appCode?: string;
+  userId?: number;
   formType?: string;
   qualityStatus?: string;
+  eventType?: string;
   keywords?: string;
 }
 

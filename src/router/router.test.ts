@@ -1,8 +1,22 @@
-import { describe, expect, it } from 'vitest';
+import { setActivePinia, createPinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { adminMenuItems, filterAdminMenuItems } from './menu';
-import { routes } from './index';
+import { router, routes } from './index';
+import { useAuthStore } from '../stores/auth';
+
+async function moveToLoginRoute() {
+  await router.push('/login');
+  await router.isReady();
+}
 
 describe('admin routes', () => {
+  beforeEach(async () => {
+    setActivePinia(createPinia());
+    localStorage.clear();
+    vi.restoreAllMocks();
+    await moveToLoginRoute();
+  });
+
   it('has one route for every sidebar menu item', () => {
     const routePaths = routes.map((route) => route.path);
 
@@ -45,5 +59,57 @@ describe('admin routes', () => {
 
     expect(usersRoute?.meta?.permissionCode).toBe('admin:user:view');
     expect(restrictionsRoute?.meta?.permissionCode).toBe('admin:user-restriction:view');
+  });
+
+  it('restores current operator from stored token before checking protected route permissions', async () => {
+    localStorage.setItem('cekaitech-admin-token', 'stored-token');
+    useAuthStore().token = 'stored-token';
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        success: true,
+        code: '0',
+        msg: '',
+        data: {
+          authenticated: true,
+          id: 'admin-1',
+          name: '策凯管理员',
+          roleCode: 'operator',
+          roleName: '运营',
+          permissions: ['admin:legal-form-event:view']
+        }
+      })
+    } as Response);
+
+    await router.push('/legal-form-events');
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/admin/auth/current-operator', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer stored-token'
+      }
+    });
+    expect(router.currentRoute.value.path).toBe('/legal-form-events');
+  });
+
+  it('redirects to login and clears stale token when current operator cannot be restored', async () => {
+    localStorage.setItem('cekaitech-admin-token', 'expired-token');
+    useAuthStore().token = 'expired-token';
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      json: async () => ({
+        success: false,
+        code: '401',
+        msg: '后台登录已失效'
+      })
+    } as Response);
+
+    await router.push('/legal-form-events');
+
+    expect(router.currentRoute.value.path).toBe('/login');
+    expect(localStorage.getItem('cekaitech-admin-token')).toBeNull();
   });
 });
