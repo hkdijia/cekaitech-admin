@@ -37,6 +37,12 @@ export const adminMenuItems: AdminMenuItem[] = [
     permissionCode: 'admin:legal-form-event:view'
   },
   {
+    path: '/generation-records',
+    title: '生成记录',
+    description: '法律助手云端生成记录',
+    permissionCode: 'admin:generation-record:view'
+  },
+  {
     path: '/data-import',
     title: '数据导入',
     description: 'crawler 导出文件导入入口',

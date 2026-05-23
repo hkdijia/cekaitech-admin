@@ -30,6 +30,15 @@ describe('admin routes', () => {
     expect(route?.meta?.permissionCode).toBe('admin:legal-form-event:view');
   });
 
+  it('declares generation records menu and route permission', () => {
+    const menuItem = adminMenuItems.find((item) => item.path === '/generation-records');
+    const route = routes.find((item) => item.path === '/generation-records');
+
+    expect(menuItem?.title).toBe('生成记录');
+    expect(menuItem?.permissionCode).toBe('admin:generation-record:view');
+    expect(route?.meta?.permissionCode).toBe('admin:generation-record:view');
+  });
+
   it('declares permission code for protected routes', () => {
     const usersRoute = routes.find((route) => route.path === '/users');
     const restrictionsRoute = routes.find((route) => route.path === '/restrictions');
