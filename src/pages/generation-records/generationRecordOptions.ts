@@ -14,7 +14,10 @@ export const generationRecordTypeOptions: OptionItem[] = [
   { label: '全部类型', value: '' },
   { label: '民间借贷', value: 'private_lending' },
   { label: '离婚协议', value: 'divorce_agreement' },
-  { label: '通用模板', value: 'generic_template' },
+  { label: '离婚纠纷', value: 'divorce' },
+  { label: '劳动争议', value: 'labor' },
+  { label: '合同纠纷', value: 'contract' },
+  { label: '侵权纠纷', value: 'tort' },
   { label: '合同模板', value: 'contract_template' }
 ];
 

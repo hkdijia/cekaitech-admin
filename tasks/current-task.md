@@ -2,12 +2,12 @@
 
 ## 当前任务
 
-- 名称：生成记录后台管理页
+- 名称：生成记录后台生成记录页面联调缺口
 - OpenSpec 变更：无
 
 ## 当前状态
 
-- 生成记录后台管理页已完成，最终质量检查已通过；提交号以 Git log 和本轮最终同步为准。
+- 已补充生成记录页组件交互测试，并完成查询参数归一化；本轮最终质量检查已通过。
 
 ## 已完成
 
@@ -22,6 +22,9 @@
 - 主菜单和路由新增 `/generation-records`，权限码 `admin:generation-record:view`。
 - 新增/扩展 Vitest 覆盖 API 契约和路由菜单入口。
 - 更新 `docs/变更日志.md` 和 `codex-handoff.md`。
+- 新增 `src/pages/generation-records/GenerationRecordsPage.test.ts`，mock `../../api/generationRecords` 覆盖初始加载、列表字段渲染、筛选查询、重置和非法用户 ID。
+- `GenerationRecordsPage.vue` 查询参数归一化：空关键词、小程序、状态和记录类型传 `undefined`；用户 ID 仅正整数传给后端。
+- 生成记录类型筛选和展示补齐法律助手实际 `caseType`：`divorce`、`labor`、`contract`、`tort`，避免通用模板云端记录只能显示原始枚举。
 
 ## 未完成
 
@@ -37,6 +40,12 @@
 - 返工 TDD 绿灯：`npm.cmd run test -- --run src/pages/generation-records/generationRecordOptions.test.ts` 通过，3 个测试通过。
 - 返工定向绿灯：`npm.cmd run test -- --run src/api/generationRecords.test.ts` 通过，1 个测试通过。
 - 最终质量检查：`npm.cmd run quality` 通过，12 个测试文件、31 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup 注释 warning 和 chunk size warning。
+- 本轮 TDD 红灯：`npm.cmd run test -- --run src/pages/generation-records/GenerationRecordsPage.test.ts` 失败，初始加载/重置仍传空字符串，非数字用户 ID 传出 `NaN`。
+- 本轮 TDD 绿灯：`npm.cmd run test -- --run src/pages/generation-records/GenerationRecordsPage.test.ts` 通过，5 个测试通过。
+- 本轮最终定向验证：`npm.cmd run test -- --run src/pages/generation-records/GenerationRecordsPage.test.ts` 通过，1 个测试文件、5 个 Vitest 测试通过。
+- 本轮最终质量检查：`npm.cmd run quality` 通过，13 个测试文件、36 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup 注释 warning 和 chunk size warning。
+- 补充 TDD 红灯：`npm.cmd run test -- --run src/pages/generation-records/generationRecordOptions.test.ts` 失败，后台缺少 `divorce/labor/contract/tort` 记录类型选项。
+- 补充 TDD 绿灯：`npm.cmd run test -- --run src/pages/generation-records/generationRecordOptions.test.ts` 通过，3 个测试通过。
 
 ## 下一步
 

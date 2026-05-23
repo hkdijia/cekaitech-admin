@@ -42,11 +42,23 @@ function formatTime(value: string) {
   return value.replace('T', ' ').replace(/\.\d+$/, '');
 }
 
-function normalizedUserId() {
-  if (!query.userId.trim()) {
+function normalizedText(value: string) {
+  const trimmedValue = value.trim();
+  if (!trimmedValue) {
     return undefined;
   }
-  return Number(query.userId);
+  return trimmedValue;
+}
+
+function normalizedUserId() {
+  const trimmedValue = query.userId.trim();
+  if (!trimmedValue) {
+    return undefined;
+  }
+  if (!/^[1-9]\d*$/.test(trimmedValue)) {
+    return undefined;
+  }
+  return Number(trimmedValue);
 }
 
 async function loadRecords() {
@@ -56,11 +68,11 @@ async function loadRecords() {
     const result = await pageGenerationRecords({
       pageNo: query.pageNo,
       pageSize: Math.min(query.pageSize, 100),
-      appCode: query.appCode,
+      appCode: normalizedText(query.appCode),
       userId: normalizedUserId(),
-      status: query.status,
-      recordType: query.recordType,
-      keywords: query.keywords.trim(),
+      status: normalizedText(query.status),
+      recordType: normalizedText(query.recordType),
+      keywords: normalizedText(query.keywords),
       orderBy: query.orderBy,
       order: query.order
     });

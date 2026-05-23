@@ -33,13 +33,19 @@ describe('generation record page options', () => {
       '',
       'private_lending',
       'divorce_agreement',
-      'generic_template',
+      'divorce',
+      'labor',
+      'contract',
+      'tort',
       'contract_template'
     ]);
 
     expect(generationRecordTypeText('private_lending')).toBe('民间借贷');
     expect(generationRecordTypeText('divorce_agreement')).toBe('离婚协议');
-    expect(generationRecordTypeText('generic_template')).toBe('通用模板');
+    expect(generationRecordTypeText('divorce')).toBe('离婚纠纷');
+    expect(generationRecordTypeText('labor')).toBe('劳动争议');
+    expect(generationRecordTypeText('contract')).toBe('合同纠纷');
+    expect(generationRecordTypeText('tort')).toBe('侵权纠纷');
     expect(generationRecordTypeText('contract_template')).toBe('合同模板');
     expect(generationRecordTypeText('unknown_case_type')).toBe('unknown_case_type');
   });

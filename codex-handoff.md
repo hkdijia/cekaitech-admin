@@ -5,8 +5,8 @@
 - 当前分支：`master`
 - 当前 HEAD：以 Git log 为准。
 - 当前阶段：后台 MVP 壳已接入 `miniapp-backend` 数据库管理员登录、工作区、工作区菜单、用户分页/详情、开发态演示数据、用户限制管理、用户主状态调整、用户操作日志、法律表单事件和生成记录查询；已适配后端 `/api/admin/**` 全局鉴权、细粒度权限码、登录失效处理、当前管理员改密和数据导入本地预检工作台。
-- 最近完成：上一轮法律表单事件后台页面已提交并推送；本轮新增生成记录后台管理页 `/generation-records`，当前最终质量检查已通过。
-- 未完成：后端生成记录接口联调、权限配置页面、数据导入真实上传/批次/审计流程、Redis/JWT 等生产级 session 机制
+- 最近完成：生成记录页补充组件交互测试；查询参数会归一化空筛选和非法用户 ID；记录类型筛选已补齐法律助手实际 `divorce/labor/contract/tort` caseType。
+- 未完成：后端生成记录接口真实账号联调、权限配置页面、数据导入真实上传/批次/审计流程、Redis/JWT 等生产级 session 机制
 
 ## 关键文件
 
@@ -26,6 +26,7 @@
 - `src/api/generationRecords.test.ts`
 - `src/pages/generation-records/generationRecordOptions.ts`
 - `src/pages/generation-records/generationRecordOptions.test.ts`
+- `src/pages/generation-records/GenerationRecordsPage.test.ts`
 - `src/api/legalFormEvents.ts`
 - `src/api/adminUsers.ts`
 - `src/api/adminUserRestrictions.ts`
@@ -58,6 +59,9 @@
 - `npm.cmd run test -- --run src/pages/generation-records/generationRecordOptions.test.ts`：返工 TDD 红灯先因缺少 `./generationRecordOptions` 模块失败，随后通过，3 个测试通过。
 - `npm.cmd run test -- --run src/api/generationRecords.test.ts`：返工定向通过，1 个测试通过，样例值使用 `generated/private_lending`。
 - `npm.cmd run quality`：本轮最终通过，12 个测试文件、31 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup 注释 warning 和 chunk size warning。
+- `npm.cmd run test -- --run src/pages/generation-records/GenerationRecordsPage.test.ts`：本轮 TDD 红灯先因空字符串筛选和非法 `userId` 传参失败，随后通过，5 个测试通过。
+- `npm.cmd run test -- --run src/pages/generation-records/GenerationRecordsPage.test.ts`：本轮最终定向通过，1 个测试文件、5 个 Vitest 测试通过。
+- `npm.cmd run quality`：本轮最终通过，13 个测试文件、36 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup 注释 warning 和 chunk size warning。
 
 ## 注意事项
 
@@ -67,7 +71,7 @@
 - 通用请求会自动读取 `cekaitech-admin-token` 并附加 Bearer token；登录接口本身不附加旧 token。
 - 非登录接口收到 HTTP 401 时会清理本地 token，并通过全局事件跳转登录页。
 - 当前权限控制以登录返回的 `operator.permissions` 为准；前端只负责隐藏入口和路由拦截，后端仍负责最终 403 校验。
-- 生成记录页只调用 `POST /api/admin/generation-records/page`，权限码为 `admin:generation-record:view`，状态筛选仅使用 `draft/generated/expired`，记录类型按小程序本机 `caseType` 口径维护，不直连数据库、不接 crawler。
+- 生成记录页只调用 `POST /api/admin/generation-records/page`，权限码为 `admin:generation-record:view`，状态筛选仅使用 `draft/generated/expired`，记录类型按法律助手小程序本机 `caseType` 口径维护：`private_lending/divorce_agreement/divorce/labor/contract/tort/contract_template`；空筛选会传 `undefined`，用户 ID 仅正整数下发，不直连数据库、不接 crawler。
 - 数据导入页当前只做浏览器本地 JSON 预检，不上传、不调用后端导入接口、不读取或控制 crawler。
 - 后续真实业务数据只能通过 `miniapp-backend` 受控 API 获取和修改。
 - 不直连数据库，不直接控制本地 `crawler`。
