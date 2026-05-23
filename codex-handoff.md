@@ -3,10 +3,10 @@
 ## 当前状态
 
 - 当前分支：`master`
-- 当前 HEAD：`cf22873`
-- 当前阶段：后台 MVP 壳已接入 `miniapp-backend` 数据库管理员登录、工作区、工作区菜单、用户分页/详情、开发态演示数据、用户限制管理、用户主状态调整接口和用户操作日志查询；已适配后端 `/api/admin/**` 全局鉴权、细粒度权限码、登录失效处理和当前管理员改密。
-- 最近完成：全局菜单按 `permissionCode` 过滤，路由按 `meta.permissionCode` 拦截，工作区菜单按后端权限码过滤，用户管理和限制管理的高风险按钮按权限显示。
-- 未完成：权限配置页面、数据导入真实流程、Redis/JWT 等生产级 session 机制
+- 当前 HEAD：本轮开始为 `cf22873`，本轮提交后以 `git log -1 --oneline` 为准。
+- 当前阶段：后台 MVP 壳已接入 `miniapp-backend` 数据库管理员登录、工作区、工作区菜单、用户分页/详情、开发态演示数据、用户限制管理、用户主状态调整接口和用户操作日志查询；已适配后端 `/api/admin/**` 全局鉴权、细粒度权限码、登录失效处理、当前管理员改密和数据导入本地预检工作台。
+- 最近完成：数据导入页从占位升级为本地预检工作台，支持选择或粘贴 JSON，在浏览器内解析记录数量、字段完整度和敏感字段提醒，并明确“仅本地预检，暂不上传”。
+- 未完成：权限配置页面、数据导入真实上传/批次/审计流程、Redis/JWT 等生产级 session 机制
 
 ## 关键文件
 
@@ -36,6 +36,9 @@
 - `src/pages/users/UsersPage.vue`
 - `src/pages/restrictions/RestrictionsPage.vue`
 - `src/pages/settings/SettingsPage.vue`
+- `src/pages/data-import/DataImportPage.vue`
+- `src/pages/data-import/importPreflight.ts`
+- `src/pages/data-import/importPreflight.test.ts`
 - `src/pages/workspace-menu/WorkspaceMenuPage.vue`
 
 ## 关键命令
@@ -60,6 +63,10 @@
 - 管理员认证 API 单测：`src/api/adminAuth.test.ts` 通过，覆盖改密请求携带 Bearer token。
 - `npm.cmd run quality`：通过，21 个 Vitest 测试通过，TypeScript 与 Vite 构建通过。
 - `npm.cmd run quality`：通过，8 个测试文件、21 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过，完成时间 2026-05-23 09:31 +08:00；构建保留 Vite chunk size warning。
+- `npm.cmd run quality`：本轮基线通过，8 个测试文件、21 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Vite/Rollup warning。
+- `npm.cmd run test -- --run src/pages/data-import/importPreflight.test.ts`：TDD 红灯先失败，随后通过，1 个测试文件、3 个 Vitest 测试通过。
+- `npm.cmd run build`：通过，TypeScript 与 Vite 构建通过；构建保留既有 Vite/Rollup warning。
+- `npm.cmd run quality`：最终通过，9 个测试文件、24 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Vite/Rollup warning 和 chunk size warning。
 
 ## 注意事项
 
@@ -78,10 +85,12 @@
 - 用户详情抽屉会加载最近操作记录；当前主要展示状态调整审计。
 - 后续真实业务数据只能通过 `miniapp-backend` 受控 API 获取和修改。
 - 不直连数据库，不直接控制本地 `crawler`。
+- 数据导入页当前只做浏览器本地 JSON 预检，不上传、不调用后端导入接口、不读取或控制 crawler。
+- 敏感字段提醒目前覆盖 sessionId、Cookie、Authorization、token、原始 HTTP exchange、原始请求/响应头等常见字段名；后续接 API 前需要继续收敛服务端校验和审计。
 - `.superpowers/` 是 brainstorming 静态预览目录，已加入 `.gitignore`。
 
 ## 下一步建议
 
-1. 将动态工作区菜单占位页逐步替换为真实业务页面。
-2. 后续补权限配置页面、黑名单等级和生产级操作者身份来源。
-3. 上线前继续评估 Nginx Basic Auth 或 IP 白名单。
+1. 提交并推送到 `master`。
+2. 将动态工作区菜单占位页逐步替换为真实业务页面。
+3. 后续补权限配置页面、数据导入字段映射/批次确认/API 审计、黑名单等级和生产级操作者身份来源。
