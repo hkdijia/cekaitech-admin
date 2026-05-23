@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
-import { Refresh, Search } from '@element-plus/icons-vue';
+import { Refresh, Search, View } from '@element-plus/icons-vue';
+import { useRouter } from 'vue-router';
 import { pageGenerationRecords, type GenerationRecordItem } from '../../api/generationRecords';
 import {
   generationRecordTypeOptions,
@@ -10,6 +11,7 @@ import {
   generationStatusText
 } from './generationRecordOptions';
 
+const router = useRouter();
 const loading = ref(false);
 const loadError = ref('');
 const records = ref<GenerationRecordItem[]>([]);
@@ -113,6 +115,16 @@ function handleSizeChange(pageSize: number) {
   loadRecords();
 }
 
+function openUserInvestigation(userId: number) {
+  if (!userId) {
+    return;
+  }
+  router.push({
+    path: '/users',
+    query: { userId: String(userId) }
+  });
+}
+
 onMounted(() => {
   loadRecords();
 });
@@ -163,7 +175,14 @@ onMounted(() => {
 
     <el-card shadow="never" class="table-panel">
       <el-table v-loading="loading" :data="records" row-key="id">
-        <el-table-column prop="userId" label="用户ID" width="96" />
+        <el-table-column label="用户ID" width="150">
+          <template #default="{ row }">
+            <div class="user-id-cell">
+              <span>{{ row.userId }}</span>
+              <el-button :icon="View" text type="primary" @click="openUserInvestigation(row.userId)">查看用户</el-button>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="identityId" label="身份ID" width="96" />
         <el-table-column prop="appCode" label="小程序" min-width="190" show-overflow-tooltip />
         <el-table-column prop="clientRecordId" label="客户端记录ID" min-width="180" show-overflow-tooltip />
@@ -240,6 +259,12 @@ onMounted(() => {
 
 .table-panel {
   min-height: 420px;
+}
+
+.user-id-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .pagination-bar {

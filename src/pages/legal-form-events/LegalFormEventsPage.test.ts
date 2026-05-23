@@ -5,8 +5,16 @@ import { nextTick } from 'vue';
 import { pageLegalFormEvents } from '../../api/legalFormEvents';
 import LegalFormEventsPage from './LegalFormEventsPage.vue';
 
+const routerPushMock = vi.hoisted(() => vi.fn());
+
 vi.mock('../../api/legalFormEvents', () => ({
   pageLegalFormEvents: vi.fn()
+}));
+
+vi.mock('vue-router', () => ({
+  useRouter: () => ({
+    push: routerPushMock
+  })
 }));
 
 const pageLegalFormEventsMock = vi.mocked(pageLegalFormEvents);
@@ -47,6 +55,7 @@ async function flushAsyncUpdates() {
 describe('LegalFormEventsPage', () => {
   beforeEach(() => {
     pageLegalFormEventsMock.mockReset();
+    routerPushMock.mockReset();
     pageLegalFormEventsMock.mockResolvedValue({
       dataList: [legalFormEvent],
       totalCount: 1
@@ -130,5 +139,19 @@ describe('LegalFormEventsPage', () => {
         userId: undefined
       })
     );
+  });
+
+  it('opens user investigation from an event user id', async () => {
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+
+    const userButton = wrapper.findAll('button').find((button) => button.text().includes('查看用户'));
+    await userButton?.trigger('click');
+
+    expect(routerPushMock).toHaveBeenCalledWith({
+      path: '/users',
+      query: { userId: '11' }
+    });
   });
 });

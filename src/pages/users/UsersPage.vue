@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { DataLine, EditPen, Refresh, Search, View } from '@element-plus/icons-vue';
+import { useRoute } from 'vue-router';
 import { pageUserOperationLogs, type UserOperationLogItem } from '../../api/adminUserOperationLogs';
 import {
   getAdminUserDetail,
@@ -13,6 +14,7 @@ import {
 import { useAuthStore } from '../../stores/auth';
 
 const auth = useAuthStore();
+const route = useRoute();
 const loading = ref(false);
 const loadError = ref('');
 const users = ref<AdminUserItem[]>([]);
@@ -26,12 +28,33 @@ const statusDialogVisible = ref(false);
 const statusUpdating = ref(false);
 const statusTarget = ref<AdminUserItem | AdminUserDetail | null>(null);
 
+function firstQueryText(value: unknown) {
+  if (Array.isArray(value)) {
+    return value[0] ?? '';
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  return '';
+}
+
+function normalizedRouteUserId() {
+  const value = firstQueryText(route.query.userId).trim();
+  if (!/^[1-9]\d*$/.test(value)) {
+    return '';
+  }
+  return value;
+}
+
+const routeUserId = normalizedRouteUserId();
+const investigationUserId = ref(routeUserId);
+
 const query = reactive({
   pageNo: 1,
   pageSize: 10,
   orderBy: 'createdAt',
   order: 'desc' as const,
-  keywords: '',
+  keywords: routeUserId,
   status: '',
   appCode: ''
 });
@@ -44,6 +67,12 @@ const statusForm = reactive({
 const canUpdateUserStatus = () => auth.hasPermission('admin:user:status:update');
 const canSeedUsers = () => auth.hasPermission('admin:dev:seed');
 const canViewOperationLogs = () => auth.hasPermission('admin:user-operation-log:view');
+const investigationMessage = computed(() => {
+  if (!investigationUserId.value) {
+    return '';
+  }
+  return `用户 ID ${investigationUserId.value} 排查入口：当前使用关键词排查用户列表，不新增用户 ID 精确筛选接口。`;
+});
 
 const statusOptions = [
   { label: '全部状态', value: '' },
@@ -123,8 +152,19 @@ async function loadUsers() {
   }
 }
 
+function refreshInvestigationState() {
+  if (!investigationUserId.value) {
+    return;
+  }
+  if (query.keywords.trim() === investigationUserId.value) {
+    return;
+  }
+  investigationUserId.value = '';
+}
+
 function searchUsers() {
   query.pageNo = 1;
+  refreshInvestigationState();
   loadUsers();
 }
 
@@ -133,6 +173,7 @@ function resetFilters() {
   query.keywords = '';
   query.status = '';
   query.appCode = '';
+  investigationUserId.value = '';
   loadUsers();
 }
 
@@ -248,6 +289,15 @@ onMounted(() => {
   <section>
     <h1 class="page-title">用户管理</h1>
     <p class="page-subtitle">查看统一用户、小程序身份和手机号绑定状态。</p>
+
+    <el-alert
+      v-if="investigationMessage"
+      class="investigation-alert"
+      type="info"
+      :title="investigationMessage"
+      :closable="false"
+      show-icon
+    />
 
     <el-card shadow="never" class="filter-panel">
       <el-form class="filter-form" :inline="true" @submit.prevent>
@@ -419,6 +469,10 @@ onMounted(() => {
 
 <style scoped>
 .filter-panel {
+  margin-bottom: 16px;
+}
+
+.investigation-alert {
   margin-bottom: 16px;
 }
 

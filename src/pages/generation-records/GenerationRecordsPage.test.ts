@@ -5,8 +5,16 @@ import { nextTick } from 'vue';
 import { pageGenerationRecords } from '../../api/generationRecords';
 import GenerationRecordsPage from './GenerationRecordsPage.vue';
 
+const routerPushMock = vi.hoisted(() => vi.fn());
+
 vi.mock('../../api/generationRecords', () => ({
   pageGenerationRecords: vi.fn()
+}));
+
+vi.mock('vue-router', () => ({
+  useRouter: () => ({
+    push: routerPushMock
+  })
 }));
 
 const pageGenerationRecordsMock = vi.mocked(pageGenerationRecords);
@@ -47,6 +55,7 @@ async function flushAsyncUpdates() {
 describe('GenerationRecordsPage', () => {
   beforeEach(() => {
     pageGenerationRecordsMock.mockReset();
+    routerPushMock.mockReset();
     pageGenerationRecordsMock.mockResolvedValue({
       dataList: [generationRecord],
       totalCount: 1
@@ -163,5 +172,19 @@ describe('GenerationRecordsPage', () => {
         userId: undefined
       })
     );
+  });
+
+  it('opens user investigation from a record user id', async () => {
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+
+    const userButton = wrapper.findAll('button').find((button) => button.text().includes('查看用户'));
+    await userButton?.trigger('click');
+
+    expect(routerPushMock).toHaveBeenCalledWith({
+      path: '/users',
+      query: { userId: '11' }
+    });
   });
 });

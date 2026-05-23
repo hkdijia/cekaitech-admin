@@ -2,9 +2,9 @@
 
 ## 当前任务
 
-- 名称：后台 session/operator 刷新恢复与法律表单事件页筛选参数归一化
+- 名称：生成记录和法律表单事件 userId 跨页排查入口
 - OpenSpec 变更：无
-- 当前 HEAD：`765f41d test: cover generation records page filters`
+- 当前 HEAD：以 Git log 为准
 
 ## 当前状态
 
@@ -12,29 +12,24 @@
 
 ## 已完成
 
-- 完成代码分析：刷新后 Pinia `operator` 缺失会导致路由守卫直接判未登录；项目已有 `getCurrentOperator` 封装和 `/api/admin/auth/current-operator` 接口可复用，无需引入 JWT/Redis/RBAC 大改。
-- `src/router/index.ts` 在访问受保护路由时，如果本地 token 存在但 `operator` 缺失，会先调用 `auth.refreshCurrentOperator()` 恢复 operator/permissions，再执行权限码判断。
-- current-operator 恢复失败时清理本地 token 并跳转 `/login`。
-- 新增 `src/pages/legal-form-events/LegalFormEventsPage.test.ts`，覆盖法律表单事件页初始加载、筛选查询和非法用户 ID。
-- `src/pages/legal-form-events/LegalFormEventsPage.vue` 对齐生成记录页查询参数归一化：空关键词、小程序、表单类型、质量状态、事件类型传 `undefined`；用户 ID 仅正整数下发。
-- 法律表单事件页新增用户 ID 和事件类型筛选控件。
-- `src/api/legalFormEvents.ts` 查询类型补充可选 `userId` 与 `eventType` 字段，不改变接口路径和后端返回契约。
-- 更新 `docs/变更日志.md` 和 `codex-handoff.md`。
+- 完成代码分析：生成记录页、法律表单事件页已有用户 ID 展示和本页用户 ID 筛选；用户管理 API 当前只支持 `keywords/status/appCode`，没有 `userId` 精确筛选字段，不能假造后端契约。
+- `src/pages/generation-records/GenerationRecordsPage.vue` 用户 ID 列新增“查看用户”动作，跳转 `/users?userId=...`。
+- `src/pages/legal-form-events/LegalFormEventsPage.vue` 用户 ID 列新增“查看用户”动作，跳转 `/users?userId=...`。
+- `src/pages/users/UsersPage.vue` 读取合法正整数 `userId` query，填入现有 `keywords` 查询用户列表，并展示“关键词排查”提示，明确这是排查入口而非精确筛选。
+- 扩展 `src/pages/generation-records/GenerationRecordsPage.test.ts` 和 `src/pages/legal-form-events/LegalFormEventsPage.test.ts`，新增 `src/pages/users/UsersPage.test.ts`，覆盖跨页跳转和 query 初始化。
+- 更新 `docs/变更日志.md`、`codex-handoff.md` 和本文件。
 
 ## 未完成
 
-- 仍需与 `miniapp-backend` 联调确认 `/api/admin/legal/form-events/page` 的 `userId` 和 `eventType` 查询字段命中后端筛选。
+- 需后续用真实后端数据确认用户列表 `keywords` 是否能命中纯数字用户 ID；若后端后续提供精确筛选字段，再按真实契约调整。
 
 ## 最近验证
 
-- TDD 红灯：`npm.cmd run test -- --run src/router/router.test.ts` 失败，新增用例证明刷新后仅有本地 token 时不会调用 `/api/admin/auth/current-operator`，过期 token 也未被清理。
-- TDD 红灯：`npm.cmd run test -- --run src/pages/legal-form-events/LegalFormEventsPage.test.ts` 失败，新增用例证明初始加载仍下发空字符串，且缺少用户 ID 筛选输入。
-- TDD 绿灯：`npm.cmd run test -- --run src/router/router.test.ts` 通过，1 个测试文件、8 个 Vitest 测试通过。
-- TDD 绿灯：`npm.cmd run test -- --run src/pages/legal-form-events/LegalFormEventsPage.test.ts` 通过，1 个测试文件、3 个 Vitest 测试通过。
-- 相关定向验证：`npm.cmd run test -- --run src/stores/auth.test.ts src/api/adminAuth.test.ts src/api/http.test.ts src/api/legalFormEvents.test.ts src/pages/legal-form-events/LegalFormEventsPage.test.ts src/router/router.test.ts` 通过，6 个测试文件、18 个 Vitest 测试通过。
-- 最终质量检查：`npm.cmd run quality` 通过，14 个测试文件、41 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup 注释 warning 和 chunk size warning。
+- TDD 红灯：`npm.cmd run test -- --run src/pages/generation-records/GenerationRecordsPage.test.ts src/pages/legal-form-events/LegalFormEventsPage.test.ts src/pages/users/UsersPage.test.ts` 失败，生成记录页/法律表单事件页缺少“查看用户”跳转，用户管理页未把 `userId` query 填入关键词。
+- TDD 绿灯：`npm.cmd run test -- --run src/pages/generation-records/GenerationRecordsPage.test.ts src/pages/legal-form-events/LegalFormEventsPage.test.ts src/pages/users/UsersPage.test.ts` 通过，3 个测试文件、11 个 Vitest 测试通过；追加 `UsersPage` query 边界后，同范围定向验证通过，3 个测试文件、18 个 Vitest 测试通过。
+- 相关定向验证：`npm.cmd run test -- --run src/pages/generation-records/GenerationRecordsPage.test.ts src/pages/legal-form-events/LegalFormEventsPage.test.ts src/pages/users/UsersPage.test.ts src/router/router.test.ts src/api/adminUsers.test.ts` 通过，5 个测试文件、23 个 Vitest 测试通过。
+- 最终质量检查：`npm.cmd run quality` 通过，15 个测试文件、51 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup 注释 warning 和 chunk size warning。
 
 ## 下一步
 
-1. 用具备 `admin:legal-form-event:view` 权限的账号联调 `/legal-form-events`。
-2. 联调后如后端筛选字段命名不同，保持接口契约不变前提下再调整前端字段映射。
+1. 用真实数据联调 `/users?userId=...` 的关键词排查命中效果。
