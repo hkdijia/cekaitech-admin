@@ -21,6 +21,15 @@ describe('admin routes', () => {
     expect(visibleItems.map((item) => item.path)).toEqual(['/users']);
   });
 
+  it('declares legal form events menu and route permission', () => {
+    const menuItem = adminMenuItems.find((item) => item.path === '/legal-form-events');
+    const route = routes.find((item) => item.path === '/legal-form-events');
+
+    expect(menuItem?.title).toBe('法律表单事件');
+    expect(menuItem?.permissionCode).toBe('admin:legal-form-event:view');
+    expect(route?.meta?.permissionCode).toBe('admin:legal-form-event:view');
+  });
+
   it('declares permission code for protected routes', () => {
     const usersRoute = routes.find((route) => route.path === '/users');
     const restrictionsRoute = routes.find((route) => route.path === '/restrictions');

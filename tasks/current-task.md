@@ -2,39 +2,39 @@
 
 ## 当前任务
 
-- 名称：数据导入本地预检工作台
+- 名称：法律表单事件后台页面
 - OpenSpec 变更：无
 
 ## 当前状态
 
-- 已完成未提交；最终质量检查已通过，等待提交并推送到 `master`。
+- 已完成未提交；最终质量检查已通过，未 push。
 
 ## 已完成
 
-- 数据导入页从纯占位升级为本地预检工作台。
-- 支持选择本地 JSON 文件或粘贴 JSON 文本，读取过程只发生在浏览器内。
-- 支持识别 `root[]`、`records[]`、`items[]`、`dataList[]`、`list[]`、`data[]` 等常见导出结构。
-- 展示记录数量、字段数量、记录来源、顶层字段完整度和敏感字段提醒。
-- 对 `sessionId`、Cookie、Authorization、token、原始 HTTP exchange、原始请求/响应头等字段给出不应上传提醒。
-- 页面明确显示“仅本地预检，暂不上传”，当前不新增后端 API。
-- 新增 Vitest 覆盖本地预检纯函数。
-- 更新 `docs/变更日志.md`、`codex-decisions.md` 和 `codex-handoff.md`。
+- 新增 `src/api/legalFormEvents.ts`，通过 `POST /api/admin/legal/form-events/page` 查询法律表单事件分页数据。
+- 分页契约按现有后台统一口径使用 `pageNo`、`pageSize`、`orderBy`、`order`、`appCode`、`formType`、`qualityStatus`、`keywords` 和 `dataList`、`totalCount`。
+- 新增 `src/pages/legal-form-events/LegalFormEventsPage.vue`，提供关键词、表单类型、质量状态和小程序筛选。
+- 页面展示分页表格、事件基础字段、质量状态标签、字段数量和 `payloadPreview` 预览列。
+- 筛选选项按当前上报值配置：`private_lending`、`divorce_agreement`、`generic_template` 和 `valid/low_value`。
+- 关键词提示只声明当前后端实际支持的客户端事件 ID、事件类型和 payload 内容。
+- 主菜单和路由新增 `/legal-form-events`，权限码 `admin:legal-form-event:view`。
+- 新增/扩展 Vitest 覆盖 API 契约和路由菜单入口。
+- 更新 `docs/变更日志.md`。
 
 ## 未完成
 
-- 暂未接入真实上传。
-- 暂未新增字段映射、导入批次、后端审计和入库流程。
-- 暂未读取 crawler 进程或控制 crawler。
+- 后端 worker 尚需同步实现对应 `miniapp-backend` API。
 
 ## 最近验证
 
-- 基线：`npm.cmd run quality` 通过，8 个测试文件、21 个 Vitest 测试通过，TypeScript 与 Vite 构建通过；构建保留既有 Vite/Rollup warning。
-- TDD 红灯：`npm.cmd run test -- --run src/pages/data-import/importPreflight.test.ts` 先因缺少 `importPreflight` 模块失败，补骨架后 3 个行为断言按预期失败。
-- TDD 绿灯：`npm.cmd run test -- --run src/pages/data-import/importPreflight.test.ts` 通过，1 个测试文件、3 个测试通过。
-- 页面构建：`npm.cmd run build` 通过，TypeScript 与 Vite 构建通过；构建保留既有 Vite/Rollup warning。
-- 最终：`npm.cmd run quality` 通过，9 个测试文件、24 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Vite/Rollup warning 和 chunk size warning。
+- TDD 红灯：`npm.cmd run test -- --run src/api/legalFormEvents.test.ts` 因缺少 `./legalFormEvents` 模块失败。
+- TDD 红灯：`npm.cmd run test -- --run src/router/router.test.ts` 因缺少 `/legal-form-events` 菜单入口失败。
+- TDD 绿灯：`npm.cmd run test -- --run src/api/legalFormEvents.test.ts` 通过，1 个测试通过。
+- TDD 绿灯：`npm.cmd run test -- --run src/router/router.test.ts` 通过，5 个测试通过。
+- 首次质量检查：`npm.cmd run quality` 测试通过，构建因 `??` 和 `||` 混用缺少括号失败。
+- 最终质量检查：`npm.cmd run quality` 通过，10 个测试文件、26 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup 注释 warning 和 chunk size warning。
 
 ## 下一步
 
-1. 提交并推送到 `master`。
-2. 后续可设计导入字段映射、批次确认、后端 API 和审计记录。
+1. 等待后端 worker 同步实现 `POST /api/admin/legal/form-events/page`。
+2. 后端就绪后用具备 `admin:legal-form-event:view` 权限的账号联调 `/legal-form-events`。

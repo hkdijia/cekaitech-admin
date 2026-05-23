@@ -31,6 +31,12 @@ export const adminMenuItems: AdminMenuItem[] = [
     permissionCode: 'admin:lawyer-audit:view'
   },
   {
+    path: '/legal-form-events',
+    title: '法律表单事件',
+    description: '法律表单填写事件和质量状态',
+    permissionCode: 'admin:legal-form-event:view'
+  },
+  {
     path: '/data-import',
     title: '数据导入',
     description: 'crawler 导出文件导入入口',

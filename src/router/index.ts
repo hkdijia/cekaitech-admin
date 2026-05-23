@@ -29,6 +29,12 @@ export const routes: RouteRecordRaw[] = [
     children: [{ path: '', component: () => import('../pages/lawyer-audits/LawyerAuditsPage.vue') }]
   },
   {
+    path: '/legal-form-events',
+    component: () => import('../layouts/AdminLayout.vue'),
+    meta: { permissionCode: 'admin:legal-form-event:view' },
+    children: [{ path: '', component: () => import('../pages/legal-form-events/LegalFormEventsPage.vue') }]
+  },
+  {
     path: '/data-import',
     component: () => import('../layouts/AdminLayout.vue'),
     meta: { permissionCode: 'admin:data-import:view' },
