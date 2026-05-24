@@ -6,7 +6,8 @@ import { nextTick } from 'vue';
 import {
   getLegalServiceRequestDetail,
   pageLegalServiceRequests,
-  updateLegalServiceRequestStatus
+  updateLegalServiceRequestStatus,
+  viewLegalServiceRequestContact
 } from '../../api/legalServiceRequests';
 import { useAuthStore } from '../../stores/auth';
 import LegalServiceRequestsPage from './LegalServiceRequestsPage.vue';
@@ -16,7 +17,8 @@ const routerPushMock = vi.hoisted(() => vi.fn());
 vi.mock('../../api/legalServiceRequests', () => ({
   pageLegalServiceRequests: vi.fn(),
   getLegalServiceRequestDetail: vi.fn(),
-  updateLegalServiceRequestStatus: vi.fn()
+  updateLegalServiceRequestStatus: vi.fn(),
+  viewLegalServiceRequestContact: vi.fn()
 }));
 
 vi.mock('vue-router', () => ({
@@ -28,6 +30,7 @@ vi.mock('vue-router', () => ({
 const pageLegalServiceRequestsMock = vi.mocked(pageLegalServiceRequests);
 const getLegalServiceRequestDetailMock = vi.mocked(getLegalServiceRequestDetail);
 const updateLegalServiceRequestStatusMock = vi.mocked(updateLegalServiceRequestStatus);
+const viewLegalServiceRequestContactMock = vi.mocked(viewLegalServiceRequestContact);
 
 const serviceRequest = {
   requestId: 1001,
@@ -50,6 +53,10 @@ const serviceRequest = {
 };
 
 const serviceRequestDetail = {
+  ...serviceRequest
+};
+
+const serviceRequestContactDetail = {
   ...serviceRequest,
   contactPhone: '13800000001'
 };
@@ -90,14 +97,16 @@ describe('LegalServiceRequestsPage', () => {
     pageLegalServiceRequestsMock.mockReset();
     getLegalServiceRequestDetailMock.mockReset();
     updateLegalServiceRequestStatusMock.mockReset();
+    viewLegalServiceRequestContactMock.mockReset();
     routerPushMock.mockReset();
     pageLegalServiceRequestsMock.mockResolvedValue({
       dataList: [serviceRequest],
       totalCount: 1
     });
     getLegalServiceRequestDetailMock.mockResolvedValue(serviceRequestDetail);
+    viewLegalServiceRequestContactMock.mockResolvedValue(serviceRequestContactDetail);
     updateLegalServiceRequestStatusMock.mockResolvedValue({
-      ...serviceRequestDetail,
+      ...serviceRequestContactDetail,
       status: 'handled',
       handler: '管理员',
       handlerId: 'admin-1',
@@ -182,7 +191,8 @@ describe('LegalServiceRequestsPage', () => {
     await flushAsyncUpdates();
 
     expect(getLegalServiceRequestDetailMock).toHaveBeenCalledWith(1001);
-    expect(wrapper.text()).toContain('13800000001');
+    expect(wrapper.text()).toContain('138****0001');
+    expect(wrapper.text()).not.toContain('13800000001');
 
     const userButton = wrapper.findAll('button').find((button) => button.text().includes('查看用户'));
     await userButton?.trigger('click');
@@ -191,6 +201,57 @@ describe('LegalServiceRequestsPage', () => {
       path: '/users',
       query: { userId: '11' }
     });
+  });
+
+  it('shows masked phone first and reveals full phone after explicit contact view request', async () => {
+    const wrapper = mountPage(['admin:legal-service-request:view']);
+
+    await flushAsyncUpdates();
+    const detailButton = wrapper.findAll('button').find((button) => button.text().includes('查看详情'));
+    await detailButton?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('138****0001');
+    expect(wrapper.text()).not.toContain('13800000001');
+    expect(viewLegalServiceRequestContactMock).not.toHaveBeenCalled();
+
+    const viewContactButton = wrapper.findAll('button').find((button) => button.text().includes('查看完整手机号'));
+    expect(viewContactButton?.exists()).toBe(true);
+    await viewContactButton?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(viewLegalServiceRequestContactMock).toHaveBeenCalledWith(1001);
+    expect(wrapper.text()).toContain('13800000001');
+  });
+
+  it('shows contact view error when full phone request fails', async () => {
+    viewLegalServiceRequestContactMock.mockRejectedValueOnce(new Error('无权查看联系方式'));
+    const wrapper = mountPage(['admin:legal-service-request:view']);
+
+    await flushAsyncUpdates();
+    const detailButton = wrapper.findAll('button').find((button) => button.text().includes('查看详情'));
+    await detailButton?.trigger('click');
+    await flushAsyncUpdates();
+
+    const viewContactButton = wrapper.findAll('button').find((button) => button.text().includes('查看完整手机号'));
+    await viewContactButton?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(viewLegalServiceRequestContactMock).toHaveBeenCalledWith(1001);
+    expect(wrapper.text()).toContain('无权查看联系方式');
+    expect(wrapper.text()).not.toContain('13800000001');
+  });
+
+  it('shows contact view button for users with view permission only', async () => {
+    const wrapper = mountPage(['admin:legal-service-request:view']);
+
+    await flushAsyncUpdates();
+    const detailButton = wrapper.findAll('button').find((button) => button.text().includes('查看详情'));
+    await detailButton?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('查看完整手机号');
+    expect(wrapper.text()).not.toContain('保存状态');
   });
 
   it('shows status update entry and calls update api when manage permission exists', async () => {

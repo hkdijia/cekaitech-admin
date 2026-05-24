@@ -34,7 +34,7 @@ export interface LegalServiceRequestItem {
 }
 
 export interface LegalServiceRequestDetail extends LegalServiceRequestItem {
-  contactPhone: string;
+  contactPhone?: string;
 }
 
 export interface UpdateLegalServiceRequestStatusPayload {
@@ -59,6 +59,12 @@ export function pageLegalServiceRequests(
 export function getLegalServiceRequestDetail(requestId: number): Promise<LegalServiceRequestDetail> {
   return request<LegalServiceRequestDetail>(`/api/admin/legal/service-requests/${requestId}`, {
     method: 'GET'
+  });
+}
+
+export function viewLegalServiceRequestContact(requestId: number): Promise<LegalServiceRequestDetail> {
+  return request<LegalServiceRequestDetail>(`/api/admin/legal/service-requests/${requestId}/contact-view`, {
+    method: 'POST'
   });
 }
 

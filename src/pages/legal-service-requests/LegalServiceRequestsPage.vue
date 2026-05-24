@@ -6,6 +6,7 @@ import {
   getLegalServiceRequestDetail,
   pageLegalServiceRequests,
   updateLegalServiceRequestStatus,
+  viewLegalServiceRequestContact,
   type LegalServiceRequestDetail,
   type LegalServiceRequestItem
 } from '../../api/legalServiceRequests';
@@ -20,6 +21,9 @@ const totalCount = ref(0);
 const detailDrawerVisible = ref(false);
 const detailLoading = ref(false);
 const detail = ref<LegalServiceRequestDetail | null>(null);
+const contactViewLoading = ref(false);
+const contactViewError = ref('');
+const contactRevealed = ref(false);
 const statusUpdating = ref(false);
 
 const query = reactive({
@@ -180,6 +184,8 @@ async function openDetail(row: LegalServiceRequestItem) {
   detailDrawerVisible.value = true;
   detailLoading.value = true;
   detail.value = null;
+  contactViewError.value = '';
+  contactRevealed.value = false;
   loadError.value = '';
   try {
     const result = await getLegalServiceRequestDetail(row.requestId);
@@ -190,6 +196,23 @@ async function openDetail(row: LegalServiceRequestItem) {
     loadError.value = error instanceof Error ? error.message : '服务请求详情加载失败';
   } finally {
     detailLoading.value = false;
+  }
+}
+
+async function viewContactPhone() {
+  if (!currentRequestId.value) {
+    return;
+  }
+  contactViewLoading.value = true;
+  contactViewError.value = '';
+  try {
+    const result = await viewLegalServiceRequestContact(currentRequestId.value);
+    detail.value = result;
+    contactRevealed.value = true;
+  } catch (error) {
+    contactViewError.value = error instanceof Error ? error.message : '完整手机号查看失败';
+  } finally {
+    contactViewLoading.value = false;
   }
 }
 
@@ -228,7 +251,10 @@ async function submitStatusUpdate() {
       status: statusForm.status,
       adminRemark: statusForm.adminRemark.trim()
     });
-    detail.value = updated;
+    detail.value = {
+      ...updated,
+      contactPhone: contactRevealed.value ? detail.value?.contactPhone : undefined
+    };
     statusForm.status = updated.status;
     statusForm.adminRemark = updated.adminRemark || '';
     await loadRequests();
@@ -350,7 +376,20 @@ onMounted(() => {
             <el-descriptions-item label="小程序">{{ detail.appCode }}</el-descriptions-item>
             <el-descriptions-item label="服务类型">{{ serviceTypeText(detail.serviceType) }}</el-descriptions-item>
             <el-descriptions-item label="联系人">{{ detail.contactName || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="完整手机号">{{ detail.contactPhone || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="手机号">
+              <span>{{ contactRevealed ? detail.contactPhone || '-' : detail.contactPhoneMasked || '-' }}</span>
+              <el-button
+                v-if="!contactRevealed"
+                class="inline-action"
+                :loading="contactViewLoading"
+                text
+                type="primary"
+                @click="viewContactPhone"
+              >
+                查看完整手机号
+              </el-button>
+              <div v-if="contactViewError" class="inline-error">{{ contactViewError }}</div>
+            </el-descriptions-item>
             <el-descriptions-item label="处理状态">
               <el-tag :type="statusTagType(detail.status)" effect="plain">{{ statusText(detail.status) }}</el-tag>
             </el-descriptions-item>
@@ -460,6 +499,12 @@ onMounted(() => {
 
 .inline-action {
   margin-left: 8px;
+}
+
+.inline-error {
+  margin-top: 4px;
+  color: #f56c6c;
+  font-size: 13px;
 }
 
 .status-update-panel {

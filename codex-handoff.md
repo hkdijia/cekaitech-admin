@@ -4,8 +4,8 @@
 
 - 当前分支：`master`
 - 当前 HEAD：以 Git log 为准。
-- 当前阶段：后台 MVP+ 已提交已推送；已接入 `miniapp-backend` 数据库管理员登录、刷新后 operator/permissions 恢复、工作区、工作区菜单、用户分页/详情、开发态演示数据、用户限制管理、用户主状态调整、用户操作日志、法律表单事件、生成记录查询和服务请求管理；已适配后端 `/api/admin/**` 全局鉴权、细粒度权限码、登录失效处理、当前管理员改密、数据导入本地预检工作台、userId 跨页入口和后台用户 ID 精确筛选契约。
-- 最近完成：同步 `AGENTS.md`、`tasks/current-task.md` 和 `codex-handoff.md` 的项目阶段状态；用户管理页将空 `keywords/status/appCode` 归一化为 `undefined` 后下发，保留合法用户 ID 精确筛选和 JS 安全整数边界。
+- 当前阶段：后台 MVP+ 已提交已推送；已接入 `miniapp-backend` 数据库管理员登录、刷新后 operator/permissions 恢复、工作区、工作区菜单、用户分页/详情、开发态演示数据、用户限制管理、用户主状态调整、用户操作日志、法律表单事件、生成记录查询和服务请求管理；已适配后端 `/api/admin/**` 全局鉴权、细粒度权限码、登录失效处理、当前管理员改密、数据导入本地预检工作台、userId 跨页入口、后台用户 ID 精确筛选契约和服务请求联系方式审计查看契约。
+- 最近完成：服务请求普通详情和状态更新响应默认只展示脱敏手机号，点击“查看完整手机号”后调用 `POST /api/admin/legal/service-requests/{requestId}/contact-view` 获取完整手机号并由后端审计；同步 `AGENTS.md`、`tasks/current-task.md` 和 `codex-handoff.md` 的项目阶段状态；用户管理页将空 `keywords/status/appCode` 归一化为 `undefined` 后下发，保留合法用户 ID 精确筛选和 JS 安全整数边界。
 - 未完成：服务请求管理页真实后端联调、后端生成记录接口真实账号联调、法律表单事件用户 ID/事件类型筛选联调、用户 ID 精确筛选真实数据联调、权限配置页面、数据导入真实上传/批次/审计流程、生产级 session 机制仍待后续评估。
 
 ## 关键文件
@@ -58,6 +58,9 @@
 
 ## 最近验证
 
+- TDD 红灯：`npm.cmd run test -- --run src/api/legalServiceRequests.test.ts src/pages/legal-service-requests/LegalServiceRequestsPage.test.ts` 失败，新增 `viewLegalServiceRequestContact` 未实现，详情页缺少“查看完整手机号”按钮和点击查看逻辑。
+- TDD 绿灯：`npm.cmd run test -- --run src/api/legalServiceRequests.test.ts src/pages/legal-service-requests/LegalServiceRequestsPage.test.ts` 通过，2 个测试文件、17 个 Vitest 测试通过。
+- 最终质量检查：`npm.cmd run quality` 通过，17 个测试文件、71 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup 注释 warning 和 chunk size warning。
 - TDD 红灯：`npm.cmd run test -- --run src/api/legalServiceRequests.test.ts src/pages/legal-service-requests/LegalServiceRequestsPage.test.ts src/router/router.test.ts` 失败，服务请求 API/页面模块缺失，菜单和路由未声明 `/legal-service-requests`。
 - TDD 绿灯：`npm.cmd run test -- --run src/api/legalServiceRequests.test.ts src/pages/legal-service-requests/LegalServiceRequestsPage.test.ts src/router/router.test.ts` 通过，3 个测试文件、22 个 Vitest 测试通过。
 - 最终质量检查：`npm.cmd run quality` 通过，17 个测试文件、66 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup 注释 warning 和 chunk size warning。
@@ -84,7 +87,7 @@
 - `/users?userId=123` 当前是精确筛选入口：用户管理页会把合法正整数且不超过 JS 安全整数范围的 `userId` 填入独立用户 ID 条件，并调用 `POST /api/admin/users/page` 下发 `userId`；空 `keywords/status/appCode` 统一传 `undefined`，不会再写入空字符串。
 - 法律表单事件页只调用 `POST /api/admin/legal/form-events/page`，权限码为 `admin:legal-form-event:view`；空关键词、小程序、表单类型、质量状态和事件类型会传 `undefined`，用户 ID 仅正整数下发。
 - 生成记录页只调用 `POST /api/admin/generation-records/page`，权限码为 `admin:generation-record:view`，状态筛选仅使用 `draft/generated/expired`，记录类型按法律助手小程序本机 `caseType` 口径维护：`private_lending/divorce_agreement/divorce/labor/contract/tort/contract_template`；空筛选会传 `undefined`，用户 ID 仅正整数下发，不直连数据库、不接 crawler。
-- 服务请求页只调用 `POST /api/admin/legal/service-requests/page`、`GET /api/admin/legal/service-requests/{requestId}` 和 `POST /api/admin/legal/service-requests/{requestId}/status`，权限码为 `admin:legal-service-request:view`，管理入口按 `admin:legal-service-request:manage` 显示；空筛选会传 `undefined`，用户 ID 仅正整数且不超过 JS 安全整数范围时下发。
+- 服务请求页调用 `POST /api/admin/legal/service-requests/page`、`GET /api/admin/legal/service-requests/{requestId}`、`POST /api/admin/legal/service-requests/{requestId}/contact-view` 和 `POST /api/admin/legal/service-requests/{requestId}/status`；普通详情和状态更新响应默认展示脱敏手机号，完整手机号必须点击“查看完整手机号”后显式获取并由后端审计；权限码为 `admin:legal-service-request:view`，管理入口按 `admin:legal-service-request:manage` 显示；空筛选会传 `undefined`，用户 ID 仅正整数且不超过 JS 安全整数范围时下发。
 - 数据导入页当前只做浏览器本地 JSON 预检，不上传、不调用后端导入接口、不读取或控制 crawler。
 - 后续真实业务数据只能通过 `miniapp-backend` 受控 API 获取和修改。
 - 不直连数据库，不直接控制本地 `crawler`。
@@ -94,5 +97,5 @@
 
 1. 用真实数据联调 `/users?userId=...`，确认后端 `userId` 精确筛选命中单个统一用户。
 2. 用具备 `admin:legal-form-event:view` 权限的账号联调 `/legal-form-events` 的用户 ID 和事件类型筛选。
-3. 用具备 `admin:legal-service-request:view/manage` 权限的账号联调服务请求分页、详情完整手机号和状态更新。
+3. 用具备 `admin:legal-service-request:view/manage` 权限的账号联调服务请求分页、详情脱敏手机号、显式联系方式审计查看和状态更新。
 4. 将动态工作区菜单占位页逐步替换为真实业务页面，并补权限配置页面、数据导入字段映射/批次确认/API 审计等后续能力。
