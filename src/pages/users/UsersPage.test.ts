@@ -80,13 +80,30 @@ describe('UsersPage', () => {
     expect(pageAdminUsersMock).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: 123,
-        keywords: ''
+        keywords: undefined
       })
     );
     expect(wrapper.text()).toContain('用户 ID 123');
     expect(wrapper.text()).toContain('精确筛选');
     expect(wrapper.find('.keyword-input input').element).toHaveProperty('value', '');
     expect(wrapper.find('.user-id-input input').element).toHaveProperty('value', '123');
+  });
+
+  it('normalizes empty text filters to undefined while preserving exact user id', async () => {
+    routeMock.query = { userId: '123' };
+
+    mountPage();
+
+    await flushAsyncUpdates();
+
+    expect(pageAdminUsersMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 123,
+        keywords: undefined,
+        status: undefined,
+        appCode: undefined
+      })
+    );
   });
 
   it.each([
@@ -106,7 +123,7 @@ describe('UsersPage', () => {
     expect(pageAdminUsersMock).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: undefined,
-        keywords: ''
+        keywords: undefined
       })
     );
     expect(wrapper.text()).not.toContain('用户 ID 精确筛选');
@@ -121,7 +138,7 @@ describe('UsersPage', () => {
     expect(pageAdminUsersMock).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: 456,
-        keywords: ''
+        keywords: undefined
       })
     );
     expect(wrapper.text()).toContain('用户 ID 456');

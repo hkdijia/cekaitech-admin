@@ -144,6 +144,14 @@ function normalizedQueryUserId() {
   return Number(value);
 }
 
+function normalizedText(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  return trimmed;
+}
+
 async function loadUsers() {
   loading.value = true;
   loadError.value = '';
@@ -154,9 +162,9 @@ async function loadUsers() {
       orderBy: query.orderBy,
       order: query.order,
       userId: normalizedQueryUserId(),
-      keywords: query.keywords.trim(),
-      status: query.status,
-      appCode: query.appCode
+      keywords: normalizedText(query.keywords),
+      status: normalizedText(query.status),
+      appCode: normalizedText(query.appCode)
     });
     users.value = result.dataList;
     totalCount.value = result.totalCount;

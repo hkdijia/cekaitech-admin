@@ -4,8 +4,8 @@
 
 - 当前分支：`master`
 - 当前 HEAD：以 Git log 为准。
-- 当前阶段：后台 MVP 壳已接入 `miniapp-backend` 数据库管理员登录、刷新后 operator/permissions 恢复、工作区、工作区菜单、用户分页/详情、开发态演示数据、用户限制管理、用户主状态调整、用户操作日志、法律表单事件、生成记录查询和服务请求管理；已适配后端 `/api/admin/**` 全局鉴权、细粒度权限码、登录失效处理、当前管理员改密、数据导入本地预检工作台、userId 跨页入口和后台用户 ID 精确筛选契约。
-- 最近完成：新增 `/legal-service-requests` 服务请求管理页，封装分页、详情和状态更新 API；页面按后端契约做空筛选归一化、安全用户 ID 下发、详情抽屉、查看用户/生成记录跳转，并按 `admin:legal-service-request:manage` 控制状态更新入口；相关定向测试和 `npm.cmd run quality` 已通过。
+- 当前阶段：后台 MVP+ 已提交已推送；已接入 `miniapp-backend` 数据库管理员登录、刷新后 operator/permissions 恢复、工作区、工作区菜单、用户分页/详情、开发态演示数据、用户限制管理、用户主状态调整、用户操作日志、法律表单事件、生成记录查询和服务请求管理；已适配后端 `/api/admin/**` 全局鉴权、细粒度权限码、登录失效处理、当前管理员改密、数据导入本地预检工作台、userId 跨页入口和后台用户 ID 精确筛选契约。
+- 最近完成：同步 `AGENTS.md`、`tasks/current-task.md` 和 `codex-handoff.md` 的项目阶段状态；用户管理页将空 `keywords/status/appCode` 归一化为 `undefined` 后下发，保留合法用户 ID 精确筛选和 JS 安全整数边界。
 - 未完成：服务请求管理页真实后端联调、后端生成记录接口真实账号联调、法律表单事件用户 ID/事件类型筛选联调、用户 ID 精确筛选真实数据联调、权限配置页面、数据导入真实上传/批次/审计流程、生产级 session 机制仍待后续评估。
 
 ## 关键文件
@@ -69,6 +69,8 @@
 - TDD 绿灯：`npm.cmd run test -- --run src/pages/generation-records/GenerationRecordsPage.test.ts src/pages/legal-form-events/LegalFormEventsPage.test.ts src/pages/users/UsersPage.test.ts` 通过，3 个测试文件、11 个 Vitest 测试通过；追加 `UsersPage` query 边界后，同范围定向验证通过，3 个测试文件、18 个 Vitest 测试通过。
 - 相关定向验证：`npm.cmd run test -- --run src/pages/generation-records/GenerationRecordsPage.test.ts src/pages/legal-form-events/LegalFormEventsPage.test.ts src/pages/users/UsersPage.test.ts src/router/router.test.ts src/api/adminUsers.test.ts` 通过，5 个测试文件、23 个 Vitest 测试通过。
 - 最终质量检查：`npm.cmd run quality` 通过，15 个测试文件、51 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup 注释 warning 和 chunk size warning。
+- TDD 红灯：`npm.cmd run test -- --run src/pages/users/UsersPage.test.ts src/api/adminUsers.test.ts` 失败，用户管理页仍把空 `keywords/status/appCode` 下发为空字符串。
+- TDD 绿灯：`npm.cmd run test -- --run src/pages/users/UsersPage.test.ts src/api/adminUsers.test.ts` 通过，2 个测试文件、14 个 Vitest 测试通过。
 
 ## 注意事项
 
@@ -79,7 +81,7 @@
 - 非登录接口收到 HTTP 401 时会清理本地 token，并通过全局事件跳转登录页。
 - 刷新页面后若本地 token 存在但 `operator` 缺失，路由守卫会调用 `/api/admin/auth/current-operator` 恢复 operator/permissions；恢复失败会清理本地 token 并回登录页。
 - 当前权限控制以登录返回或 current-operator 恢复的 `operator.permissions` 为准；前端只负责隐藏入口和路由拦截，后端仍负责最终 403 校验。
-- `/users?userId=123` 当前是精确筛选入口：用户管理页会把合法正整数且不超过 JS 安全整数范围的 `userId` 填入独立用户 ID 条件，并调用 `POST /api/admin/users/page` 下发 `userId`，不会再写入 `keywords`。
+- `/users?userId=123` 当前是精确筛选入口：用户管理页会把合法正整数且不超过 JS 安全整数范围的 `userId` 填入独立用户 ID 条件，并调用 `POST /api/admin/users/page` 下发 `userId`；空 `keywords/status/appCode` 统一传 `undefined`，不会再写入空字符串。
 - 法律表单事件页只调用 `POST /api/admin/legal/form-events/page`，权限码为 `admin:legal-form-event:view`；空关键词、小程序、表单类型、质量状态和事件类型会传 `undefined`，用户 ID 仅正整数下发。
 - 生成记录页只调用 `POST /api/admin/generation-records/page`，权限码为 `admin:generation-record:view`，状态筛选仅使用 `draft/generated/expired`，记录类型按法律助手小程序本机 `caseType` 口径维护：`private_lending/divorce_agreement/divorce/labor/contract/tort/contract_template`；空筛选会传 `undefined`，用户 ID 仅正整数下发，不直连数据库、不接 crawler。
 - 服务请求页只调用 `POST /api/admin/legal/service-requests/page`、`GET /api/admin/legal/service-requests/{requestId}` 和 `POST /api/admin/legal/service-requests/{requestId}/status`，权限码为 `admin:legal-service-request:view`，管理入口按 `admin:legal-service-request:manage` 显示；空筛选会传 `undefined`，用户 ID 仅正整数且不超过 JS 安全整数范围时下发。
