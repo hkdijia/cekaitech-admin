@@ -53,6 +53,15 @@ describe('admin routes', () => {
     expect(route?.meta?.permissionCode).toBe('admin:generation-record:view');
   });
 
+  it('declares legal service requests menu and route permission', () => {
+    const menuItem = adminMenuItems.find((item) => item.path === '/legal-service-requests');
+    const route = routes.find((item) => item.path === '/legal-service-requests');
+
+    expect(menuItem?.title).toBe('服务请求');
+    expect(menuItem?.permissionCode).toBe('admin:legal-service-request:view');
+    expect(route?.meta?.permissionCode).toBe('admin:legal-service-request:view');
+  });
+
   it('declares permission code for protected routes', () => {
     const usersRoute = routes.find((route) => route.path === '/users');
     const restrictionsRoute = routes.find((route) => route.path === '/restrictions');

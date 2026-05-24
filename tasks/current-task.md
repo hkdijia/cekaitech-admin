@@ -2,38 +2,36 @@
 
 ## 当前任务
 
-- 名称：用户管理 userId 精确筛选契约适配
+- 名称：服务请求管理页前端实现
 - OpenSpec 变更：无
 - 当前 HEAD：以 Git log 为准
 
 ## 当前状态
 
-- 已完成；提交和推送状态以当前 Git log 与远程分支为准。
+- 已完成未提交；等待人工后续联调。
 
 ## 已完成
 
-- 完成代码分析：后端 `miniapp-backend` 已补齐 `POST /api/admin/users/page` 的 `userId` 精确筛选字段，管理后台不应再把 `/users?userId=...` 塞进 `keywords` 做模糊排查。
-- `src/api/adminUsers.ts` 的 `AdminUserPageQuery` 增加 `userId?: number`。
-- `src/pages/users/UsersPage.vue` 新增独立“用户ID”筛选项，合法正整数且不超过 JS 安全整数范围时下发 `userId`，关键词保持独立。
-- `/users?userId=...` 进入用户管理页时会初始化用户 ID 筛选框并展示“精确筛选”提示；非法、空白、小数、负数、数组首项非法和超出 JS 安全整数范围的 query 不下发 `userId`。
-- `src/api/adminUsers.test.ts` 覆盖用户分页请求体携带 `userId`。
-- `src/pages/users/UsersPage.test.ts` 覆盖合法 query、数组 query、非法 query、超出 JS 安全整数范围 query、关键词不污染和页面提示文案。
-- 更新 `docs/变更日志.md` 和 `codex-handoff.md`。
+- 完成代码分析：服务请求管理页应复用生成记录/法律表单事件页的列表筛选模式，复用用户页的权限判断和详情操作模式；只通过 `miniapp-backend` 受控 API，不直连数据库、不控制 crawler。
+- 新增 `src/api/legalServiceRequests.ts`，封装分页、详情和状态更新接口。
+- 新增 `/legal-service-requests` 菜单和路由，标题“服务请求”，权限码 `admin:legal-service-request:view`。
+- 新增 `src/pages/legal-service-requests/LegalServiceRequestsPage.vue`，支持关键词、用户 ID、手机号、服务类型、状态、小程序筛选；空筛选传 `undefined`，用户 ID 仅正整数且 `Number.isSafeInteger` 时下发。
+- 页面表格展示请求 ID、用户 ID、小程序、服务类型、联系人、脱敏手机号、状态、处理人、创建/更新时间和查看详情操作。
+- 详情抽屉展示请求基础信息、用户/来源记录、完整手机号、用户备注、内部备注和处理状态；支持跳转 `/users?userId=...` 与 `/generation-records?userId=...`。
+- 具备 `admin:legal-service-request:manage` 时显示处理状态和内部备注更新入口，并调用状态更新 API。
+- 新增 API、页面和路由测试，覆盖契约请求、筛选归一化、非法用户 ID、查看用户跳转和管理权限。
+- 更新 `docs/变更日志.md`、`codex-handoff.md`、`tasks/current-task.md` 和 `codex-decisions.md`。
 
 ## 未完成
 
-- 需后续用真实后端数据联调 `/users?userId=...`，确认后端精确筛选返回单个统一用户。
+- 需后续用真实后端数据和具备服务请求权限的账号联调分页、详情完整手机号、状态更新和后端 403 行为。
 
 ## 最近验证
 
-- RED：`npm.cmd run test -- --run src/pages/users/UsersPage.test.ts src/api/adminUsers.test.ts`：旧代码仍把 `/users?userId=123` 下发为 `keywords: "123"`，没有 `userId: 123`。
-- REVIEW RED：`npm.cmd run test -- --run src/pages/users/UsersPage.test.ts`：新增超出 JS 安全整数范围用例后失败，旧代码把 `9007199254740993` 静默转换为 `9007199254740992` 下发。
-- GREEN：`npm.cmd run test -- --run src/pages/users/UsersPage.test.ts`：1 个测试文件、9 个 Vitest 测试通过。
-- GREEN：`npm.cmd run test -- --run src/pages/users/UsersPage.test.ts src/api/adminUsers.test.ts`：2 个测试文件、13 个 Vitest 测试通过。
-- 相关定向：`npm.cmd run test -- --run src/pages/users/UsersPage.test.ts src/api/adminUsers.test.ts src/pages/generation-records/GenerationRecordsPage.test.ts src/pages/legal-form-events/LegalFormEventsPage.test.ts`：4 个测试文件、23 个 Vitest 测试通过。
-- 全量质量：`npm.cmd run quality`：15 个测试文件、52 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
+- RED：`npm.cmd run test -- --run src/api/legalServiceRequests.test.ts src/pages/legal-service-requests/LegalServiceRequestsPage.test.ts src/router/router.test.ts`：服务请求 API/页面模块缺失，菜单和路由未声明 `/legal-service-requests`。
+- GREEN：`npm.cmd run test -- --run src/api/legalServiceRequests.test.ts src/pages/legal-service-requests/LegalServiceRequestsPage.test.ts src/router/router.test.ts`：3 个测试文件、22 个 Vitest 测试通过。
+- 全量质量：`npm.cmd run quality`：17 个测试文件、66 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
 
 ## 下一步
 
-1. 用真实数据联调 `/users?userId=...`，确认后端 `userId` 精确筛选命中单个统一用户。
-2. 后端服务请求 MVP API 就绪后，新增服务请求管理页和对应权限入口。
+1. 用真实后端联调服务请求分页、详情完整手机号和状态更新。

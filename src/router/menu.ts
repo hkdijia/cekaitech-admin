@@ -43,6 +43,12 @@ export const adminMenuItems: AdminMenuItem[] = [
     permissionCode: 'admin:generation-record:view'
   },
   {
+    path: '/legal-service-requests',
+    title: '服务请求',
+    description: '人工服务请求处理',
+    permissionCode: 'admin:legal-service-request:view'
+  },
+  {
     path: '/data-import',
     title: '数据导入',
     description: 'crawler 导出文件导入入口',
