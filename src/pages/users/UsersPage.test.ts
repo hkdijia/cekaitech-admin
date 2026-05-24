@@ -71,7 +71,7 @@ describe('UsersPage', () => {
     });
   });
 
-  it('uses a userId query value as keyword-based investigation entry', async () => {
+  it('uses a userId query value as exact user id filter without polluting keywords', async () => {
     routeMock.query = { userId: '123' };
     const wrapper = mountPage();
 
@@ -79,11 +79,14 @@ describe('UsersPage', () => {
 
     expect(pageAdminUsersMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        keywords: '123'
+        userId: 123,
+        keywords: ''
       })
     );
     expect(wrapper.text()).toContain('用户 ID 123');
-    expect(wrapper.text()).toContain('关键词排查');
+    expect(wrapper.text()).toContain('精确筛选');
+    expect(wrapper.find('.keyword-input input').element).toHaveProperty('value', '');
+    expect(wrapper.find('.user-id-input input').element).toHaveProperty('value', '123');
   });
 
   it.each([
@@ -92,6 +95,7 @@ describe('UsersPage', () => {
     ['12.3'],
     ['   '],
     ['abc'],
+    ['9007199254740993'],
     [['0', '123']]
   ])('ignores invalid userId query value %s', async (userId) => {
     routeMock.query = { userId };
@@ -101,10 +105,11 @@ describe('UsersPage', () => {
 
     expect(pageAdminUsersMock).toHaveBeenCalledWith(
       expect.objectContaining({
+        userId: undefined,
         keywords: ''
       })
     );
-    expect(wrapper.text()).not.toContain('关键词排查');
+    expect(wrapper.text()).not.toContain('用户 ID 精确筛选');
   });
 
   it('uses the first valid userId when router provides an array query value', async () => {
@@ -115,10 +120,11 @@ describe('UsersPage', () => {
 
     expect(pageAdminUsersMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        keywords: '456'
+        userId: 456,
+        keywords: ''
       })
     );
     expect(wrapper.text()).toContain('用户 ID 456');
-    expect(wrapper.text()).toContain('关键词排查');
+    expect(wrapper.text()).toContain('精确筛选');
   });
 });

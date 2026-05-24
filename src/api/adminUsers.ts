@@ -5,6 +5,7 @@ export interface AdminUserPageQuery {
   pageSize: number;
   orderBy: string;
   order: 'asc' | 'desc';
+  userId?: number;
   keywords?: string;
   status?: string;
   appCode?: string;

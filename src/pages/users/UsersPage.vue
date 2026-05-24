@@ -38,9 +38,16 @@ function firstQueryText(value: unknown) {
   return '';
 }
 
+function isPositiveSafeIntegerText(value: string) {
+  if (!/^[1-9]\d*$/.test(value)) {
+    return false;
+  }
+  return Number.isSafeInteger(Number(value));
+}
+
 function normalizedRouteUserId() {
   const value = firstQueryText(route.query.userId).trim();
-  if (!/^[1-9]\d*$/.test(value)) {
+  if (!isPositiveSafeIntegerText(value)) {
     return '';
   }
   return value;
@@ -54,7 +61,8 @@ const query = reactive({
   pageSize: 10,
   orderBy: 'createdAt',
   order: 'desc' as const,
-  keywords: routeUserId,
+  userId: routeUserId,
+  keywords: '',
   status: '',
   appCode: ''
 });
@@ -71,7 +79,7 @@ const investigationMessage = computed(() => {
   if (!investigationUserId.value) {
     return '';
   }
-  return `用户 ID ${investigationUserId.value} 排查入口：当前使用关键词排查用户列表，不新增用户 ID 精确筛选接口。`;
+  return `用户 ID ${investigationUserId.value} 精确筛选：当前列表已按用户 ID 精确查询。`;
 });
 
 const statusOptions = [
@@ -128,6 +136,14 @@ function formatTime(value: string) {
   return value.replace('T', ' ').replace(/\.\d+$/, '');
 }
 
+function normalizedQueryUserId() {
+  const value = query.userId.trim();
+  if (!isPositiveSafeIntegerText(value)) {
+    return undefined;
+  }
+  return Number(value);
+}
+
 async function loadUsers() {
   loading.value = true;
   loadError.value = '';
@@ -137,6 +153,7 @@ async function loadUsers() {
       pageSize: query.pageSize,
       orderBy: query.orderBy,
       order: query.order,
+      userId: normalizedQueryUserId(),
       keywords: query.keywords.trim(),
       status: query.status,
       appCode: query.appCode
@@ -156,7 +173,7 @@ function refreshInvestigationState() {
   if (!investigationUserId.value) {
     return;
   }
-  if (query.keywords.trim() === investigationUserId.value) {
+  if (query.userId.trim() === investigationUserId.value) {
     return;
   }
   investigationUserId.value = '';
@@ -170,6 +187,7 @@ function searchUsers() {
 
 function resetFilters() {
   query.pageNo = 1;
+  query.userId = '';
   query.keywords = '';
   query.status = '';
   query.appCode = '';
@@ -307,6 +325,15 @@ onMounted(() => {
             class="keyword-input"
             clearable
             placeholder="手机号 / unionId / openid"
+            @keyup.enter="searchUsers"
+          />
+        </el-form-item>
+        <el-form-item label="用户ID">
+          <el-input
+            v-model="query.userId"
+            class="user-id-input"
+            clearable
+            placeholder="精确用户ID"
             @keyup.enter="searchUsers"
           />
         </el-form-item>
@@ -484,6 +511,10 @@ onMounted(() => {
 
 .keyword-input {
   width: 240px;
+}
+
+.user-id-input {
+  width: 150px;
 }
 
 .filter-select {

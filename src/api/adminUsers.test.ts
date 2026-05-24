@@ -31,6 +31,7 @@ describe('admin user api', () => {
       pageSize: 10,
       orderBy: 'createdAt',
       order: 'desc',
+      userId: 1,
       keywords: '13800000001',
       status: 'normal',
       appCode: 'lawsuit-material-assistant'
@@ -43,6 +44,7 @@ describe('admin user api', () => {
         pageSize: 10,
         orderBy: 'createdAt',
         order: 'desc',
+        userId: 1,
         keywords: '13800000001',
         status: 'normal',
         appCode: 'lawsuit-material-assistant'
