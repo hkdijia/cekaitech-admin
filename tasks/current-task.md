@@ -2,13 +2,20 @@
 
 ## 当前任务
 
-- 名称：服务请求联系方式审计查看适配
+- 名称：后台操作审计查询入口
 - OpenSpec 变更：无
 - 当前 HEAD：以 Git log 为准
 
+## 追溯信息
+
+- 反馈编号：无
+- 来源文档：无
+- 本地台账：无
+- 当前状态：已验证
+
 ## 当前状态
 
-- 已提交已推送；已通过定向测试和全量质量验证，等待后续真实后端联调。
+- 已完成未提交；已通过操作审计页面定向绿灯和全量质量验证。
 
 ## 已完成
 
@@ -19,6 +26,10 @@
 - 页面表格展示请求 ID、用户 ID、小程序、服务类型、联系人、脱敏手机号、状态、处理人、创建/更新时间和查看详情操作。
 - 详情抽屉展示请求基础信息、用户/来源记录、脱敏手机号、用户备注、内部备注和处理状态；支持跳转 `/users?userId=...` 与 `/generation-records?userId=...`。
 - 服务请求详情页已适配联系方式审计查看：普通详情和状态更新响应不直接展示完整手机号，点击“查看完整手机号”后调用 `POST /api/admin/legal/service-requests/{requestId}/contact-view` 获取完整手机号，失败时展示错误。
+- 新增后台“操作审计”页面 `/user-operation-logs`，作为服务请求联系方式审计后的查询入口，支持按用户 ID 和操作类型查询 `legal_service_request_contact_view` 等审计日志。
+- 操作审计页查询显式携带 `orderBy=createdAt`，联系方式查看日志 Before/After 值做前端二次脱敏，避免历史或异常完整手机号在审计页直出。
+- 新增菜单和路由，标题“操作审计”，权限码 `admin:user-operation-log:view`。
+- 新增 `src/pages/user-operation-logs/UserOperationLogsPage.test.ts`，覆盖初始查询、筛选查询、非法用户 ID 和表格字段展示。
 - 具备 `admin:legal-service-request:manage` 时显示处理状态和内部备注更新入口，并调用状态更新 API。
 - 新增 API、页面和路由测试，覆盖契约请求、筛选归一化、非法用户 ID、查看用户跳转和管理权限。
 - 更新 `docs/变更日志.md`、`codex-handoff.md`、`tasks/current-task.md` 和 `codex-decisions.md`。
@@ -27,7 +38,7 @@
 
 ## 未完成
 
-- 需后续用真实后端数据联调用户页精确筛选、服务请求分页、详情脱敏手机号、联系方式审计查看、状态更新和后端 403 行为。
+- 需后续用真实后端数据联调用户页精确筛选、服务请求分页、详情脱敏手机号、联系方式审计查看、操作审计查询入口、状态更新和后端 403 行为。
 - 继续按业务优先级补齐权限配置、数据导入真实上传/批次/审计流程等下一阶段业务页。
 
 ## 最近验证
@@ -39,8 +50,11 @@
 - RED：`npm.cmd run test -- --run src/api/legalServiceRequests.test.ts src/pages/legal-service-requests/LegalServiceRequestsPage.test.ts`：2 个测试文件失败，新增 `viewLegalServiceRequestContact` 未实现，详情页缺少“查看完整手机号”按钮和点击查看逻辑。
 - GREEN：`npm.cmd run test -- --run src/api/legalServiceRequests.test.ts src/pages/legal-service-requests/LegalServiceRequestsPage.test.ts`：2 个测试文件、17 个 Vitest 测试通过。
 - 全量质量：`npm.cmd run quality`：17 个测试文件、71 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
+- RED：`npm.cmd run test -- --run src/pages/user-operation-logs/UserOperationLogsPage.test.ts src/router/router.test.ts`：页面组件不存在，菜单和路由未声明 `/user-operation-logs`。
+- GREEN：`npm.cmd run test -- --run src/pages/user-operation-logs/UserOperationLogsPage.test.ts src/router/router.test.ts`：2 个测试文件、18 个 Vitest 测试通过。
+- 全量质量：`npm.cmd run quality`：18 个测试文件、80 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
 
 ## 下一步
 
-1. 用真实后端联调用户页精确筛选、服务请求分页、详情脱敏手机号、显式联系方式审计查看和状态更新。
+1. 用真实后端联调用户页精确筛选、服务请求分页、详情脱敏手机号、显式联系方式审计查看、操作审计查询入口和状态更新。
 2. 继续推进权限配置、数据导入真实上传/批次/审计流程等下一阶段业务页。

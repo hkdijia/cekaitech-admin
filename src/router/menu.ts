@@ -49,6 +49,12 @@ export const adminMenuItems: AdminMenuItem[] = [
     permissionCode: 'admin:legal-service-request:view'
   },
   {
+    path: '/user-operation-logs',
+    title: '操作审计',
+    description: '用户相关后台操作审计',
+    permissionCode: 'admin:user-operation-log:view'
+  },
+  {
     path: '/data-import',
     title: '数据导入',
     description: 'crawler 导出文件导入入口',

@@ -62,6 +62,15 @@ describe('admin routes', () => {
     expect(route?.meta?.permissionCode).toBe('admin:legal-service-request:view');
   });
 
+  it('declares user operation logs menu and route permission', () => {
+    const menuItem = adminMenuItems.find((item) => item.path === '/user-operation-logs');
+    const route = routes.find((item) => item.path === '/user-operation-logs');
+
+    expect(menuItem?.title).toBe('操作审计');
+    expect(menuItem?.permissionCode).toBe('admin:user-operation-log:view');
+    expect(route?.meta?.permissionCode).toBe('admin:user-operation-log:view');
+  });
+
   it('declares permission code for protected routes', () => {
     const usersRoute = routes.find((route) => route.path === '/users');
     const restrictionsRoute = routes.find((route) => route.path === '/restrictions');
