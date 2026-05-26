@@ -165,6 +165,32 @@ describe('LegalServiceRequestsPage', () => {
     });
   });
 
+  it('sends contract template service type after the contract template filter is selected', async () => {
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+    pageLegalServiceRequestsMock.mockClear();
+
+    const serviceTypeOptions = (wrapper.vm as unknown as { serviceTypeOptions: Array<{ label: string; value: string }> })
+      .serviceTypeOptions;
+    expect(serviceTypeOptions).toContainEqual({
+      label: '合同模板',
+      value: 'contract_template'
+    });
+
+    setPageQuery(wrapper, {
+      serviceType: 'contract_template'
+    });
+    await wrapper.find('button.el-button--primary').trigger('click');
+    await flushAsyncUpdates();
+
+    expect(pageLegalServiceRequestsMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        serviceType: 'contract_template'
+      })
+    );
+  });
+
   it.each(['0', '-1', '12.3', 'abc', '9007199254740993'])('does not send invalid user id %s to backend', async (userId) => {
     const wrapper = mountPage();
 

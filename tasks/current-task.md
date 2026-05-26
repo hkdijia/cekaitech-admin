@@ -2,20 +2,20 @@
 
 ## 当前任务
 
-- 名称：后台操作审计查询入口
+- 名称：后台服务请求合同模板类型同步
 - OpenSpec 变更：无
 - 当前 HEAD：以 Git log 为准
 
 ## 追溯信息
 
-- 反馈编号：无
+- 反馈编号：LMA-FB-009
 - 来源文档：无
 - 本地台账：无
-- 当前状态：已验证
+- 当前状态：已验证，已提交已推送后等待真实后端联调
 
 ## 当前状态
 
-- 已完成未提交；已通过操作审计页面定向绿灯和全量质量验证。
+- 后台 MVP+ 已提交已推送；本轮服务请求类型契约同步完成后等待真实后端联调。
 
 ## 已完成
 
@@ -35,6 +35,7 @@
 - 更新 `docs/变更日志.md`、`codex-handoff.md`、`tasks/current-task.md` 和 `codex-decisions.md`。
 - 同步 `AGENTS.md`、`tasks/current-task.md` 和 `codex-handoff.md` 的项目阶段状态：后台已从占位初始化进入 MVP+，当前为已提交已推送，等待真实后端联调和下一阶段业务页。
 - 用户管理页空 `keywords`、`status`、`appCode` 筛选归一化为 `undefined` 后下发，继续保留合法 `userId` 精确筛选和 JS 安全整数边界。
+- [反馈编号：LMA-FB-009] 服务请求页服务类型筛选新增“合同模板”，选择后下发 `serviceType: "contract_template"`；不引入订单、支付、收款等无关表达。
 
 ## 未完成
 
@@ -53,6 +54,9 @@
 - RED：`npm.cmd run test -- --run src/pages/user-operation-logs/UserOperationLogsPage.test.ts src/router/router.test.ts`：页面组件不存在，菜单和路由未声明 `/user-operation-logs`。
 - GREEN：`npm.cmd run test -- --run src/pages/user-operation-logs/UserOperationLogsPage.test.ts src/router/router.test.ts`：2 个测试文件、18 个 Vitest 测试通过。
 - 全量质量：`npm.cmd run quality`：18 个测试文件、80 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
+- RED（LMA-FB-009）：`npm.cmd run test -- --run src/pages/legal-service-requests/LegalServiceRequestsPage.test.ts`：14 个页面测试中 1 个失败，失败于服务类型筛选缺少“合同模板” -> `contract_template` 选项。
+- GREEN（LMA-FB-009）：`npm.cmd run test -- --run src/pages/legal-service-requests/LegalServiceRequestsPage.test.ts`：1 个测试文件、14 个 Vitest 测试通过。
+- 全量质量（LMA-FB-009）：`npm.cmd run quality`：18 个测试文件、81 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
 
 ## 下一步
 

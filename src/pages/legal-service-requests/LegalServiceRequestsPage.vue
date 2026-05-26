@@ -53,6 +53,7 @@ const serviceTypeOptions = [
   { label: '全部类型', value: '' },
   { label: '立案指导', value: 'filing_guidance' },
   { label: '合同审查', value: 'contract_review' },
+  { label: '合同模板', value: 'contract_template' },
   { label: '人工材料整理', value: 'manual_material_sorting' },
   { label: '律师审核', value: 'lawyer_review' }
 ];
