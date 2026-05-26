@@ -11,11 +11,11 @@
 - 反馈编号：LMA-FB-009
 - 来源文档：无
 - 本地台账：无
-- 当前状态：已验证，已提交已推送后等待真实后端联调
+- 当前状态：已验证，已提交已推送；本地后端服务请求 API 闭环已完成，后台页面仍待真实浏览器联调和生产级权限账号复核
 
 ## 当前状态
 
-- 后台 MVP+ 已提交已推送；本轮服务请求类型契约同步完成后等待真实后端联调。
+- 后台 MVP+ 已提交已推送；本轮服务请求类型契约同步完成，本地后端 API 已验证 `contract_template`、409、脱敏、`contact-view` 和审计日志链路，后台页面仍待真实浏览器联调。
 
 ## 已完成
 
@@ -36,10 +36,12 @@
 - 同步 `AGENTS.md`、`tasks/current-task.md` 和 `codex-handoff.md` 的项目阶段状态：后台已从占位初始化进入 MVP+，当前为已提交已推送，等待真实后端联调和下一阶段业务页。
 - 用户管理页空 `keywords`、`status`、`appCode` 筛选归一化为 `undefined` 后下发，继续保留合法 `userId` 精确筛选和 JS 安全整数边界。
 - [反馈编号：LMA-FB-009] 服务请求页服务类型筛选新增“合同模板”，选择后下发 `serviceType: "contract_template"`；不引入订单、支付、收款等无关表达。
+- [反馈编号：LMA-FB-009] 本地后端 API 已用默认 `admin` 跑通服务请求分页、详情脱敏、`contact-view`、状态处理和 `legal_service_request_contact_view` 审计日志；后台前端 `npm.cmd run quality` 仍通过 81 个 Vitest 测试和生产构建。
 
 ## 未完成
 
-- 需后续用真实后端数据联调用户页精确筛选、服务请求分页、详情脱敏手机号、联系方式审计查看、操作审计查询入口、状态更新和后端 403 行为。
+- 需后续用后台真实浏览器页面联调服务请求分页、详情脱敏手机号、联系方式审计查看、操作审计查询入口、状态更新和后端 403 行为。
+- 需后续用生产级真实权限账号复核服务请求和操作审计权限边界。
 - 继续按业务优先级补齐权限配置、数据导入真实上传/批次/审计流程等下一阶段业务页。
 
 ## 最近验证
@@ -57,8 +59,10 @@
 - RED（LMA-FB-009）：`npm.cmd run test -- --run src/pages/legal-service-requests/LegalServiceRequestsPage.test.ts`：14 个页面测试中 1 个失败，失败于服务类型筛选缺少“合同模板” -> `contract_template` 选项。
 - GREEN（LMA-FB-009）：`npm.cmd run test -- --run src/pages/legal-service-requests/LegalServiceRequestsPage.test.ts`：1 个测试文件、14 个 Vitest 测试通过。
 - 全量质量（LMA-FB-009）：`npm.cmd run quality`：18 个测试文件、81 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
+- 本地后端 API 联调（LMA-FB-009）：`miniapp-backend` 当前仓库 `p15` profile 已在 `localhost:8080` 跑通 `contract_template` 服务请求创建、重复提交 409、后台分页、详情脱敏、`contact-view`、状态处理和 `legal_service_request_contact_view` 审计日志；本仓随后执行 `npm.cmd run quality` 通过，18 个测试文件、81 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
 
 ## 下一步
 
-1. 用真实后端联调用户页精确筛选、服务请求分页、详情脱敏手机号、显式联系方式审计查看、操作审计查询入口和状态更新。
-2. 继续推进权限配置、数据导入真实上传/批次/审计流程等下一阶段业务页。
+1. 用后台真实浏览器页面联调服务请求分页、详情脱敏手机号、显式联系方式审计查看、操作审计查询入口和状态更新。
+2. 用生产级真实权限账号复核后端 403 和菜单/按钮权限边界。
+3. 继续推进权限配置、数据导入真实上传/批次/审计流程等下一阶段业务页。
