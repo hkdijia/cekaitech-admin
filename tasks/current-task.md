@@ -11,11 +11,11 @@
 - 反馈编号：LMA-FB-009
 - 来源文档：无
 - 本地台账：无
-- 当前状态：已验证，已提交已推送；本地后端服务请求 API 闭环已完成，后台页面仍待真实浏览器联调和生产级权限账号复核
+- 当前状态：实施中；本地后端服务请求 API 闭环已完成，已补后台页面真实浏览器联调前置诊断，页面仍待真实浏览器操作联调和生产级权限账号复核
 
 ## 当前状态
 
-- 后台 MVP+ 已提交已推送；本轮服务请求类型契约同步完成，本地后端 API 已验证 `contract_template`、409、脱敏、`contact-view` 和审计日志链路，后台页面仍待真实浏览器联调。
+- 后台 MVP+ 已提交已推送；本轮服务请求类型契约同步完成，本地后端 API 已验证 `contract_template`、409、脱敏、`contact-view` 和审计日志链路；已新增 `npm.cmd run admin:check` 做后台真实浏览器联调前置诊断，后台页面仍待真实浏览器操作联调。
 
 ## 已完成
 
@@ -37,6 +37,7 @@
 - 用户管理页空 `keywords`、`status`、`appCode` 筛选归一化为 `undefined` 后下发，继续保留合法 `userId` 精确筛选和 JS 安全整数边界。
 - [反馈编号：LMA-FB-009] 服务请求页服务类型筛选新增“合同模板”，选择后下发 `serviceType: "contract_template"`；不引入订单、支付、收款等无关表达。
 - [反馈编号：LMA-FB-009] 本地后端 API 已用默认 `admin` 跑通服务请求分页、详情脱敏、`contact-view`、状态处理和 `legal_service_request_contact_view` 审计日志；后台前端 `npm.cmd run quality` 仍通过 81 个 Vitest 测试和生产构建。
+- [反馈编号：LMA-FB-009] 新增后台联调准备诊断 `npm.cmd run admin:check`，只读检查后端健康、Vite `/api` 代理、服务请求/操作审计/生成记录/用户关键路由和关键 API/页面模块；当前报告 PASS 11 / WARN 0 / FAIL 0。
 
 ## 未完成
 
@@ -60,9 +61,13 @@
 - GREEN（LMA-FB-009）：`npm.cmd run test -- --run src/pages/legal-service-requests/LegalServiceRequestsPage.test.ts`：1 个测试文件、14 个 Vitest 测试通过。
 - 全量质量（LMA-FB-009）：`npm.cmd run quality`：18 个测试文件、81 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
 - 本地后端 API 联调（LMA-FB-009）：`miniapp-backend` 当前仓库 `p15` profile 已在 `localhost:8080` 跑通 `contract_template` 服务请求创建、重复提交 409、后台分页、详情脱敏、`contact-view`、状态处理和 `legal_service_request_contact_view` 审计日志；本仓随后执行 `npm.cmd run quality` 通过，18 个测试文件、81 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
+- RED（LMA-FB-009）：`npm.cmd run test -- --run scripts/check-admin-integration-ready.test.mjs`：失败于 `scripts/check-admin-integration-ready.mjs` 诊断脚本缺失。
+- GREEN（LMA-FB-009）：`npm.cmd run test -- --run scripts/check-admin-integration-ready.test.mjs`：1 个测试文件、3 个 Vitest 测试通过。
+- 联调准备诊断（LMA-FB-009）：`npm.cmd run admin:check`：PASS 11 / WARN 0 / FAIL 0，后端健康、Vite 代理、关键路由和关键模块均通过。
+- 全量质量（LMA-FB-009）：`npm.cmd run quality`：19 个测试文件、84 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
 
 ## 下一步
 
-1. 用后台真实浏览器页面联调服务请求分页、详情脱敏手机号、显式联系方式审计查看、操作审计查询入口和状态更新。
+1. 启动后台前端，用真实浏览器页面联调服务请求分页、详情脱敏手机号、显式联系方式审计查看、操作审计查询入口和状态更新。
 2. 用生产级真实权限账号复核后端 403 和菜单/按钮权限边界。
 3. 继续推进权限配置、数据导入真实上传/批次/审计流程等下一阶段业务页。

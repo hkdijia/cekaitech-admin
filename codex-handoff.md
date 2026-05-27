@@ -5,7 +5,7 @@
 - 当前分支：`master`
 - 当前 HEAD：以 Git log 为准。
 - 当前阶段：后台 MVP+ 已提交已推送；已接入 `miniapp-backend` 数据库管理员登录、刷新后 operator/permissions 恢复、工作区、工作区菜单、用户分页/详情、开发态演示数据、用户限制管理、用户主状态调整、用户操作日志、独立操作审计页、法律表单事件、生成记录查询和服务请求管理；已适配后端 `/api/admin/**` 全局鉴权、细粒度权限码、登录失效处理、当前管理员改密、数据导入本地预检工作台、userId 跨页入口、后台用户 ID 精确筛选契约、服务请求联系方式审计查看契约和 LMA-FB-009 服务类型契约。
-- 最近完成：反馈编号 LMA-FB-009，服务请求页服务类型筛选新增“合同模板”并下发 `serviceType: "contract_template"`；本地后端 API 已跑通 `contract_template` 服务请求创建、重复提交 409、详情脱敏、`contact-view`、状态处理和审计日志；同步 `docs/变更日志.md`、`tasks/current-task.md` 和 `codex-handoff.md`，将状态从等待真实后端联调调整为等待后台真实浏览器页面联调和生产级权限账号复核。
+- 最近完成：反馈编号 LMA-FB-009，服务请求页服务类型筛选新增“合同模板”并下发 `serviceType: "contract_template"`；本地后端 API 已跑通 `contract_template` 服务请求创建、重复提交 409、详情脱敏、`contact-view`、状态处理和审计日志；新增 `npm.cmd run admin:check` 后台联调准备诊断，当前 PASS 11 / WARN 0 / FAIL 0。
 - 未完成：服务请求管理页真实浏览器联调、后端生成记录接口真实账号联调、法律表单事件用户 ID/事件类型筛选联调、用户 ID 精确筛选真实数据联调、权限配置页面、数据导入真实上传/批次/审计流程、生产级 session 机制仍待后续评估。
 
 ## 关键文件
@@ -18,6 +18,8 @@
 - `tasks/current-task.md`
 - `codex-decisions.md`
 - `package.json`
+- `scripts/check-admin-integration-ready.mjs`
+- `scripts/check-admin-integration-ready.test.mjs`
 - `src/router/index.ts`
 - `src/router/menu.ts`
 - `src/router/router.test.ts`
@@ -57,6 +59,7 @@
 - `npm.cmd test`
 - `npm.cmd run build`
 - `npm.cmd run quality`
+- `npm.cmd run admin:check`
 
 ## 最近验证
 
@@ -67,6 +70,10 @@
 - TDD 绿灯（LMA-FB-009）：`npm.cmd run test -- --run src/pages/legal-service-requests/LegalServiceRequestsPage.test.ts` 通过，1 个测试文件、14 个 Vitest 测试通过。
 - 最终质量检查（LMA-FB-009）：`npm.cmd run quality` 通过，18 个测试文件、81 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
 - 本地后端 API 联调（LMA-FB-009）：`miniapp-backend` 当前仓库 `p15` profile 已在 `localhost:8080` 跑通 `contract_template` 服务请求创建、重复提交 409、后台分页、详情脱敏、`contact-view`、状态处理和 `legal_service_request_contact_view` 审计日志；本仓随后执行 `npm.cmd run quality` 通过，18 个测试文件、81 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
+- TDD 红灯（LMA-FB-009）：`npm.cmd run test -- --run scripts/check-admin-integration-ready.test.mjs` 失败，诊断脚本缺失。
+- TDD 绿灯（LMA-FB-009）：`npm.cmd run test -- --run scripts/check-admin-integration-ready.test.mjs` 通过，1 个测试文件、3 个 Vitest 测试通过。
+- 联调准备诊断（LMA-FB-009）：`npm.cmd run admin:check` 通过，PASS 11 / WARN 0 / FAIL 0；后端健康、Vite `/api` 代理、关键路由和关键模块均通过。
+- 最终质量检查（LMA-FB-009）：`npm.cmd run quality` 通过，19 个测试文件、84 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
 - TDD 红灯：`npm.cmd run test -- --run src/api/legalServiceRequests.test.ts src/pages/legal-service-requests/LegalServiceRequestsPage.test.ts` 失败，新增 `viewLegalServiceRequestContact` 未实现，详情页缺少“查看完整手机号”按钮和点击查看逻辑。
 - TDD 绿灯：`npm.cmd run test -- --run src/api/legalServiceRequests.test.ts src/pages/legal-service-requests/LegalServiceRequestsPage.test.ts` 通过，2 个测试文件、17 个 Vitest 测试通过。
 - 最终质量检查：`npm.cmd run quality` 通过，17 个测试文件、71 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup 注释 warning 和 chunk size warning。
@@ -103,6 +110,7 @@
 - 后续真实业务数据只能通过 `miniapp-backend` 受控 API 获取和修改。
 - 不直连数据库，不直接控制本地 `crawler`。
 - 若新工作区缺少 `node_modules`，先执行 `npm.cmd ci` 按 `package-lock.json` 恢复依赖，再运行 `npm.cmd run quality`。
+- 远程状态下可先运行 `npm.cmd run admin:check` 做服务请求后台联调准备；该命令为只读诊断，后端不可达会记为 WARN，配置或模块缺失才记为 FAIL。
 
 ## 下一步建议
 
