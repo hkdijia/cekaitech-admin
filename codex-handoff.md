@@ -4,9 +4,9 @@
 
 - 当前分支：`master`
 - 当前 HEAD：以 Git log 为准。
-- 当前阶段：LMA-FB-013 首页菜单与 Banner 公告后台动态配置管理页；管理端页面已验证、已提交、已推送、已回写，待真实后端账号联调。
+- 当前阶段：LMA-FB-013 首页菜单与 Banner 公告后台动态配置管理页；管理端页面已验证、已提交、已推送、已回写，真实后端账号联调已通过，待小程序真机复验。
 - 最近完成：新增 `miniappHomeConfig` API 封装和 `/miniapp-home-config` 页面，按模块配置、功能入口、Banner 公告三块维护首页配置；菜单与路由权限为 `admin:miniapp-home-config:view`，写操作按 `admin:miniapp-home-config:manage` 控制。
-- 未完成：真实后端账号联调新增/编辑/禁用操作。
+- 未完成：小程序真实接口复验首页配置读取、Banner 点击和公告详情。
 
 ## 关键文件
 
@@ -72,6 +72,8 @@
 - 全量质量（LMA-FB-013）：`npm.cmd run quality` 通过，21 个测试文件、91 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
 - 推送记录（LMA-FB-013）：`git push origin master` 已推送 `fcd220c feat: add miniapp home config admin page`。
 - 阶段回写（LMA-FB-013）：企业微信智能表格 `XRhKT7` 已回写为“已验证（后台配置页已完成，待真实联调）”。
+- 真实联调（LMA-FB-013）：重启 8080 后端后，`admin/123456` 登录返回 `admin:miniapp-home-config:view/manage`；浏览器页面可见“首页配置”，并完成模块、功能入口、Banner 的新增、编辑、禁用。
+- 公开接口复核（LMA-FB-013）：`GET /api/miniapps/lawsuit-material-assistant/home-config` 不包含已禁用的 `codex_test_*` 联调记录。
 - TDD 红灯：`npm.cmd run test -- --run src/pages/user-operation-logs/UserOperationLogsPage.test.ts src/router/router.test.ts` 失败，页面组件不存在，菜单和路由未声明 `/user-operation-logs`。
 - TDD 绿灯：`npm.cmd run test -- --run src/pages/user-operation-logs/UserOperationLogsPage.test.ts src/router/router.test.ts` 通过，2 个测试文件、18 个 Vitest 测试通过。
 - 最终质量检查：`npm.cmd run quality` 通过，18 个测试文件、80 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
@@ -115,7 +117,7 @@
 - 服务请求页调用 `POST /api/admin/legal/service-requests/page`、`GET /api/admin/legal/service-requests/{requestId}`、`POST /api/admin/legal/service-requests/{requestId}/contact-view` 和 `POST /api/admin/legal/service-requests/{requestId}/status`；普通详情和状态更新响应默认展示脱敏手机号，完整手机号必须点击“查看完整手机号”后显式获取并由后端审计；权限码为 `admin:legal-service-request:view`，管理入口按 `admin:legal-service-request:manage` 显示；空筛选会传 `undefined`，用户 ID 仅正整数且不超过 JS 安全整数范围时下发。
 - 服务请求服务类型筛选已包含 LMA-FB-009 的“合同模板” -> `contract_template`；当前后台页面未引入订单、支付、收款等无关表达。
 - 操作审计页调用 `POST /api/admin/user-operation-logs/page`，路由 `/user-operation-logs`，权限码 `admin:user-operation-log:view`；用于追踪用户状态变更、服务请求状态变更和服务请求联系方式查看 `legal_service_request_contact_view`，空筛选传 `undefined`，用户 ID 仅正整数且不超过 JS 安全整数范围时下发，排序固定携带 `orderBy=createdAt`；联系方式查看日志 Before/After 值在前端做二次脱敏，防止历史或异常完整手机号直出。
-- 首页配置页调用 `POST /api/admin/miniapp-home-config/**`，路由 `/miniapp-home-config`，权限码 `admin:miniapp-home-config:view`；模块、功能入口、Banner 公告的新增/编辑/禁用按钮按 `admin:miniapp-home-config:manage` 显示。后端仍负责路径、图片、action/status/tone/fontWeight 白名单和最终 403。
+- 首页配置页调用 `POST /api/admin/miniapp-home-config/**`，路由 `/miniapp-home-config`，权限码 `admin:miniapp-home-config:view`；模块、功能入口、Banner 公告的新增/编辑/禁用按钮按 `admin:miniapp-home-config:manage` 显示。真实后端账号联调已通过三类配置新增、编辑和禁用；后端仍负责路径、图片、action/status/tone/fontWeight 白名单和最终 403。
 - 数据导入页当前只做浏览器本地 JSON 预检，不上传、不调用后端导入接口、不读取或控制 crawler。
 - 后续真实业务数据只能通过 `miniapp-backend` 受控 API 获取和修改。
 - 不直连数据库，不直接控制本地 `crawler`。
@@ -124,6 +126,5 @@
 
 ## 下一步建议
 
-1. 用真实后端账号联调首页配置新增/编辑/禁用操作。
-2. 用小程序真实接口复验首页配置读取、Banner 点击和公告详情。
-3. 确认无误后关闭 `LMA-FB-013`。
+1. 用小程序真实接口复验首页配置读取、Banner 点击和公告详情。
+2. 确认无误后关闭 `LMA-FB-013`。
