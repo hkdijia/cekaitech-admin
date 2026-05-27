@@ -62,6 +62,15 @@ describe('admin routes', () => {
     expect(route?.meta?.permissionCode).toBe('admin:legal-service-request:view');
   });
 
+  it('declares miniapp home config menu and route permission', () => {
+    const menuItem = adminMenuItems.find((item) => item.path === '/miniapp-home-config');
+    const route = routes.find((item) => item.path === '/miniapp-home-config');
+
+    expect(menuItem?.title).toBe('首页配置');
+    expect(menuItem?.permissionCode).toBe('admin:miniapp-home-config:view');
+    expect(route?.meta?.permissionCode).toBe('admin:miniapp-home-config:view');
+  });
+
   it('declares user operation logs menu and route permission', () => {
     const menuItem = adminMenuItems.find((item) => item.path === '/user-operation-logs');
     const route = routes.find((item) => item.path === '/user-operation-logs');

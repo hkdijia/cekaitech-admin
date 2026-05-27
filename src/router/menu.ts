@@ -49,6 +49,12 @@ export const adminMenuItems: AdminMenuItem[] = [
     permissionCode: 'admin:legal-service-request:view'
   },
   {
+    path: '/miniapp-home-config',
+    title: '首页配置',
+    description: '小程序首页模块、功能入口和公告',
+    permissionCode: 'admin:miniapp-home-config:view'
+  },
+  {
     path: '/user-operation-logs',
     title: '操作审计',
     description: '用户相关后台操作审计',
