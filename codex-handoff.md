@@ -4,9 +4,9 @@
 
 - 当前分支：`master`
 - 当前 HEAD：以 Git log 为准。
-- 当前阶段：LMA-FB-013 首页菜单与 Banner 公告后台动态配置管理页；管理端页面全量质量验证已通过，待提交推送和企业微信智能表格回写。
+- 当前阶段：LMA-FB-013 首页菜单与 Banner 公告后台动态配置管理页；管理端页面已验证、已提交、已推送、已回写，待真实后端账号联调。
 - 最近完成：新增 `miniappHomeConfig` API 封装和 `/miniapp-home-config` 页面，按模块配置、功能入口、Banner 公告三块维护首页配置；菜单与路由权限为 `admin:miniapp-home-config:view`，写操作按 `admin:miniapp-home-config:manage` 控制。
-- 未完成：提交推送、企业微信智能表格回写、真实后端账号联调新增/编辑/禁用操作。
+- 未完成：真实后端账号联调新增/编辑/禁用操作。
 
 ## 关键文件
 
@@ -70,6 +70,8 @@
 - TDD 红灯（LMA-FB-013）：`npm.cmd run test -- --run src/api/miniappHomeConfig.test.ts src/pages/miniapp-home-config/MiniappHomeConfigPage.test.ts src/router/router.test.ts` 失败，`miniappHomeConfig` API 模块缺失、页面组件缺失、菜单和路由未声明 `/miniapp-home-config`。
 - TDD 绿灯（LMA-FB-013）：`npm.cmd run test -- --run src/api/miniappHomeConfig.test.ts src/pages/miniapp-home-config/MiniappHomeConfigPage.test.ts src/router/router.test.ts` 通过，3 个测试文件、17 个 Vitest 测试通过。
 - 全量质量（LMA-FB-013）：`npm.cmd run quality` 通过，21 个测试文件、91 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
+- 推送记录（LMA-FB-013）：`git push origin master` 已推送 `fcd220c feat: add miniapp home config admin page`。
+- 阶段回写（LMA-FB-013）：企业微信智能表格 `XRhKT7` 已回写为“已验证（后台配置页已完成，待真实联调）”。
 - TDD 红灯：`npm.cmd run test -- --run src/pages/user-operation-logs/UserOperationLogsPage.test.ts src/router/router.test.ts` 失败，页面组件不存在，菜单和路由未声明 `/user-operation-logs`。
 - TDD 绿灯：`npm.cmd run test -- --run src/pages/user-operation-logs/UserOperationLogsPage.test.ts src/router/router.test.ts` 通过，2 个测试文件、18 个 Vitest 测试通过。
 - 最终质量检查：`npm.cmd run quality` 通过，18 个测试文件、80 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
@@ -122,6 +124,6 @@
 
 ## 下一步建议
 
-1. 提交并推送 LMA-FB-013 管理端配置页。
-2. 回写企业微信智能表格 `XRhKT7`。
-3. 用真实后端账号联调首页配置新增/编辑/禁用操作。
+1. 用真实后端账号联调首页配置新增/编辑/禁用操作。
+2. 用小程序真实接口复验首页配置读取、Banner 点击和公告详情。
+3. 确认无误后关闭 `LMA-FB-013`。

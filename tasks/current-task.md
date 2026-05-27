@@ -11,7 +11,7 @@
 - 反馈编号：`LMA-FB-013`
 - 来源文档：企业微信需求整理文档 / LMA 智能表格台账
 - 本地台账：法律助手小程序 `docs/product-feedback.md` 与企业微信智能表格记录
-- 当前状态：实施中；管理端页面全量质量验证已通过，待提交推送和企业微信智能表格回写
+- 当前状态：已提交已推送，企业微信智能表格已回写；待真实后端账号联调
 
 ## 当前状态
 
@@ -31,8 +31,6 @@
 
 ## 未完成
 
-- 提交并推送管理端改动。
-- 回写企业微信智能表格 `XRhKT7`。
 - 用真实后端账号联调页面新增/编辑/禁用操作。
 
 ## 最近验证
@@ -40,9 +38,11 @@
 - RED：`npm.cmd run test -- --run src/api/miniappHomeConfig.test.ts src/pages/miniapp-home-config/MiniappHomeConfigPage.test.ts src/router/router.test.ts`：失败于 `miniappHomeConfig` API 模块缺失、页面组件缺失、`/miniapp-home-config` 菜单路由未声明。
 - GREEN：`npm.cmd run test -- --run src/api/miniappHomeConfig.test.ts src/pages/miniapp-home-config/MiniappHomeConfigPage.test.ts src/router/router.test.ts`：3 个测试文件、17 个 Vitest 测试通过。
 - 全量质量：`npm.cmd run quality`：21 个测试文件、91 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
+- `git push origin master`：已将 `fcd220c feat: add miniapp home config admin page` 推送到 `origin/master`。
+- 企业微信智能表格 `LMA-FB-013` / `XRhKT7`：已回写管理端提交记录、验证证据、状态、下一步和备注。
 
 ## 下一步
 
-1. 提交并推送管理端改动。
-2. 回写企业微信智能表格 `XRhKT7`。
-3. 用真实后端账号联调页面新增/编辑/禁用操作。
+1. 用真实后端账号联调页面新增/编辑/禁用操作。
+2. 用小程序真实接口复验首页配置读取、Banner 点击和公告详情。
+3. 确认无误后关闭 `LMA-FB-013`。
