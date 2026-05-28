@@ -4,9 +4,9 @@
 
 - 当前分支：`master`
 - 当前 HEAD：以 Git log 为准。
-- 当前阶段：LMA-FB-013 首页菜单与 Banner 公告后台动态配置管理页；管理端页面已验证、已提交、已推送、已回写，真实后端账号联调已通过，待小程序真机复验。
+- 当前阶段：LMA-FB-013 首页菜单与 Banner 公告后台动态配置管理页；管理端页面已验证、已提交、已推送、已回写，真实后端账号联调和小程序真实接口复验均已通过，待发布前真机抽检。
 - 最近完成：新增 `miniappHomeConfig` API 封装和 `/miniapp-home-config` 页面，按模块配置、功能入口、Banner 公告三块维护首页配置；菜单与路由权限为 `admin:miniapp-home-config:view`，写操作按 `admin:miniapp-home-config:manage` 控制。
-- 未完成：小程序真实接口复验首页配置读取、Banner 点击和公告详情。
+- 未完成：发布前实体手机抽检首页配置读取、Banner 点击和公告详情。
 
 ## 关键文件
 
@@ -71,9 +71,10 @@
 - TDD 绿灯（LMA-FB-013）：`npm.cmd run test -- --run src/api/miniappHomeConfig.test.ts src/pages/miniapp-home-config/MiniappHomeConfigPage.test.ts src/router/router.test.ts` 通过，3 个测试文件、17 个 Vitest 测试通过。
 - 全量质量（LMA-FB-013）：`npm.cmd run quality` 通过，21 个测试文件、91 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
 - 推送记录（LMA-FB-013）：`git push origin master` 已推送 `fcd220c feat: add miniapp home config admin page`。
-- 阶段回写（LMA-FB-013）：企业微信智能表格 `XRhKT7` 已回写为“已验证（后台配置页已完成，待真实联调）”。
+- 阶段回写（LMA-FB-013）：企业微信智能表格 `XRhKT7` 已回写为“已验证（小程序真实接口复验通过，发布前真机抽检）”。
 - 真实联调（LMA-FB-013）：重启 8080 后端后，`admin/123456` 登录返回 `admin:miniapp-home-config:view/manage`；浏览器页面可见“首页配置”，并完成模块、功能入口、Banner 的新增、编辑、禁用。
 - 公开接口复核（LMA-FB-013）：`GET /api/miniapps/lawsuit-material-assistant/home-config` 不包含已禁用的 `codex_test_*` 联调记录。
+- 小程序真实接口自动化复验（LMA-FB-013）：清空缓存并使用本地后端后，首页加载远程 `launch_notice` Banner 和模块，点击 Banner 进入公告详情。
 - TDD 红灯：`npm.cmd run test -- --run src/pages/user-operation-logs/UserOperationLogsPage.test.ts src/router/router.test.ts` 失败，页面组件不存在，菜单和路由未声明 `/user-operation-logs`。
 - TDD 绿灯：`npm.cmd run test -- --run src/pages/user-operation-logs/UserOperationLogsPage.test.ts src/router/router.test.ts` 通过，2 个测试文件、18 个 Vitest 测试通过。
 - 最终质量检查：`npm.cmd run quality` 通过，18 个测试文件、80 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
@@ -126,5 +127,5 @@
 
 ## 下一步建议
 
-1. 用小程序真实接口复验首页配置读取、Banner 点击和公告详情。
+1. 发布前用实体手机抽检首页配置读取、Banner 点击和公告详情。
 2. 确认无误后关闭 `LMA-FB-013`。
