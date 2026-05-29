@@ -71,6 +71,15 @@ describe('admin routes', () => {
     expect(route?.meta?.permissionCode).toBe('admin:miniapp-home-config:view');
   });
 
+  it('declares miniapp document catalog menu and route permission', () => {
+    const menuItem = adminMenuItems.find((item) => item.path === '/miniapp-document-catalog');
+    const route = routes.find((item) => item.path === '/miniapp-document-catalog');
+
+    expect(menuItem?.title).toBe('文书目录配置');
+    expect(menuItem?.permissionCode).toBe('admin:miniapp-document-catalog:view');
+    expect(route?.meta?.permissionCode).toBe('admin:miniapp-document-catalog:view');
+  });
+
   it('declares user operation logs menu and route permission', () => {
     const menuItem = adminMenuItems.find((item) => item.path === '/user-operation-logs');
     const route = routes.find((item) => item.path === '/user-operation-logs');

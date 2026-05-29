@@ -4,9 +4,9 @@
 
 - 当前分支：`master`
 - 当前 HEAD：以 Git log 为准。
-- 当前阶段：LMA-FB-013 首页菜单与 Banner 公告后台动态配置管理页；管理端页面已验证、已提交、已推送、已回写，真实后端账号联调和小程序真实接口复验均已通过，待发布前真机抽检。
-- 最近完成：新增 `miniappHomeConfig` API 封装和 `/miniapp-home-config` 页面，按模块配置、功能入口、Banner 公告三块维护首页配置；菜单与路由权限为 `admin:miniapp-home-config:view`，写操作按 `admin:miniapp-home-config:manage` 控制。
-- 未完成：发布前实体手机抽检首页配置读取、Banner 点击和公告详情。
+- 当前阶段：LMA-FB-014 起诉文书生成目录动态配置管理页；管理端页面、自动化质量验证、真实浏览器验证、同局域网实体手机目录抽检和企业微信阶段回写均已完成，待提交收口。
+- 最近完成：新增 `miniappDocumentCatalog` API 封装和 `/miniapp-document-catalog` 页面，维护起诉文书生成目录、状态、图标 key 和页面指向；菜单与路由权限为 `admin:miniapp-document-catalog:view`，写操作按 `admin:miniapp-document-catalog:manage` 控制；禁用请求已随当前 `APP_CODE` 传给后端，匹配后端 `itemId + appCode` 作用域；真实页面新增 `codex_check_20260528` 测试目录后已软禁用。
+- 未完成：提交前验证和本轮多仓提交整理。
 
 ## 关键文件
 
@@ -33,6 +33,10 @@
 - `src/api/miniappHomeConfig.test.ts`
 - `src/pages/miniapp-home-config/MiniappHomeConfigPage.vue`
 - `src/pages/miniapp-home-config/MiniappHomeConfigPage.test.ts`
+- `src/api/miniappDocumentCatalog.ts`
+- `src/api/miniappDocumentCatalog.test.ts`
+- `src/pages/miniapp-document-catalog/MiniappDocumentCatalogPage.vue`
+- `src/pages/miniapp-document-catalog/MiniappDocumentCatalogPage.test.ts`
 - `src/pages/generation-records/generationRecordOptions.ts`
 - `src/pages/generation-records/generationRecordOptions.test.ts`
 - `src/pages/generation-records/GenerationRecordsPage.test.ts`
@@ -67,6 +71,14 @@
 
 ## 最近验证
 
+- TDD 红灯（LMA-FB-014）：`npm.cmd run test -- --run src/api/miniappDocumentCatalog.test.ts src/pages/miniapp-document-catalog/MiniappDocumentCatalogPage.test.ts src/router/router.test.ts` 失败，`miniappDocumentCatalog` API 模块缺失、页面组件缺失、菜单和路由未声明 `/miniapp-document-catalog`。
+- TDD 绿灯（LMA-FB-014）：`npm.cmd run test -- --run src/api/miniappDocumentCatalog.test.ts src/pages/miniapp-document-catalog/MiniappDocumentCatalogPage.test.ts src/router/router.test.ts` 通过，3 个测试文件、16 个 Vitest 测试通过。
+- 全量质量（LMA-FB-014）：`npm.cmd run quality` 通过，23 个测试文件、96 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
+- 真实浏览器（LMA-FB-014）：`admin/123456` 登录后可见“文书目录配置”；`/miniapp-document-catalog` 表格加载 `private_lending/divorce/labor`，新增 `codex_check_20260528` 测试目录并软禁用；公开目录接口不返回禁用测试记录。
+- 同局域网实体手机（LMA-FB-014）：法律助手起诉文书生成页读取后台配置结果，显示 1 个开放入口“民间借贷纠纷”和 2 个“暂不可生成”入口；企业微信智能表格 record_id=`OfxNNC` 已回写为“已验证（同局域网真机抽检通过）”。
+- 2026-05-29 收口验证（LMA-FB-014）：`npm.cmd run quality` 通过，23 个测试文件、96 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；`git diff --check` 仅提示 Windows 换行转换。
+- 2026-05-29 作用域补强（LMA-FB-014）：`npm.cmd run test -- --run src/api/miniappDocumentCatalog.test.ts src/pages/miniapp-document-catalog/MiniappDocumentCatalogPage.test.ts` 通过，2 个测试文件、5 个 Vitest 测试通过。
+- 2026-05-29 最终质量复验（LMA-FB-014）：`npm.cmd run quality` 通过，23 个测试文件、97 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
 - TDD 红灯（LMA-FB-013）：`npm.cmd run test -- --run src/api/miniappHomeConfig.test.ts src/pages/miniapp-home-config/MiniappHomeConfigPage.test.ts src/router/router.test.ts` 失败，`miniappHomeConfig` API 模块缺失、页面组件缺失、菜单和路由未声明 `/miniapp-home-config`。
 - TDD 绿灯（LMA-FB-013）：`npm.cmd run test -- --run src/api/miniappHomeConfig.test.ts src/pages/miniapp-home-config/MiniappHomeConfigPage.test.ts src/router/router.test.ts` 通过，3 个测试文件、17 个 Vitest 测试通过。
 - 全量质量（LMA-FB-013）：`npm.cmd run quality` 通过，21 个测试文件、91 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
@@ -119,6 +131,7 @@
 - 服务请求服务类型筛选已包含 LMA-FB-009 的“合同模板” -> `contract_template`；当前后台页面未引入订单、支付、收款等无关表达。
 - 操作审计页调用 `POST /api/admin/user-operation-logs/page`，路由 `/user-operation-logs`，权限码 `admin:user-operation-log:view`；用于追踪用户状态变更、服务请求状态变更和服务请求联系方式查看 `legal_service_request_contact_view`，空筛选传 `undefined`，用户 ID 仅正整数且不超过 JS 安全整数范围时下发，排序固定携带 `orderBy=createdAt`；联系方式查看日志 Before/After 值在前端做二次脱敏，防止历史或异常完整手机号直出。
 - 首页配置页调用 `POST /api/admin/miniapp-home-config/**`，路由 `/miniapp-home-config`，权限码 `admin:miniapp-home-config:view`；模块、功能入口、Banner 公告的新增/编辑/禁用按钮按 `admin:miniapp-home-config:manage` 显示。真实后端账号联调已通过三类配置新增、编辑和禁用；后端仍负责路径、图片、action/status/tone/fontWeight 白名单和最终 403。
+- 文书目录配置页调用 `POST /api/admin/miniapp-document-catalog/**`，路由 `/miniapp-document-catalog`，权限码 `admin:miniapp-document-catalog:view`；保存和禁用按钮按 `admin:miniapp-document-catalog:manage` 显示。后端仍负责 `targetPath/action/status` 白名单、重复 `caseType` 校验、软禁用和最终 403。
 - 数据导入页当前只做浏览器本地 JSON 预检，不上传、不调用后端导入接口、不读取或控制 crawler。
 - 后续真实业务数据只能通过 `miniapp-backend` 受控 API 获取和修改。
 - 不直连数据库，不直接控制本地 `crawler`。
@@ -127,5 +140,5 @@
 
 ## 下一步建议
 
-1. 发布前用实体手机抽检首页配置读取、Banner 点击和公告详情。
-2. 确认无误后关闭 `LMA-FB-013`。
+1. 跑提交前验证并整理提交。
+2. 提交信息保留 `Refs: LMA-FB-014`。

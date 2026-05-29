@@ -55,6 +55,12 @@ export const adminMenuItems: AdminMenuItem[] = [
     permissionCode: 'admin:miniapp-home-config:view'
   },
   {
+    path: '/miniapp-document-catalog',
+    title: '文书目录配置',
+    description: '起诉文书生成目录和页面指向',
+    permissionCode: 'admin:miniapp-document-catalog:view'
+  },
+  {
     path: '/user-operation-logs',
     title: '操作审计',
     description: '用户相关后台操作审计',
