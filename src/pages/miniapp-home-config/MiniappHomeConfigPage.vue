@@ -1,22 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
 import {
-  CollectionTag,
-  Document,
-  DocumentChecked,
   EditPen,
-  FolderChecked,
-  List,
-  MagicStick,
-  Management,
-  Message,
-  Money,
-  More,
-  OfficeBuilding,
   Plus,
   Refresh,
-  Search,
-  Service,
   SwitchButton
 } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
@@ -37,6 +24,7 @@ import {
   type MiniappHomeModuleItem,
   type MiniappHomeModulePayload
 } from '../../api/miniappHomeConfig';
+import MiniappIconPicker from '../../components/miniapp-icon-picker/MiniappIconPicker.vue';
 import { useAuthStore } from '../../stores/auth';
 
 const APP_CODE = 'lawsuit-material-assistant';
@@ -125,22 +113,6 @@ const statusOptions = [
 const fontWeightOptions = [
   { label: '常规', value: 'normal' },
   { label: '加粗', value: 'bold' }
-];
-
-const iconOptions = [
-  { key: 'calculator', label: '计算器', component: MagicStick, scene: '计算工具' },
-  { key: 'scale', label: '天平', component: Money, scene: '费用与规则' },
-  { key: 'clipboard-list', label: '表单清单', component: List, scene: '流程清单' },
-  { key: 'landmark', label: '机构', component: OfficeBuilding, scene: '法院与机构' },
-  { key: 'hand-heart', label: '援助', component: Service, scene: '公益支持' },
-  { key: 'file-text', label: '文书', component: Document, scene: '文书生成' },
-  { key: 'shield-check', label: '复核', component: DocumentChecked, scene: '审核校验' },
-  { key: 'folder-check', label: '材料整理', component: FolderChecked, scene: '材料归集' },
-  { key: 'search-check', label: '查询', component: Search, scene: '检索核对' },
-  { key: 'message-square', label: '咨询', component: Message, scene: '沟通咨询' },
-  { key: 'notice', label: '公告', component: CollectionTag, scene: '公告通知' },
-  { key: 'management', label: '管理', component: Management, scene: '后台管理' },
-  { key: 'more-horizontal', label: '更多', component: More, scene: '更多入口' }
 ];
 
 const canManageHomeConfig = computed(() => auth.hasPermission('admin:miniapp-home-config:manage'));
@@ -274,10 +246,6 @@ function openMenuItemDialog(row?: MiniappHomeMenuItem) {
     enabled: row?.enabled ?? true
   });
   menuItemDialogVisible.value = true;
-}
-
-function selectMenuIcon(iconKey: string) {
-  menuItemForm.iconKey = iconKey;
 }
 
 async function submitMenuItem() {
@@ -521,30 +489,7 @@ onMounted(async () => {
         </el-form-item>
         <el-form-item label="状态文案"><el-input v-model="menuItemForm.statusText" /></el-form-item>
         <el-form-item label="图标">
-          <div class="icon-picker">
-            <div class="icon-picker-head">
-              <span>开源图标库</span>
-              <span class="icon-current">当前图标：{{ menuItemForm.iconKey || '未选择' }}</span>
-            </div>
-            <div class="icon-grid">
-              <button
-                v-for="icon in iconOptions"
-                :key="icon.key"
-                class="icon-choice"
-                :class="{ active: menuItemForm.iconKey === icon.key }"
-                type="button"
-                @click="selectMenuIcon(icon.key)"
-              >
-                <span class="icon-symbol" :data-test="`home-icon-${icon.key}`">
-                  <el-icon>
-                    <component :is="icon.component" />
-                  </el-icon>
-                </span>
-                <span class="icon-name">{{ icon.label }}</span>
-                <span class="icon-scene">{{ icon.scene }}</span>
-              </button>
-            </div>
-          </div>
+          <MiniappIconPicker v-model="menuItemForm.iconKey" />
         </el-form-item>
         <el-form-item label="图标地址"><el-input v-model="menuItemForm.iconUrl" /></el-form-item>
         <el-form-item label="字体">
@@ -625,79 +570,4 @@ onMounted(async () => {
   width: 100%;
 }
 
-.icon-picker {
-  width: 100%;
-}
-
-.icon-picker-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
-  color: #344054;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.icon-current {
-  color: #667085;
-  font-weight: 500;
-}
-
-.icon-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.icon-choice {
-  display: grid;
-  grid-template-columns: 30px 1fr;
-  grid-template-rows: auto auto;
-  align-items: center;
-  min-height: 62px;
-  padding: 8px;
-  border: 1px solid #d0d5dd;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #344054;
-  cursor: pointer;
-  text-align: left;
-}
-
-.icon-choice.active {
-  border-color: #1e3a8a;
-  background: #f1f5ff;
-  color: #1e3a8a;
-}
-
-.icon-symbol {
-  grid-row: span 2;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  background: #eef7f5;
-  color: #0f766e;
-  font-size: 16px;
-}
-
-.icon-name {
-  overflow: hidden;
-  font-size: 13px;
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.icon-scene {
-  overflow: hidden;
-  color: #667085;
-  font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 </style>

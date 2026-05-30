@@ -225,20 +225,19 @@ describe('MiniappHomeConfigPage', () => {
 
     const vm = wrapper.vm as unknown as {
       openMenuItemDialog: (row?: typeof menuItem) => void;
-      selectMenuIcon: (iconKey: string) => void;
       menuItemForm: typeof menuItem;
     };
     vm.openMenuItemDialog(menuItem);
     await nextTick();
 
-    expect(wrapper.text()).toContain('开源图标库');
+    expect(wrapper.text()).toContain('统一开源图标库');
     expect(wrapper.text()).toContain('计算器');
     expect(wrapper.text()).toContain('天平');
     expect(wrapper.text()).toContain('表单清单');
-    expect(wrapper.find('[data-test="home-icon-calculator"]').exists()).toBe(true);
-    expect(wrapper.find('[data-test="home-icon-scale"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="miniapp-icon-calculator"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="miniapp-icon-scale"]').exists()).toBe(true);
 
-    vm.selectMenuIcon('scale');
+    await wrapper.find('[data-test="miniapp-icon-scale"]').trigger('click');
     await nextTick();
 
     expect(vm.menuItemForm.iconKey).toBe('scale');

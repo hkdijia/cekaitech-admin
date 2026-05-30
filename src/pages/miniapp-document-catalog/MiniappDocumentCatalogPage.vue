@@ -9,6 +9,7 @@ import {
   type MiniappDocumentCatalogItem,
   type MiniappDocumentCatalogPayload
 } from '../../api/miniappDocumentCatalog';
+import MiniappIconPicker from '../../components/miniapp-icon-picker/MiniappIconPicker.vue';
 import { useAuthStore } from '../../stores/auth';
 
 const APP_CODE = 'lawsuit-material-assistant';
@@ -192,7 +193,7 @@ onMounted(loadItems);
           </el-select>
         </el-form-item>
         <el-form-item label="状态文案"><el-input v-model="itemForm.statusText" /></el-form-item>
-        <el-form-item label="图标 Key"><el-input v-model="itemForm.iconKey" /></el-form-item>
+        <el-form-item label="图标"><MiniappIconPicker v-model="itemForm.iconKey" /></el-form-item>
         <el-form-item label="排序"><el-input-number v-model="itemForm.sortOrder" :min="0" /></el-form-item>
         <el-form-item label="启用"><el-switch v-model="itemForm.enabled" /></el-form-item>
       </el-form>

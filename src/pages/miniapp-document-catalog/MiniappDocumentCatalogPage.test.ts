@@ -155,6 +155,30 @@ describe('MiniappDocumentCatalogPage', () => {
     expect(wrapper.text()).not.toContain('禁用');
   });
 
+  it('uses the shared miniapp icon picker for catalog icon keys', async () => {
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+
+    const vm = wrapper.vm as unknown as {
+      openItemDialog: (row?: typeof catalogItem) => void;
+      itemForm: typeof catalogItem;
+    };
+    vm.openItemDialog(catalogItem);
+    await nextTick();
+
+    expect(wrapper.text()).toContain('统一开源图标库');
+    expect(wrapper.text()).toContain('文书');
+    expect(wrapper.text()).toContain('材料整理');
+    expect(wrapper.find('[data-test="miniapp-icon-file-text"]').exists()).toBe(true);
+
+    await wrapper.find('[data-test="miniapp-icon-folder-check"]').trigger('click');
+    await nextTick();
+
+    expect(vm.itemForm.iconKey).toBe('folder-check');
+    expect(wrapper.text()).toContain('当前图标：folder-check');
+  });
+
   it('disables document catalog rows with scoped app code', async () => {
     const wrapper = mountPage();
 
