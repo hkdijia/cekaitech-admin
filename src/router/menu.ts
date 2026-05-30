@@ -61,6 +61,12 @@ export const adminMenuItems: AdminMenuItem[] = [
     permissionCode: 'admin:miniapp-document-catalog:view'
   },
   {
+    path: '/legal-tool-center',
+    title: '法律工具中心',
+    description: '竞品工具能力库、展示分组和曝光入口',
+    permissionCode: 'admin:legal-tool-center:view'
+  },
+  {
     path: '/private-lending-result-template',
     title: '结果模板配置',
     description: '民间借贷结果模板和预览',

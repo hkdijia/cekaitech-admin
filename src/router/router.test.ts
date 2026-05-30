@@ -80,6 +80,15 @@ describe('admin routes', () => {
     expect(route?.meta?.permissionCode).toBe('admin:miniapp-document-catalog:view');
   });
 
+  it('declares legal tool center menu and route permission', () => {
+    const menuItem = adminMenuItems.find((item) => item.path === '/legal-tool-center');
+    const route = routes.find((item) => item.path === '/legal-tool-center');
+
+    expect(menuItem?.title).toBe('法律工具中心');
+    expect(menuItem?.permissionCode).toBe('admin:legal-tool-center:view');
+    expect(route?.meta?.permissionCode).toBe('admin:legal-tool-center:view');
+  });
+
   it('declares private lending result template menu and route permission', () => {
     const menuItem = adminMenuItems.find((item) => item.path === '/private-lending-result-template');
     const route = routes.find((item) => item.path === '/private-lending-result-template');
