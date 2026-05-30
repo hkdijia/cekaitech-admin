@@ -10,11 +10,15 @@ import {
   pageLegalToolExposureGroups,
   pageLegalToolExposureItems,
   pageLegalToolInteractionBlueprints,
+  pageLegalLprRates,
   saveLegalToolCapability,
   saveLegalToolDataSource,
   saveLegalToolExposureGroup,
   saveLegalToolExposureItem,
   saveLegalToolInteractionBlueprint,
+  saveLegalLprRate,
+  type LegalLprRateItem,
+  type LegalLprRatePayload,
   type LegalToolCapabilityItem,
   type LegalToolCapabilityPayload,
   type LegalToolDataSourceItem,
@@ -36,18 +40,21 @@ const auth = useAuthStore();
 const activeTab = ref('capabilities');
 const loading = ref(false);
 const dataSourceLoading = ref(false);
+const lprRateLoading = ref(false);
 const groupLoading = ref(false);
 const exposureItemLoading = ref(false);
 const blueprintLoading = ref(false);
 const loadError = ref('');
 const capabilities = ref<LegalToolCapabilityItem[]>([]);
 const dataSources = ref<LegalToolDataSourceItem[]>([]);
+const lprRates = ref<LegalLprRateItem[]>([]);
 const groups = ref<LegalToolExposureGroupItem[]>([]);
 const exposureItems = ref<LegalToolExposureItem[]>([]);
 const blueprints = ref<LegalToolInteractionBlueprintItem[]>([]);
 const selectedGroupId = ref<number | null>(null);
 const capabilityDialogVisible = ref(false);
 const dataSourceDialogVisible = ref(false);
+const lprRateDialogVisible = ref(false);
 const groupDialogVisible = ref(false);
 const exposureItemDialogVisible = ref(false);
 const blueprintDialogVisible = ref(false);
@@ -95,6 +102,22 @@ const dataSourceForm = reactive<LegalToolDataSourcePayload>({
   riskLevel: 'medium',
   linkedToolKeys: '',
   ownerNote: '',
+  sortOrder: 10,
+  enabled: true
+});
+
+const lprRateForm = reactive<LegalLprRatePayload>({
+  id: 0,
+  appCode: APP_CODE,
+  quoteDate: '',
+  oneYearRate: 0,
+  fiveYearPlusRate: 0,
+  sourceKey: 'lpr_chinamoney',
+  sourceName: '贷款市场报价利率 LPR',
+  sourceUrl: 'https://www.chinamoney.com.cn/chinese/bklpr/',
+  sourceVersion: '',
+  lastCheckedDate: '',
+  status: 'verified',
   sortOrder: 10,
   enabled: true
 });
@@ -333,6 +356,24 @@ function dataSourcePayload() {
   });
 }
 
+function lprRatePayload() {
+  return normalizePayloadId({
+    id: lprRateForm.id,
+    appCode: lprRateForm.appCode,
+    quoteDate: lprRateForm.quoteDate,
+    oneYearRate: Number(lprRateForm.oneYearRate || 0),
+    fiveYearPlusRate: Number(lprRateForm.fiveYearPlusRate || 0),
+    sourceKey: lprRateForm.sourceKey,
+    sourceName: lprRateForm.sourceName,
+    sourceUrl: lprRateForm.sourceUrl,
+    sourceVersion: lprRateForm.sourceVersion,
+    lastCheckedDate: lprRateForm.lastCheckedDate,
+    status: lprRateForm.status,
+    sortOrder: lprRateForm.sortOrder,
+    enabled: lprRateForm.enabled
+  });
+}
+
 function groupPayload() {
   return normalizePayloadId({
     id: groupForm.id,
@@ -433,6 +474,24 @@ async function loadDataSources() {
     dataSources.value = [];
   } finally {
     dataSourceLoading.value = false;
+  }
+}
+
+async function loadLprRates() {
+  lprRateLoading.value = true;
+  loadError.value = '';
+  try {
+    const result = await pageLegalLprRates({
+      appCode: APP_CODE,
+      pageNo: 1,
+      pageSize: PAGE_SIZE
+    });
+    lprRates.value = result.dataList;
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : 'LPR 利率加载失败';
+    lprRates.value = [];
+  } finally {
+    lprRateLoading.value = false;
   }
 }
 
@@ -581,6 +640,40 @@ async function submitDataSource() {
   }
 }
 
+function openLprRateDialog(row?: LegalLprRateItem) {
+  Object.assign(lprRateForm, {
+    id: row?.id ?? 0,
+    appCode: APP_CODE,
+    quoteDate: row?.quoteDate ?? '',
+    oneYearRate: row?.oneYearRate ?? 0,
+    fiveYearPlusRate: row?.fiveYearPlusRate ?? 0,
+    sourceKey: row?.sourceKey ?? 'lpr_chinamoney',
+    sourceName: row?.sourceName ?? '贷款市场报价利率 LPR',
+    sourceUrl: row?.sourceUrl ?? 'https://www.chinamoney.com.cn/chinese/bklpr/',
+    sourceVersion: row?.sourceVersion ?? '',
+    lastCheckedDate: row?.lastCheckedDate ?? '',
+    status: row?.status ?? 'verified',
+    sortOrder: row?.sortOrder ?? 10,
+    enabled: row?.enabled ?? true
+  });
+  lprRateDialogVisible.value = true;
+}
+
+async function submitLprRate() {
+  submitting.value = true;
+  loadError.value = '';
+  try {
+    await saveLegalLprRate(lprRatePayload());
+    lprRateDialogVisible.value = false;
+    ElMessage.success('LPR 利率已保存');
+    await loadLprRates();
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : 'LPR 利率保存失败';
+  } finally {
+    submitting.value = false;
+  }
+}
+
 function openGroupDialog(row?: LegalToolExposureGroupItem) {
   Object.assign(groupForm, {
     id: row?.id ?? 0,
@@ -717,6 +810,7 @@ onMounted(async () => {
   await Promise.all([
     loadCapabilities(),
     loadDataSources(),
+    loadLprRates(),
     loadGroups(),
     loadBlueprints()
   ]);
@@ -807,6 +901,43 @@ onMounted(async () => {
             <el-table-column v-if="canManageLegalToolCenter" label="操作" width="100" fixed="right">
               <template #default="{ row }">
                 <el-button :icon="EditPen" text type="primary" @click="openDataSourceDialog(row)">编辑</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+
+        <el-tab-pane label="LPR利率" name="lpr-rates">
+          <div class="toolbar">
+            <div>
+              <div class="toolbar-title">LPR 利率序列</div>
+              <div class="toolbar-subtitle">维护贷款市场报价利率的报价日期、一年期、五年期以上和官方来源版本。</div>
+            </div>
+            <div class="toolbar-actions">
+              <el-button :icon="Refresh" @click="loadLprRates">刷新</el-button>
+              <el-button v-if="canManageLegalToolCenter" type="primary" :icon="Plus" @click="openLprRateDialog()">
+                新增利率
+              </el-button>
+            </div>
+          </div>
+
+          <el-table v-loading="lprRateLoading" :data="lprRates" row-key="id">
+            <el-table-column prop="quoteDate" label="报价日期" width="130" />
+            <el-table-column prop="oneYearRate" label="一年期 LPR" width="130" />
+            <el-table-column prop="fiveYearPlusRate" label="五年期以上" width="130" />
+            <el-table-column prop="sourceKey" label="来源标识" width="150" />
+            <el-table-column prop="sourceName" label="来源名称" min-width="190" show-overflow-tooltip />
+            <el-table-column prop="sourceVersion" label="来源版本" width="170" show-overflow-tooltip />
+            <el-table-column prop="lastCheckedDate" label="核验日期" width="120" />
+            <el-table-column prop="status" label="状态" width="110" />
+            <el-table-column prop="sortOrder" label="排序" width="80" />
+            <el-table-column label="启用" width="104">
+              <template #default="{ row }">
+                <el-tag :type="statusTagType(row.enabled)" effect="plain">{{ row.enabled ? '启用' : '禁用' }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column v-if="canManageLegalToolCenter" label="操作" width="100" fixed="right">
+              <template #default="{ row }">
+                <el-button :icon="EditPen" text type="primary" @click="openLprRateDialog(row)">编辑</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -1041,6 +1172,34 @@ onMounted(async () => {
       <template #footer>
         <el-button @click="dataSourceDialogVisible = false">取消</el-button>
         <el-button type="primary" :loading="submitting" @click="submitDataSource">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="lprRateDialogVisible" title="LPR 利率" width="680px">
+      <el-form label-width="116px">
+        <el-form-item label="报价日期"><el-input v-model="lprRateForm.quoteDate" placeholder="YYYY-MM-DD" /></el-form-item>
+        <el-form-item label="一年期 LPR">
+          <el-input-number v-model="lprRateForm.oneYearRate" :min="0" :max="30" :precision="2" :step="0.05" />
+        </el-form-item>
+        <el-form-item label="五年期以上">
+          <el-input-number v-model="lprRateForm.fiveYearPlusRate" :min="0" :max="30" :precision="2" :step="0.05" />
+        </el-form-item>
+        <el-form-item label="来源标识"><el-input v-model="lprRateForm.sourceKey" /></el-form-item>
+        <el-form-item label="来源名称"><el-input v-model="lprRateForm.sourceName" /></el-form-item>
+        <el-form-item label="来源链接"><el-input v-model="lprRateForm.sourceUrl" /></el-form-item>
+        <el-form-item label="来源版本"><el-input v-model="lprRateForm.sourceVersion" /></el-form-item>
+        <el-form-item label="核验日期"><el-input v-model="lprRateForm.lastCheckedDate" /></el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="lprRateForm.status" class="full-input">
+            <el-option v-for="item in sourceStatusOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="排序"><el-input-number v-model="lprRateForm.sortOrder" :min="0" /></el-form-item>
+        <el-form-item label="启用"><el-switch v-model="lprRateForm.enabled" /></el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="lprRateDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitLprRate">保存</el-button>
       </template>
     </el-dialog>
 

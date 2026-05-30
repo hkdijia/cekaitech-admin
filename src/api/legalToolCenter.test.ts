@@ -7,11 +7,13 @@ import {
   pageLegalToolExposureGroups,
   pageLegalToolExposureItems,
   pageLegalToolInteractionBlueprints,
+  pageLegalLprRates,
   saveLegalToolCapability,
   saveLegalToolDataSource,
   saveLegalToolExposureGroup,
   saveLegalToolExposureItem,
-  saveLegalToolInteractionBlueprint
+  saveLegalToolInteractionBlueprint,
+  saveLegalLprRate
 } from './legalToolCenter';
 
 describe('legal tool center api', () => {
@@ -337,5 +339,70 @@ describe('legal tool center api', () => {
     expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/admin/legal-tool-center/data-sources/save', expect.objectContaining({ method: 'POST' }));
     expect(fetchMock).toHaveBeenNthCalledWith(3, '/api/admin/legal-tool-center/interaction-blueprints/page', expect.objectContaining({ method: 'POST' }));
     expect(fetchMock).toHaveBeenNthCalledWith(4, '/api/admin/legal-tool-center/interaction-blueprints/save', expect.objectContaining({ method: 'POST' }));
+  });
+
+  it('posts LPR rate page and save requests to backend endpoints', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          code: '0',
+          msg: '',
+          data: {
+            dataList: [{ id: 51, quoteDate: '2025-05-20', oneYearRate: 3, fiveYearPlusRate: 3.5 }],
+            totalCount: 1
+          }
+        })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          code: '0',
+          msg: '',
+          data: { id: 51, quoteDate: '2025-05-20', oneYearRate: 3, fiveYearPlusRate: 3.5 }
+        })
+      } as Response);
+
+    await pageLegalLprRates({ appCode: 'lawsuit-material-assistant', pageNo: 1, pageSize: 50 });
+    await saveLegalLprRate({
+      id: 51,
+      appCode: 'lawsuit-material-assistant',
+      quoteDate: '2025-05-20',
+      oneYearRate: 3,
+      fiveYearPlusRate: 3.5,
+      sourceKey: 'lpr_chinamoney',
+      sourceName: '贷款市场报价利率 LPR',
+      sourceUrl: 'https://www.chinamoney.com.cn/chinese/bklpr/',
+      sourceVersion: 'pbc-2025-05-20',
+      lastCheckedDate: '2026-05-31',
+      status: 'verified',
+      sortOrder: 10,
+      enabled: true
+    });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/admin/legal-tool-center/lpr-rates/page', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ appCode: 'lawsuit-material-assistant', pageNo: 1, pageSize: 50 })
+    }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/admin/legal-tool-center/lpr-rates/save', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({
+        id: 51,
+        appCode: 'lawsuit-material-assistant',
+        quoteDate: '2025-05-20',
+        oneYearRate: 3,
+        fiveYearPlusRate: 3.5,
+        sourceKey: 'lpr_chinamoney',
+        sourceName: '贷款市场报价利率 LPR',
+        sourceUrl: 'https://www.chinamoney.com.cn/chinese/bklpr/',
+        sourceVersion: 'pbc-2025-05-20',
+        lastCheckedDate: '2026-05-31',
+        status: 'verified',
+        sortOrder: 10,
+        enabled: true
+      })
+    }));
   });
 });

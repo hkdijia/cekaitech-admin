@@ -12,12 +12,14 @@ import {
   pageLegalToolExposureGroups,
   pageLegalToolExposureItems,
   pageLegalToolInteractionBlueprints,
+  pageLegalLprRates,
   saveLegalToolCapability,
   saveLegalToolDataSource,
   saveLegalToolExposureGroup,
   saveLegalToolExposureItem
   ,
-  saveLegalToolInteractionBlueprint
+  saveLegalToolInteractionBlueprint,
+  saveLegalLprRate
 } from '../../api/legalToolCenter';
 import { useAuthStore } from '../../stores/auth';
 import LegalToolCenterPage from './LegalToolCenterPage.vue';
@@ -34,7 +36,9 @@ vi.mock('../../api/legalToolCenter', () => ({
   saveLegalToolExposureItem: vi.fn(),
   disableLegalToolExposureItem: vi.fn(),
   pageLegalToolInteractionBlueprints: vi.fn(),
-  saveLegalToolInteractionBlueprint: vi.fn()
+  saveLegalToolInteractionBlueprint: vi.fn(),
+  pageLegalLprRates: vi.fn(),
+  saveLegalLprRate: vi.fn()
 }));
 
 const pageLegalToolCapabilitiesMock = vi.mocked(pageLegalToolCapabilities);
@@ -49,6 +53,8 @@ const saveLegalToolExposureItemMock = vi.mocked(saveLegalToolExposureItem);
 const disableLegalToolExposureItemMock = vi.mocked(disableLegalToolExposureItem);
 const pageLegalToolInteractionBlueprintsMock = vi.mocked(pageLegalToolInteractionBlueprints);
 const saveLegalToolInteractionBlueprintMock = vi.mocked(saveLegalToolInteractionBlueprint);
+const pageLegalLprRatesMock = vi.mocked(pageLegalLprRates);
+const saveLegalLprRateMock = vi.mocked(saveLegalLprRate);
 
 const capability = {
   id: 1,
@@ -159,6 +165,24 @@ const blueprint = {
   updatedAt: '2026-05-30T20:00:00'
 };
 
+const lprRate = {
+  id: 51,
+  appCode: 'lawsuit-material-assistant',
+  quoteDate: '2025-05-20',
+  oneYearRate: 3,
+  fiveYearPlusRate: 3.5,
+  sourceKey: 'lpr_chinamoney',
+  sourceName: '贷款市场报价利率 LPR',
+  sourceUrl: 'https://www.chinamoney.com.cn/chinese/bklpr/',
+  sourceVersion: 'pbc-2025-05-20',
+  lastCheckedDate: '2026-05-31',
+  status: 'verified',
+  sortOrder: 10,
+  enabled: true,
+  createdAt: '2026-05-31T01:00:00',
+  updatedAt: '2026-05-31T01:00:00'
+};
+
 function mountPage(
   permissions: string[] = ['admin:legal-tool-center:view', 'admin:legal-tool-center:manage']
 ) {
@@ -202,17 +226,21 @@ describe('LegalToolCenterPage', () => {
     disableLegalToolExposureItemMock.mockReset();
     pageLegalToolInteractionBlueprintsMock.mockReset();
     saveLegalToolInteractionBlueprintMock.mockReset();
+    pageLegalLprRatesMock.mockReset();
+    saveLegalLprRateMock.mockReset();
 
     pageLegalToolCapabilitiesMock.mockResolvedValue({ dataList: [capability], totalCount: 1 });
     pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource], totalCount: 1 });
     pageLegalToolExposureGroupsMock.mockResolvedValue({ dataList: [group], totalCount: 1 });
     pageLegalToolExposureItemsMock.mockResolvedValue({ dataList: [exposureItem], totalCount: 1 });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
+    pageLegalLprRatesMock.mockResolvedValue({ dataList: [lprRate], totalCount: 1 });
     saveLegalToolCapabilityMock.mockResolvedValue(capability);
     saveLegalToolDataSourceMock.mockResolvedValue(dataSource);
     saveLegalToolExposureGroupMock.mockResolvedValue(group);
     saveLegalToolExposureItemMock.mockResolvedValue(exposureItem);
     saveLegalToolInteractionBlueprintMock.mockResolvedValue(blueprint);
+    saveLegalLprRateMock.mockResolvedValue(lprRate);
     disableLegalToolExposureGroupMock.mockResolvedValue({ ...group, enabled: false });
     disableLegalToolExposureItemMock.mockResolvedValue({ ...exposureItem, enabled: false });
     vi.spyOn(ElMessageBox, 'confirm').mockResolvedValue({ action: 'confirm' } as Awaited<ReturnType<typeof ElMessageBox.confirm>>);
@@ -248,18 +276,27 @@ describe('LegalToolCenterPage', () => {
       pageNo: 1,
       pageSize: 50
     });
+    expect(pageLegalLprRatesMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      pageNo: 1,
+      pageSize: 50
+    });
     expect(wrapper.text()).toContain('法律工具中心');
     expect(wrapper.text()).toContain('能力库');
     expect(wrapper.text()).toContain('数据来源');
     expect(wrapper.text()).toContain('展示分组');
     expect(wrapper.text()).toContain('曝光入口');
     expect(wrapper.text()).toContain('交互蓝图');
+    expect(wrapper.text()).toContain('LPR利率');
     expect(wrapper.text()).toContain('诉讼费用');
     expect(wrapper.text()).toContain('official');
     expect(wrapper.text()).toContain('medium');
     expect(wrapper.text()).toContain('民事案件案由规定');
     expect(wrapper.text()).toContain('诉讼计算');
     expect(wrapper.text()).toContain('诉讼费用计算交互蓝图');
+    expect(wrapper.text()).toContain('2025-05-20');
+    expect(wrapper.text()).toContain('3');
+    expect(wrapper.text()).toContain('3.5');
   });
 
   it('hides write actions when operator lacks manage permission', async () => {
@@ -390,6 +427,45 @@ describe('LegalToolCenterPage', () => {
       pageSize: 50
     });
     expect(pageLegalToolInteractionBlueprintsMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      pageNo: 1,
+      pageSize: 50
+    });
+  });
+
+  it('saves LPR rates through backend without audit fields', async () => {
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+    pageLegalLprRatesMock.mockClear();
+
+    const vm = wrapper.vm as unknown as {
+      openLprRateDialog: (row?: typeof lprRate) => void;
+      lprRateForm: typeof lprRate;
+      submitLprRate: () => Promise<void>;
+    };
+
+    vm.openLprRateDialog(lprRate);
+    Object.assign(vm.lprRateForm, lprRate);
+    await vm.submitLprRate();
+    await flushAsyncUpdates();
+
+    expect(saveLegalLprRateMock).toHaveBeenCalledWith({
+      id: 51,
+      appCode: 'lawsuit-material-assistant',
+      quoteDate: '2025-05-20',
+      oneYearRate: 3,
+      fiveYearPlusRate: 3.5,
+      sourceKey: 'lpr_chinamoney',
+      sourceName: '贷款市场报价利率 LPR',
+      sourceUrl: 'https://www.chinamoney.com.cn/chinese/bklpr/',
+      sourceVersion: 'pbc-2025-05-20',
+      lastCheckedDate: '2026-05-31',
+      status: 'verified',
+      sortOrder: 10,
+      enabled: true
+    });
+    expect(pageLegalLprRatesMock).toHaveBeenCalledWith({
       appCode: 'lawsuit-material-assistant',
       pageNo: 1,
       pageSize: 50

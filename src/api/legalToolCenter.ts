@@ -35,6 +35,12 @@ export interface LegalToolInteractionBlueprintPageQuery {
   pageSize: number;
 }
 
+export interface LegalLprRatePageQuery {
+  appCode: string;
+  pageNo: number;
+  pageSize: number;
+}
+
 export interface LegalToolCapabilityItem {
   id: number;
   appCode: string;
@@ -144,11 +150,30 @@ export interface LegalToolInteractionBlueprintItem {
   updatedAt: string;
 }
 
+export interface LegalLprRateItem {
+  id: number;
+  appCode: string;
+  quoteDate: string;
+  oneYearRate: number;
+  fiveYearPlusRate: number;
+  sourceKey: string;
+  sourceName: string;
+  sourceUrl: string;
+  sourceVersion: string;
+  lastCheckedDate: string;
+  status: string;
+  sortOrder: number;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type LegalToolCapabilityPayload = Omit<LegalToolCapabilityItem, 'createdAt' | 'updatedAt'>;
 export type LegalToolExposureGroupPayload = Omit<LegalToolExposureGroupItem, 'createdAt' | 'updatedAt'>;
 export type LegalToolExposureItemPayload = Omit<LegalToolExposureItem, 'createdAt' | 'updatedAt'>;
 export type LegalToolDataSourcePayload = Omit<LegalToolDataSourceItem, 'createdAt' | 'updatedAt'>;
 export type LegalToolInteractionBlueprintPayload = Omit<LegalToolInteractionBlueprintItem, 'createdAt' | 'updatedAt'>;
+export type LegalLprRatePayload = Omit<LegalLprRateItem, 'createdAt' | 'updatedAt'>;
 
 export function pageLegalToolCapabilities(
   query: LegalToolCapabilityPageQuery
@@ -181,6 +206,24 @@ export function saveLegalToolDataSource(
   payload: LegalToolDataSourcePayload
 ): Promise<LegalToolDataSourceItem> {
   return request<LegalToolDataSourceItem>('/api/admin/legal-tool-center/data-sources/save', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function pageLegalLprRates(
+  query: LegalLprRatePageQuery
+): Promise<PageResult<LegalLprRateItem>> {
+  return request<PageResult<LegalLprRateItem>>('/api/admin/legal-tool-center/lpr-rates/page', {
+    method: 'POST',
+    body: JSON.stringify(query)
+  });
+}
+
+export function saveLegalLprRate(
+  payload: LegalLprRatePayload
+): Promise<LegalLprRateItem> {
+  return request<LegalLprRateItem>('/api/admin/legal-tool-center/lpr-rates/save', {
     method: 'POST',
     body: JSON.stringify(payload)
   });
