@@ -217,4 +217,31 @@ describe('MiniappHomeConfigPage', () => {
     expect(wrapper.text()).not.toContain('新增 Banner');
     expect(wrapper.text()).not.toContain('禁用');
   });
+
+  it('offers a controlled icon library for menu item icon keys', async () => {
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+
+    const vm = wrapper.vm as unknown as {
+      openMenuItemDialog: (row?: typeof menuItem) => void;
+      selectMenuIcon: (iconKey: string) => void;
+      menuItemForm: typeof menuItem;
+    };
+    vm.openMenuItemDialog(menuItem);
+    await nextTick();
+
+    expect(wrapper.text()).toContain('开源图标库');
+    expect(wrapper.text()).toContain('计算器');
+    expect(wrapper.text()).toContain('天平');
+    expect(wrapper.text()).toContain('表单清单');
+    expect(wrapper.find('[data-test="home-icon-calculator"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="home-icon-scale"]').exists()).toBe(true);
+
+    vm.selectMenuIcon('scale');
+    await nextTick();
+
+    expect(vm.menuItemForm.iconKey).toBe('scale');
+    expect(wrapper.text()).toContain('当前图标：scale');
+  });
 });
