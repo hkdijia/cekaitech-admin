@@ -80,6 +80,15 @@ describe('admin routes', () => {
     expect(route?.meta?.permissionCode).toBe('admin:miniapp-document-catalog:view');
   });
 
+  it('declares private lending result template menu and route permission', () => {
+    const menuItem = adminMenuItems.find((item) => item.path === '/private-lending-result-template');
+    const route = routes.find((item) => item.path === '/private-lending-result-template');
+
+    expect(menuItem?.title).toBe('结果模板配置');
+    expect(menuItem?.permissionCode).toBe('admin:private-lending-result-template:view');
+    expect(route?.meta?.permissionCode).toBe('admin:private-lending-result-template:view');
+  });
+
   it('declares user operation logs menu and route permission', () => {
     const menuItem = adminMenuItems.find((item) => item.path === '/user-operation-logs');
     const route = routes.find((item) => item.path === '/user-operation-logs');

@@ -2,44 +2,41 @@
 
 ## 当前任务
 
-- 名称：LMA-FB-013 小程序配置统一图标库能力
-- OpenSpec 变更：无；延续首页配置后台化能力，将图标选择器抽象为 `cekaitech-admin` 统一管理能力。
+- 名称：LMA-FB-016 民间借贷结果模板配置页
+- OpenSpec 变更：无；延续 `lawsuit-material-assistant/openspec/changes/backend-private-lending-form-schema` 后续切片。
 - 当前 HEAD：以 Git log 为准
 
 ## 追溯信息
 
-- 反馈编号：`LMA-FB-013`
-- 来源文档：企业微信需求整理文档 / LMA 智能表格台账
-- 本地台账：法律助手小程序 `docs/product-feedback.md` 与企业微信智能表格记录 `XRhKT7`
-- 当前状态：已验证（共享 icon catalog 与选择器已完成定向测试、全量质量验证和 diff 检查，待提交）
+- 反馈编号：`LMA-FB-016`
+- 来源文档：当前会话规划 / LMA 智能表格台账 record_id=`AQWFiM`
+- 本地台账：法律助手小程序 `docs/product-feedback.md`
+- 当前状态：已验证（管理端定向、全量质量和真实浏览器闭环通过）
 
 ## 当前状态
 
-- 新增共享图标目录 `src/miniapp-icons/miniappIconCatalog.ts`，统一维护小程序配置页使用的开源图标候选。
-- 新增共享组件 `src/components/miniapp-icon-picker/MiniappIconPicker.vue`，负责真实图标预览、当前 key 回显和选择交互。
-- 首页配置页已从局部 `iconOptions` 切换为共享组件。
-- 文书目录配置页已从自由输入 `图标 Key` 切换为共享组件。
-- 后台仍只保存既有 `iconKey` 字符串，不改变后端接口结构，不直连数据库。
-- 图标预览使用项目既有 `@element-plus/icons-vue` 开源图标组件，不新增依赖。
+- 新增 `/private-lending-result-template` 菜单和路由。
+- 新增 `src/api/privateLendingResultTemplate.ts`，只通过 `miniapp-backend` 受控 API 读写和预览模板。
+- 新增 `PrivateLendingResultTemplatePage`，维护结构化字段并展示后端 `docPackage` 预览。
+- 页面不渲染后端 HTML/WXML/CSS/JS，只把后端纯文本预览为普通文本。
 
 ## 已完成
 
-- TDD RED：新增共享 catalog 测试和文书目录页共享图标选择器测试，初始失败于 `miniappIconCatalog` 模块缺失、文书目录页仍显示自由输入。
-- TDD GREEN：补齐共享 catalog、共享 picker、首页配置页复用和文书目录页复用。
-- 更新首页配置页测试，从调用页面内部方法改为点击共享选择器。
+- TDD RED：API、页面和路由测试先失败于模块缺失。
+- TDD GREEN：补齐 API 封装、页面、菜单和路由。
+- 定向验证通过：`npm.cmd run test -- --run src/api/privateLendingResultTemplate.test.ts src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts src/router/router.test.ts`，3 个测试文件、18 个 Vitest 测试通过。
 
 ## 未完成
 
-- 提交信息保留 `Refs: LMA-FB-013`。
+- 与后端、小程序产品台账一起提交整理。
 
 ## 最近验证
 
-- RED：`npm.cmd run test -- --run src/miniapp-icons/miniappIconCatalog.test.ts src/pages/miniapp-document-catalog/MiniappDocumentCatalogPage.test.ts` 失败于共享 catalog 文件缺失、文书目录页缺少“统一开源图标库”。
-- GREEN：`npm.cmd run test -- --run src/miniapp-icons/miniappIconCatalog.test.ts src/pages/miniapp-home-config/MiniappHomeConfigPage.test.ts src/pages/miniapp-document-catalog/MiniappDocumentCatalogPage.test.ts` 通过，3 个测试文件、10 个 Vitest 测试通过。
-- 全量质量：`npm.cmd run quality` 通过，24 个测试文件、100 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
-- Diff 检查：`git diff --check` 仅提示 Windows 换行转换。
+- RED：`npm.cmd run test -- --run src/api/privateLendingResultTemplate.test.ts src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts src/router/router.test.ts` 失败于 `privateLendingResultTemplate` API 文件、页面组件和路由缺失。
+- GREEN：同一命令通过，3 个测试文件、18 个 Vitest 测试通过。
+- 全量：`npm.cmd run quality` 通过，26 个测试文件、106 个 Vitest 测试通过，`vue-tsc --noEmit && vite build` 通过；构建保留既有 Rollup PURE 注释 warning 和 chunk size warning。
+- 真实浏览器：`admin/123456` 登录后可见“结果模板配置”；页面加载后端模板，点击“预览结果”展示后端 `docPackage` 样例正文、证据清单、立案提示和风险提示。
 
 ## 下一步
 
-1. 提交并保留 `Refs: LMA-FB-013`。
-2. 后续其他小程序配置页直接复用 `MiniappIconPicker`。
+1. 提交并保留 `Refs: LMA-FB-016`。

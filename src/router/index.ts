@@ -59,6 +59,12 @@ export const routes: RouteRecordRaw[] = [
     children: [{ path: '', component: () => import('../pages/miniapp-document-catalog/MiniappDocumentCatalogPage.vue') }]
   },
   {
+    path: '/private-lending-result-template',
+    component: () => import('../layouts/AdminLayout.vue'),
+    meta: { permissionCode: 'admin:private-lending-result-template:view' },
+    children: [{ path: '', component: () => import('../pages/private-lending-result-template/PrivateLendingResultTemplatePage.vue') }]
+  },
+  {
     path: '/user-operation-logs',
     component: () => import('../layouts/AdminLayout.vue'),
     meta: { permissionCode: 'admin:user-operation-log:view' },

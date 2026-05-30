@@ -61,6 +61,12 @@ export const adminMenuItems: AdminMenuItem[] = [
     permissionCode: 'admin:miniapp-document-catalog:view'
   },
   {
+    path: '/private-lending-result-template',
+    title: '结果模板配置',
+    description: '民间借贷结果模板和预览',
+    permissionCode: 'admin:private-lending-result-template:view'
+  },
+  {
     path: '/user-operation-logs',
     title: '操作审计',
     description: '用户相关后台操作审计',
