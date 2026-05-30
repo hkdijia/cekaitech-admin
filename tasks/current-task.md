@@ -11,7 +11,7 @@
 - 反馈编号：`LMA-FB-018`
 - 来源文档：当前会话规划 / LMA 智能表格台账 record_id=`HaYpcv`
 - 本地台账：法律助手小程序 `docs/product-feedback.md`
-- 当前状态：已验证（LPR 利率 API 客户端、页面标签页和全量质量验证通过，待提交、推送和企业微信回写）
+- 当前状态：已验证（LPR 利率 API 客户端、页面标签页和全量质量验证通过，已提交、已推送、已回写）
 
 ## 当前状态
 
@@ -32,7 +32,7 @@
 
 ## 未完成
 
-- [反馈编号：LMA-FB-018] 提交、推送，并与后端和小程序追溯文档一起回写企业微信智能表格。
+- [反馈编号：待登记] 下一轮数据驱动治理的 admin 维护入口：本地 crawler 同步状态、发布批次、人工复核和公网数据发布记录。
 
 ## 最近验证
 
@@ -44,8 +44,10 @@
 - 差异检查：`git diff --check` 无空白错误，仅提示 Windows 换行转换。
 - LPR 定向：`npm.cmd run test -- --run src/api/legalToolCenter.test.ts src/pages/legal-tool-center/LegalToolCenterPage.test.ts` 通过，2 个测试文件、13 个 Vitest 测试通过。
 - LPR 全量质量：`npm.cmd run quality` 通过，28 个测试文件、120 项 Vitest，`vue-tsc --noEmit && vite build` 通过；保留既有 Rollup PURE 注释和 chunk size warning。
+- 提交推送：`f88d0de feat: add legal lpr rate admin` 已推送到 GitHub，footer `Refs: LMA-FB-018`。
+- 企业微信回写：智能表格 `HaYpcv` 已更新为“已验证（LPR 查询小闭环通过，已推送）”。
 
 ## 下一步
 
-1. 提交并推送 `feat: add legal lpr rate admin`。
-2. 配合后端和法律助手小程序追溯文档回写企业微信智能表格。
+1. 配合后端设计数据驱动治理的管理端入口。
+2. 评估同步批次、人工复核、冲突处理和发布记录在 `cekaitech-admin` 的展示与操作边界。
