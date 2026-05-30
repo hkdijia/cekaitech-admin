@@ -23,6 +23,18 @@ export interface LegalToolExposureItemPageQuery {
   pageSize: number;
 }
 
+export interface LegalToolDataSourcePageQuery {
+  appCode: string;
+  pageNo: number;
+  pageSize: number;
+}
+
+export interface LegalToolInteractionBlueprintPageQuery {
+  appCode: string;
+  pageNo: number;
+  pageSize: number;
+}
+
 export interface LegalToolCapabilityItem {
   id: number;
   appCode: string;
@@ -88,9 +100,55 @@ export interface LegalToolExposureItem {
   updatedAt: string;
 }
 
+export interface LegalToolDataSourceItem {
+  id: number;
+  appCode: string;
+  sourceKey: string;
+  sourceName: string;
+  sourceType: string;
+  issuer: string;
+  sourceUrl: string;
+  citation: string;
+  effectiveDate: string;
+  sourceVersion: string;
+  lastCheckedDate: string;
+  status: string;
+  riskLevel: string;
+  linkedToolKeys: string;
+  ownerNote: string;
+  sortOrder: number;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LegalToolInteractionBlueprintItem {
+  id: number;
+  appCode: string;
+  blueprintKey: string;
+  toolKey: string;
+  blueprintName: string;
+  referenceType: string;
+  referenceNote: string;
+  formGroupsJson: string;
+  resultBlocksJson: string;
+  ctaRulesJson: string;
+  validationNotes: string;
+  status: string;
+  reviewedBy: string;
+  lastReviewedDate: string;
+  ownerNote: string;
+  sortOrder: number;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type LegalToolCapabilityPayload = Omit<LegalToolCapabilityItem, 'createdAt' | 'updatedAt'>;
 export type LegalToolExposureGroupPayload = Omit<LegalToolExposureGroupItem, 'createdAt' | 'updatedAt'>;
 export type LegalToolExposureItemPayload = Omit<LegalToolExposureItem, 'createdAt' | 'updatedAt'>;
+export type LegalToolDataSourcePayload = Omit<LegalToolDataSourceItem, 'createdAt' | 'updatedAt'>;
+export type LegalToolInteractionBlueprintPayload = Omit<LegalToolInteractionBlueprintItem, 'createdAt' | 'updatedAt'>;
 
 export function pageLegalToolCapabilities(
   query: LegalToolCapabilityPageQuery
@@ -105,6 +163,42 @@ export function saveLegalToolCapability(
   payload: LegalToolCapabilityPayload
 ): Promise<LegalToolCapabilityItem> {
   return request<LegalToolCapabilityItem>('/api/admin/legal-tool-center/capabilities/save', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function pageLegalToolDataSources(
+  query: LegalToolDataSourcePageQuery
+): Promise<PageResult<LegalToolDataSourceItem>> {
+  return request<PageResult<LegalToolDataSourceItem>>('/api/admin/legal-tool-center/data-sources/page', {
+    method: 'POST',
+    body: JSON.stringify(query)
+  });
+}
+
+export function saveLegalToolDataSource(
+  payload: LegalToolDataSourcePayload
+): Promise<LegalToolDataSourceItem> {
+  return request<LegalToolDataSourceItem>('/api/admin/legal-tool-center/data-sources/save', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function pageLegalToolInteractionBlueprints(
+  query: LegalToolInteractionBlueprintPageQuery
+): Promise<PageResult<LegalToolInteractionBlueprintItem>> {
+  return request<PageResult<LegalToolInteractionBlueprintItem>>('/api/admin/legal-tool-center/interaction-blueprints/page', {
+    method: 'POST',
+    body: JSON.stringify(query)
+  });
+}
+
+export function saveLegalToolInteractionBlueprint(
+  payload: LegalToolInteractionBlueprintPayload
+): Promise<LegalToolInteractionBlueprintItem> {
+  return request<LegalToolInteractionBlueprintItem>('/api/admin/legal-tool-center/interaction-blueprints/save', {
     method: 'POST',
     body: JSON.stringify(payload)
   });

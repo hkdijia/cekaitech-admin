@@ -3,11 +3,15 @@ import {
   disableLegalToolExposureGroup,
   disableLegalToolExposureItem,
   pageLegalToolCapabilities,
+  pageLegalToolDataSources,
   pageLegalToolExposureGroups,
   pageLegalToolExposureItems,
+  pageLegalToolInteractionBlueprints,
   saveLegalToolCapability,
+  saveLegalToolDataSource,
   saveLegalToolExposureGroup,
-  saveLegalToolExposureItem
+  saveLegalToolExposureItem,
+  saveLegalToolInteractionBlueprint
 } from './legalToolCenter';
 
 describe('legal tool center api', () => {
@@ -247,5 +251,91 @@ describe('legal tool center api', () => {
     expect(fetchMock).toHaveBeenNthCalledWith(3, '/api/admin/legal-tool-center/exposure-items/21/disable', expect.objectContaining({
       method: 'POST'
     }));
+  });
+
+  it('posts data source and interaction blueprint requests to backend endpoints', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          code: '0',
+          msg: '',
+          data: { dataList: [{ id: 31, sourceKey: 'civil_case_cause_2026' }], totalCount: 1 }
+        })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          code: '0',
+          msg: '',
+          data: { id: 31, sourceKey: 'civil_case_cause_2026' }
+        })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          code: '0',
+          msg: '',
+          data: { dataList: [{ id: 41, blueprintKey: 'litigation_fee_v1' }], totalCount: 1 }
+        })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          code: '0',
+          msg: '',
+          data: { id: 41, blueprintKey: 'litigation_fee_v1' }
+        })
+      } as Response);
+
+    await pageLegalToolDataSources({ appCode: 'lawsuit-material-assistant', pageNo: 1, pageSize: 50 });
+    await saveLegalToolDataSource({
+      id: 31,
+      appCode: 'lawsuit-material-assistant',
+      sourceKey: 'civil_case_cause_2026',
+      sourceName: '民事案件案由规定（第三次修正）',
+      sourceType: 'official_rule',
+      issuer: '最高人民法院',
+      sourceUrl: 'https://www.court.gov.cn/zixun/xiangqing/484231.html',
+      citation: '法〔2025〕166号',
+      effectiveDate: '2026-01-01',
+      sourceVersion: '2025-third-amendment',
+      lastCheckedDate: '2026-05-30',
+      status: 'verified',
+      riskLevel: 'medium',
+      linkedToolKeys: 'civil_cause_of_action',
+      ownerNote: '',
+      sortOrder: 10,
+      enabled: true
+    });
+    await pageLegalToolInteractionBlueprints({ appCode: 'lawsuit-material-assistant', pageNo: 1, pageSize: 50 });
+    await saveLegalToolInteractionBlueprint({
+      id: 41,
+      appCode: 'lawsuit-material-assistant',
+      blueprintKey: 'litigation_fee_v1',
+      toolKey: 'litigation_fee',
+      blueprintName: '诉讼费用计算交互蓝图',
+      referenceType: 'competitor_observation',
+      referenceNote: '吸收表单分组和结果块结构。',
+      formGroupsJson: '[{"key":"amount"}]',
+      resultBlocksJson: '[{"key":"summary"}]',
+      ctaRulesJson: '[]',
+      validationNotes: '金额为非负数',
+      status: 'draft',
+      reviewedBy: '',
+      lastReviewedDate: '',
+      ownerNote: '',
+      sortOrder: 10,
+      enabled: true
+    });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/admin/legal-tool-center/data-sources/page', expect.objectContaining({ method: 'POST' }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/admin/legal-tool-center/data-sources/save', expect.objectContaining({ method: 'POST' }));
+    expect(fetchMock).toHaveBeenNthCalledWith(3, '/api/admin/legal-tool-center/interaction-blueprints/page', expect.objectContaining({ method: 'POST' }));
+    expect(fetchMock).toHaveBeenNthCalledWith(4, '/api/admin/legal-tool-center/interaction-blueprints/save', expect.objectContaining({ method: 'POST' }));
   });
 });

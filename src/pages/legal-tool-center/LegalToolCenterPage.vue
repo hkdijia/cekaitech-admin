@@ -6,17 +6,25 @@ import {
   disableLegalToolExposureGroup,
   disableLegalToolExposureItem,
   pageLegalToolCapabilities,
+  pageLegalToolDataSources,
   pageLegalToolExposureGroups,
   pageLegalToolExposureItems,
+  pageLegalToolInteractionBlueprints,
   saveLegalToolCapability,
+  saveLegalToolDataSource,
   saveLegalToolExposureGroup,
   saveLegalToolExposureItem,
+  saveLegalToolInteractionBlueprint,
   type LegalToolCapabilityItem,
   type LegalToolCapabilityPayload,
+  type LegalToolDataSourceItem,
+  type LegalToolDataSourcePayload,
   type LegalToolExposureGroupItem,
   type LegalToolExposureGroupPayload,
   type LegalToolExposureItem,
-  type LegalToolExposureItemPayload
+  type LegalToolExposureItemPayload,
+  type LegalToolInteractionBlueprintItem,
+  type LegalToolInteractionBlueprintPayload
 } from '../../api/legalToolCenter';
 import MiniappIconPicker from '../../components/miniapp-icon-picker/MiniappIconPicker.vue';
 import { useAuthStore } from '../../stores/auth';
@@ -27,16 +35,22 @@ const PAGE_SIZE = 50;
 const auth = useAuthStore();
 const activeTab = ref('capabilities');
 const loading = ref(false);
+const dataSourceLoading = ref(false);
 const groupLoading = ref(false);
 const exposureItemLoading = ref(false);
+const blueprintLoading = ref(false);
 const loadError = ref('');
 const capabilities = ref<LegalToolCapabilityItem[]>([]);
+const dataSources = ref<LegalToolDataSourceItem[]>([]);
 const groups = ref<LegalToolExposureGroupItem[]>([]);
 const exposureItems = ref<LegalToolExposureItem[]>([]);
+const blueprints = ref<LegalToolInteractionBlueprintItem[]>([]);
 const selectedGroupId = ref<number | null>(null);
 const capabilityDialogVisible = ref(false);
+const dataSourceDialogVisible = ref(false);
 const groupDialogVisible = ref(false);
 const exposureItemDialogVisible = ref(false);
+const blueprintDialogVisible = ref(false);
 const submitting = ref(false);
 
 const capabilityForm = reactive<LegalToolCapabilityPayload>({
@@ -60,6 +74,26 @@ const capabilityForm = reactive<LegalToolCapabilityPayload>({
   sourceVersion: '',
   sourceEffectiveDate: '',
   lastCheckedDate: '',
+  ownerNote: '',
+  sortOrder: 10,
+  enabled: true
+});
+
+const dataSourceForm = reactive<LegalToolDataSourcePayload>({
+  id: 0,
+  appCode: APP_CODE,
+  sourceKey: '',
+  sourceName: '',
+  sourceType: 'official_rule',
+  issuer: '',
+  sourceUrl: '',
+  citation: '',
+  effectiveDate: '',
+  sourceVersion: '',
+  lastCheckedDate: '',
+  status: 'verified',
+  riskLevel: 'medium',
+  linkedToolKeys: '',
   ownerNote: '',
   sortOrder: 10,
   enabled: true
@@ -94,6 +128,26 @@ const exposureItemForm = reactive<LegalToolExposureItemPayload>({
   releaseStage: 'internal',
   disclaimerProfile: 'legal_tool_reference',
   linkedServiceKey: '',
+  sortOrder: 10,
+  enabled: true
+});
+
+const blueprintForm = reactive<LegalToolInteractionBlueprintPayload>({
+  id: 0,
+  appCode: APP_CODE,
+  blueprintKey: '',
+  toolKey: '',
+  blueprintName: '',
+  referenceType: 'competitor_observation',
+  referenceNote: '',
+  formGroupsJson: '[]',
+  resultBlocksJson: '[]',
+  ctaRulesJson: '[]',
+  validationNotes: '',
+  status: 'draft',
+  reviewedBy: '',
+  lastReviewedDate: '',
+  ownerNote: '',
   sortOrder: 10,
   enabled: true
 });
@@ -145,6 +199,35 @@ const riskLevelOptions = [
   { label: '低', value: 'low' },
   { label: '中', value: 'medium' },
   { label: '高', value: 'high' }
+];
+
+const sourceTypeOptions = [
+  { label: '官方规则', value: 'official_rule' },
+  { label: '官方通知', value: 'official_notice' },
+  { label: '官方数据', value: 'official_data' },
+  { label: '公开参考', value: 'public_reference' },
+  { label: '内部模型', value: 'internal_model' }
+];
+
+const sourceStatusOptions = [
+  { label: '待核验', value: 'pending' },
+  { label: '已核验', value: 'verified' },
+  { label: '待更新', value: 'stale' },
+  { label: '已废弃', value: 'deprecated' }
+];
+
+const blueprintReferenceTypeOptions = [
+  { label: '竞品观察', value: 'competitor_observation' },
+  { label: '内部设计', value: 'internal_design' },
+  { label: '律师审核', value: 'lawyer_review' },
+  { label: '用户反馈', value: 'user_feedback' }
+];
+
+const blueprintStatusOptions = [
+  { label: '草稿', value: 'draft' },
+  { label: '已审核', value: 'reviewed' },
+  { label: '可进入 Schema', value: 'ready_for_schema' },
+  { label: '已废弃', value: 'deprecated' }
 ];
 
 const actionOptions = [
@@ -228,6 +311,28 @@ function capabilityPayload() {
   });
 }
 
+function dataSourcePayload() {
+  return normalizePayloadId({
+    id: dataSourceForm.id,
+    appCode: dataSourceForm.appCode,
+    sourceKey: dataSourceForm.sourceKey,
+    sourceName: dataSourceForm.sourceName,
+    sourceType: dataSourceForm.sourceType,
+    issuer: dataSourceForm.issuer,
+    sourceUrl: dataSourceForm.sourceUrl,
+    citation: dataSourceForm.citation,
+    effectiveDate: dataSourceForm.effectiveDate,
+    sourceVersion: dataSourceForm.sourceVersion,
+    lastCheckedDate: dataSourceForm.lastCheckedDate,
+    status: dataSourceForm.status,
+    riskLevel: dataSourceForm.riskLevel,
+    linkedToolKeys: dataSourceForm.linkedToolKeys,
+    ownerNote: dataSourceForm.ownerNote,
+    sortOrder: dataSourceForm.sortOrder,
+    enabled: dataSourceForm.enabled
+  });
+}
+
 function groupPayload() {
   return normalizePayloadId({
     id: groupForm.id,
@@ -265,6 +370,28 @@ function exposureItemPayload() {
   });
 }
 
+function blueprintPayload() {
+  return normalizePayloadId({
+    id: blueprintForm.id,
+    appCode: blueprintForm.appCode,
+    blueprintKey: blueprintForm.blueprintKey,
+    toolKey: blueprintForm.toolKey,
+    blueprintName: blueprintForm.blueprintName,
+    referenceType: blueprintForm.referenceType,
+    referenceNote: blueprintForm.referenceNote,
+    formGroupsJson: blueprintForm.formGroupsJson,
+    resultBlocksJson: blueprintForm.resultBlocksJson,
+    ctaRulesJson: blueprintForm.ctaRulesJson,
+    validationNotes: blueprintForm.validationNotes,
+    status: blueprintForm.status,
+    reviewedBy: blueprintForm.reviewedBy,
+    lastReviewedDate: blueprintForm.lastReviewedDate,
+    ownerNote: blueprintForm.ownerNote,
+    sortOrder: blueprintForm.sortOrder,
+    enabled: blueprintForm.enabled
+  });
+}
+
 function capabilityTitle(capabilityId: number) {
   const item = capabilities.value.find((capability) => capability.id === capabilityId);
   if (!item) {
@@ -288,6 +415,24 @@ async function loadCapabilities() {
     capabilities.value = [];
   } finally {
     loading.value = false;
+  }
+}
+
+async function loadDataSources() {
+  dataSourceLoading.value = true;
+  loadError.value = '';
+  try {
+    const result = await pageLegalToolDataSources({
+      appCode: APP_CODE,
+      pageNo: 1,
+      pageSize: PAGE_SIZE
+    });
+    dataSources.value = result.dataList;
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '数据来源加载失败';
+    dataSources.value = [];
+  } finally {
+    dataSourceLoading.value = false;
   }
 }
 
@@ -336,6 +481,24 @@ async function loadExposureItems() {
   }
 }
 
+async function loadBlueprints() {
+  blueprintLoading.value = true;
+  loadError.value = '';
+  try {
+    const result = await pageLegalToolInteractionBlueprints({
+      appCode: APP_CODE,
+      pageNo: 1,
+      pageSize: PAGE_SIZE
+    });
+    blueprints.value = result.dataList;
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '交互蓝图加载失败';
+    blueprints.value = [];
+  } finally {
+    blueprintLoading.value = false;
+  }
+}
+
 function openCapabilityDialog(row?: LegalToolCapabilityItem) {
   Object.assign(capabilityForm, {
     id: row?.id ?? 0,
@@ -375,6 +538,44 @@ async function submitCapability() {
     await loadCapabilities();
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : '法律工具能力保存失败';
+  } finally {
+    submitting.value = false;
+  }
+}
+
+function openDataSourceDialog(row?: LegalToolDataSourceItem) {
+  Object.assign(dataSourceForm, {
+    id: row?.id ?? 0,
+    appCode: APP_CODE,
+    sourceKey: row?.sourceKey ?? '',
+    sourceName: row?.sourceName ?? '',
+    sourceType: row?.sourceType ?? 'official_rule',
+    issuer: row?.issuer ?? '',
+    sourceUrl: row?.sourceUrl ?? '',
+    citation: row?.citation ?? '',
+    effectiveDate: row?.effectiveDate ?? '',
+    sourceVersion: row?.sourceVersion ?? '',
+    lastCheckedDate: row?.lastCheckedDate ?? '',
+    status: row?.status ?? 'verified',
+    riskLevel: row?.riskLevel ?? 'medium',
+    linkedToolKeys: row?.linkedToolKeys ?? '',
+    ownerNote: row?.ownerNote ?? '',
+    sortOrder: row?.sortOrder ?? 10,
+    enabled: row?.enabled ?? true
+  });
+  dataSourceDialogVisible.value = true;
+}
+
+async function submitDataSource() {
+  submitting.value = true;
+  loadError.value = '';
+  try {
+    await saveLegalToolDataSource(dataSourcePayload());
+    dataSourceDialogVisible.value = false;
+    ElMessage.success('数据来源已保存');
+    await loadDataSources();
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '数据来源保存失败';
   } finally {
     submitting.value = false;
   }
@@ -457,6 +658,44 @@ async function submitExposureItem() {
   }
 }
 
+function openBlueprintDialog(row?: LegalToolInteractionBlueprintItem) {
+  Object.assign(blueprintForm, {
+    id: row?.id ?? 0,
+    appCode: APP_CODE,
+    blueprintKey: row?.blueprintKey ?? '',
+    toolKey: row?.toolKey ?? '',
+    blueprintName: row?.blueprintName ?? '',
+    referenceType: row?.referenceType ?? 'competitor_observation',
+    referenceNote: row?.referenceNote ?? '',
+    formGroupsJson: row?.formGroupsJson ?? '[]',
+    resultBlocksJson: row?.resultBlocksJson ?? '[]',
+    ctaRulesJson: row?.ctaRulesJson ?? '[]',
+    validationNotes: row?.validationNotes ?? '',
+    status: row?.status ?? 'draft',
+    reviewedBy: row?.reviewedBy ?? '',
+    lastReviewedDate: row?.lastReviewedDate ?? '',
+    ownerNote: row?.ownerNote ?? '',
+    sortOrder: row?.sortOrder ?? 10,
+    enabled: row?.enabled ?? true
+  });
+  blueprintDialogVisible.value = true;
+}
+
+async function submitBlueprint() {
+  submitting.value = true;
+  loadError.value = '';
+  try {
+    await saveLegalToolInteractionBlueprint(blueprintPayload());
+    blueprintDialogVisible.value = false;
+    ElMessage.success('交互蓝图已保存');
+    await loadBlueprints();
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '交互蓝图保存失败';
+  } finally {
+    submitting.value = false;
+  }
+}
+
 async function disableGroup(row: LegalToolExposureGroupItem) {
   await ElMessageBox.confirm(`确认禁用分组「${row.title}」？`, '禁用展示分组', { type: 'warning' });
   await disableLegalToolExposureGroup(row.id);
@@ -475,8 +714,12 @@ function handleGroupSelection(groupId: number) {
 }
 
 onMounted(async () => {
-  await loadCapabilities();
-  await loadGroups();
+  await Promise.all([
+    loadCapabilities(),
+    loadDataSources(),
+    loadGroups(),
+    loadBlueprints()
+  ]);
 });
 </script>
 
@@ -525,6 +768,45 @@ onMounted(async () => {
             <el-table-column v-if="canManageLegalToolCenter" label="操作" width="100" fixed="right">
               <template #default="{ row }">
                 <el-button :icon="EditPen" text type="primary" @click="openCapabilityDialog(row)">编辑</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+
+        <el-tab-pane label="数据来源" name="data-sources">
+          <div class="toolbar">
+            <div>
+              <div class="toolbar-title">官方与公开来源</div>
+              <div class="toolbar-subtitle">登记法律工具依据的发布机构、版本、生效日期、核验日期和风险等级。</div>
+            </div>
+            <div class="toolbar-actions">
+              <el-button :icon="Refresh" @click="loadDataSources">刷新</el-button>
+              <el-button v-if="canManageLegalToolCenter" type="primary" :icon="Plus" @click="openDataSourceDialog()">
+                新增来源
+              </el-button>
+            </div>
+          </div>
+
+          <el-table v-loading="dataSourceLoading" :data="dataSources" row-key="id">
+            <el-table-column prop="sourceKey" label="来源标识" width="190" />
+            <el-table-column prop="sourceName" label="来源名称" min-width="220" show-overflow-tooltip />
+            <el-table-column prop="sourceType" label="类型" width="130" />
+            <el-table-column prop="issuer" label="发布机构" width="170" />
+            <el-table-column prop="citation" label="文号" width="130" show-overflow-tooltip />
+            <el-table-column prop="sourceVersion" label="版本" width="170" show-overflow-tooltip />
+            <el-table-column prop="effectiveDate" label="生效日期" width="120" />
+            <el-table-column prop="lastCheckedDate" label="核验日期" width="120" />
+            <el-table-column prop="status" label="状态" width="110" />
+            <el-table-column prop="riskLevel" label="风险" width="90" />
+            <el-table-column prop="linkedToolKeys" label="关联工具" min-width="170" show-overflow-tooltip />
+            <el-table-column label="启用" width="104">
+              <template #default="{ row }">
+                <el-tag :type="statusTagType(row.enabled)" effect="plain">{{ row.enabled ? '启用' : '禁用' }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column v-if="canManageLegalToolCenter" label="操作" width="100" fixed="right">
+              <template #default="{ row }">
+                <el-button :icon="EditPen" text type="primary" @click="openDataSourceDialog(row)">编辑</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -625,6 +907,42 @@ onMounted(async () => {
             </el-table-column>
           </el-table>
         </el-tab-pane>
+
+        <el-tab-pane label="交互蓝图" name="blueprints">
+          <div class="toolbar">
+            <div>
+              <div class="toolbar-title">工具交互蓝图</div>
+              <div class="toolbar-subtitle">沉淀竞品观察后的表单分组、结果区块、提示和服务转化结构，不复制竞品文案。</div>
+            </div>
+            <div class="toolbar-actions">
+              <el-button :icon="Refresh" @click="loadBlueprints">刷新</el-button>
+              <el-button v-if="canManageLegalToolCenter" type="primary" :icon="Plus" @click="openBlueprintDialog()">
+                新增蓝图
+              </el-button>
+            </div>
+          </div>
+
+          <el-table v-loading="blueprintLoading" :data="blueprints" row-key="id">
+            <el-table-column prop="blueprintKey" label="蓝图标识" width="190" />
+            <el-table-column prop="toolKey" label="工具标识" width="160" />
+            <el-table-column prop="blueprintName" label="名称" min-width="210" show-overflow-tooltip />
+            <el-table-column prop="referenceType" label="参考类型" width="170" />
+            <el-table-column prop="status" label="状态" width="120" />
+            <el-table-column prop="validationNotes" label="校验说明" min-width="210" show-overflow-tooltip />
+            <el-table-column prop="lastReviewedDate" label="审核日期" width="120" />
+            <el-table-column prop="reviewedBy" label="审核人" width="120" />
+            <el-table-column label="启用" width="104">
+              <template #default="{ row }">
+                <el-tag :type="statusTagType(row.enabled)" effect="plain">{{ row.enabled ? '启用' : '禁用' }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column v-if="canManageLegalToolCenter" label="操作" width="100" fixed="right">
+              <template #default="{ row }">
+                <el-button :icon="EditPen" text type="primary" @click="openBlueprintDialog(row)">编辑</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
       </el-tabs>
     </el-card>
 
@@ -687,6 +1005,42 @@ onMounted(async () => {
       <template #footer>
         <el-button @click="capabilityDialogVisible = false">取消</el-button>
         <el-button type="primary" :loading="submitting" @click="submitCapability">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="dataSourceDialogVisible" title="数据来源" width="720px">
+      <el-form label-width="108px">
+        <el-form-item label="来源标识"><el-input v-model="dataSourceForm.sourceKey" /></el-form-item>
+        <el-form-item label="来源名称"><el-input v-model="dataSourceForm.sourceName" /></el-form-item>
+        <el-form-item label="来源类型">
+          <el-select v-model="dataSourceForm.sourceType" class="full-input">
+            <el-option v-for="item in sourceTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="发布机构"><el-input v-model="dataSourceForm.issuer" /></el-form-item>
+        <el-form-item label="来源链接"><el-input v-model="dataSourceForm.sourceUrl" /></el-form-item>
+        <el-form-item label="引用文号"><el-input v-model="dataSourceForm.citation" /></el-form-item>
+        <el-form-item label="生效日期"><el-input v-model="dataSourceForm.effectiveDate" /></el-form-item>
+        <el-form-item label="来源版本"><el-input v-model="dataSourceForm.sourceVersion" /></el-form-item>
+        <el-form-item label="核验日期"><el-input v-model="dataSourceForm.lastCheckedDate" /></el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="dataSourceForm.status" class="full-input">
+            <el-option v-for="item in sourceStatusOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="风险等级">
+          <el-select v-model="dataSourceForm.riskLevel" class="full-input">
+            <el-option v-for="item in riskLevelOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="关联工具"><el-input v-model="dataSourceForm.linkedToolKeys" /></el-form-item>
+        <el-form-item label="运营备注"><el-input v-model="dataSourceForm.ownerNote" type="textarea" :rows="2" /></el-form-item>
+        <el-form-item label="排序"><el-input-number v-model="dataSourceForm.sortOrder" :min="0" /></el-form-item>
+        <el-form-item label="启用"><el-switch v-model="dataSourceForm.enabled" /></el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dataSourceDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitDataSource">保存</el-button>
       </template>
     </el-dialog>
 
@@ -772,6 +1126,43 @@ onMounted(async () => {
       <template #footer>
         <el-button @click="exposureItemDialogVisible = false">取消</el-button>
         <el-button type="primary" :loading="submitting" @click="submitExposureItem">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="blueprintDialogVisible" title="交互蓝图" width="780px">
+      <el-form label-width="112px">
+        <el-form-item label="蓝图标识"><el-input v-model="blueprintForm.blueprintKey" /></el-form-item>
+        <el-form-item label="工具标识"><el-input v-model="blueprintForm.toolKey" /></el-form-item>
+        <el-form-item label="蓝图名称"><el-input v-model="blueprintForm.blueprintName" /></el-form-item>
+        <el-form-item label="参考类型">
+          <el-select v-model="blueprintForm.referenceType" class="full-input">
+            <el-option
+              v-for="item in blueprintReferenceTypeOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="参考说明"><el-input v-model="blueprintForm.referenceNote" type="textarea" :rows="2" /></el-form-item>
+        <el-form-item label="表单分组 JSON"><el-input v-model="blueprintForm.formGroupsJson" type="textarea" :rows="4" /></el-form-item>
+        <el-form-item label="结果区块 JSON"><el-input v-model="blueprintForm.resultBlocksJson" type="textarea" :rows="4" /></el-form-item>
+        <el-form-item label="CTA 规则 JSON"><el-input v-model="blueprintForm.ctaRulesJson" type="textarea" :rows="3" /></el-form-item>
+        <el-form-item label="校验说明"><el-input v-model="blueprintForm.validationNotes" type="textarea" :rows="2" /></el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="blueprintForm.status" class="full-input">
+            <el-option v-for="item in blueprintStatusOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="审核人"><el-input v-model="blueprintForm.reviewedBy" /></el-form-item>
+        <el-form-item label="审核日期"><el-input v-model="blueprintForm.lastReviewedDate" /></el-form-item>
+        <el-form-item label="运营备注"><el-input v-model="blueprintForm.ownerNote" type="textarea" :rows="2" /></el-form-item>
+        <el-form-item label="排序"><el-input-number v-model="blueprintForm.sortOrder" :min="0" /></el-form-item>
+        <el-form-item label="启用"><el-switch v-model="blueprintForm.enabled" /></el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="blueprintDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitBlueprint">保存</el-button>
       </template>
     </el-dialog>
   </section>

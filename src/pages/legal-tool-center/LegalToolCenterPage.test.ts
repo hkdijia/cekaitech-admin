@@ -8,11 +8,16 @@ import {
   disableLegalToolExposureGroup,
   disableLegalToolExposureItem,
   pageLegalToolCapabilities,
+  pageLegalToolDataSources,
   pageLegalToolExposureGroups,
   pageLegalToolExposureItems,
+  pageLegalToolInteractionBlueprints,
   saveLegalToolCapability,
+  saveLegalToolDataSource,
   saveLegalToolExposureGroup,
   saveLegalToolExposureItem
+  ,
+  saveLegalToolInteractionBlueprint
 } from '../../api/legalToolCenter';
 import { useAuthStore } from '../../stores/auth';
 import LegalToolCenterPage from './LegalToolCenterPage.vue';
@@ -20,22 +25,30 @@ import LegalToolCenterPage from './LegalToolCenterPage.vue';
 vi.mock('../../api/legalToolCenter', () => ({
   pageLegalToolCapabilities: vi.fn(),
   saveLegalToolCapability: vi.fn(),
+  pageLegalToolDataSources: vi.fn(),
+  saveLegalToolDataSource: vi.fn(),
   pageLegalToolExposureGroups: vi.fn(),
   saveLegalToolExposureGroup: vi.fn(),
   disableLegalToolExposureGroup: vi.fn(),
   pageLegalToolExposureItems: vi.fn(),
   saveLegalToolExposureItem: vi.fn(),
-  disableLegalToolExposureItem: vi.fn()
+  disableLegalToolExposureItem: vi.fn(),
+  pageLegalToolInteractionBlueprints: vi.fn(),
+  saveLegalToolInteractionBlueprint: vi.fn()
 }));
 
 const pageLegalToolCapabilitiesMock = vi.mocked(pageLegalToolCapabilities);
 const saveLegalToolCapabilityMock = vi.mocked(saveLegalToolCapability);
+const pageLegalToolDataSourcesMock = vi.mocked(pageLegalToolDataSources);
+const saveLegalToolDataSourceMock = vi.mocked(saveLegalToolDataSource);
 const pageLegalToolExposureGroupsMock = vi.mocked(pageLegalToolExposureGroups);
 const saveLegalToolExposureGroupMock = vi.mocked(saveLegalToolExposureGroup);
 const disableLegalToolExposureGroupMock = vi.mocked(disableLegalToolExposureGroup);
 const pageLegalToolExposureItemsMock = vi.mocked(pageLegalToolExposureItems);
 const saveLegalToolExposureItemMock = vi.mocked(saveLegalToolExposureItem);
 const disableLegalToolExposureItemMock = vi.mocked(disableLegalToolExposureItem);
+const pageLegalToolInteractionBlueprintsMock = vi.mocked(pageLegalToolInteractionBlueprints);
+const saveLegalToolInteractionBlueprintMock = vi.mocked(saveLegalToolInteractionBlueprint);
 
 const capability = {
   id: 1,
@@ -102,6 +115,50 @@ const exposureItem = {
   updatedAt: '2026-05-30T20:00:00'
 };
 
+const dataSource = {
+  id: 31,
+  appCode: 'lawsuit-material-assistant',
+  sourceKey: 'civil_case_cause_2026',
+  sourceName: '民事案件案由规定（第三次修正）',
+  sourceType: 'official_rule',
+  issuer: '最高人民法院',
+  sourceUrl: 'https://www.court.gov.cn/zixun/xiangqing/484231.html',
+  citation: '法〔2025〕166号',
+  effectiveDate: '2026-01-01',
+  sourceVersion: '2025-third-amendment',
+  lastCheckedDate: '2026-05-30',
+  status: 'verified',
+  riskLevel: 'medium',
+  linkedToolKeys: 'civil_cause_of_action',
+  ownerNote: '',
+  sortOrder: 10,
+  enabled: true,
+  createdAt: '2026-05-30T20:00:00',
+  updatedAt: '2026-05-30T20:00:00'
+};
+
+const blueprint = {
+  id: 41,
+  appCode: 'lawsuit-material-assistant',
+  blueprintKey: 'litigation_fee_v1',
+  toolKey: 'litigation_fee',
+  blueprintName: '诉讼费用计算交互蓝图',
+  referenceType: 'competitor_observation',
+  referenceNote: '吸收表单分组和结果块结构。',
+  formGroupsJson: '[{"key":"amount"}]',
+  resultBlocksJson: '[{"key":"summary"}]',
+  ctaRulesJson: '[]',
+  validationNotes: '金额为非负数',
+  status: 'draft',
+  reviewedBy: '',
+  lastReviewedDate: '',
+  ownerNote: '',
+  sortOrder: 10,
+  enabled: true,
+  createdAt: '2026-05-30T20:00:00',
+  updatedAt: '2026-05-30T20:00:00'
+};
+
 function mountPage(
   permissions: string[] = ['admin:legal-tool-center:view', 'admin:legal-tool-center:manage']
 ) {
@@ -135,19 +192,27 @@ describe('LegalToolCenterPage', () => {
     localStorage.clear();
     pageLegalToolCapabilitiesMock.mockReset();
     saveLegalToolCapabilityMock.mockReset();
+    pageLegalToolDataSourcesMock.mockReset();
+    saveLegalToolDataSourceMock.mockReset();
     pageLegalToolExposureGroupsMock.mockReset();
     saveLegalToolExposureGroupMock.mockReset();
     disableLegalToolExposureGroupMock.mockReset();
     pageLegalToolExposureItemsMock.mockReset();
     saveLegalToolExposureItemMock.mockReset();
     disableLegalToolExposureItemMock.mockReset();
+    pageLegalToolInteractionBlueprintsMock.mockReset();
+    saveLegalToolInteractionBlueprintMock.mockReset();
 
     pageLegalToolCapabilitiesMock.mockResolvedValue({ dataList: [capability], totalCount: 1 });
+    pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource], totalCount: 1 });
     pageLegalToolExposureGroupsMock.mockResolvedValue({ dataList: [group], totalCount: 1 });
     pageLegalToolExposureItemsMock.mockResolvedValue({ dataList: [exposureItem], totalCount: 1 });
+    pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     saveLegalToolCapabilityMock.mockResolvedValue(capability);
+    saveLegalToolDataSourceMock.mockResolvedValue(dataSource);
     saveLegalToolExposureGroupMock.mockResolvedValue(group);
     saveLegalToolExposureItemMock.mockResolvedValue(exposureItem);
+    saveLegalToolInteractionBlueprintMock.mockResolvedValue(blueprint);
     disableLegalToolExposureGroupMock.mockResolvedValue({ ...group, enabled: false });
     disableLegalToolExposureItemMock.mockResolvedValue({ ...exposureItem, enabled: false });
     vi.spyOn(ElMessageBox, 'confirm').mockResolvedValue({ action: 'confirm' } as Awaited<ReturnType<typeof ElMessageBox.confirm>>);
@@ -163,6 +228,11 @@ describe('LegalToolCenterPage', () => {
       pageNo: 1,
       pageSize: 50
     });
+    expect(pageLegalToolDataSourcesMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      pageNo: 1,
+      pageSize: 50
+    });
     expect(pageLegalToolExposureGroupsMock).toHaveBeenCalledWith({
       appCode: 'lawsuit-material-assistant',
       pageNo: 1,
@@ -173,14 +243,23 @@ describe('LegalToolCenterPage', () => {
       pageNo: 1,
       pageSize: 50
     });
+    expect(pageLegalToolInteractionBlueprintsMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      pageNo: 1,
+      pageSize: 50
+    });
     expect(wrapper.text()).toContain('法律工具中心');
     expect(wrapper.text()).toContain('能力库');
+    expect(wrapper.text()).toContain('数据来源');
     expect(wrapper.text()).toContain('展示分组');
     expect(wrapper.text()).toContain('曝光入口');
+    expect(wrapper.text()).toContain('交互蓝图');
     expect(wrapper.text()).toContain('诉讼费用');
     expect(wrapper.text()).toContain('official');
     expect(wrapper.text()).toContain('medium');
+    expect(wrapper.text()).toContain('民事案件案由规定');
     expect(wrapper.text()).toContain('诉讼计算');
+    expect(wrapper.text()).toContain('诉讼费用计算交互蓝图');
   });
 
   it('hides write actions when operator lacks manage permission', async () => {
@@ -236,6 +315,81 @@ describe('LegalToolCenterPage', () => {
       enabled: true
     });
     expect(pageLegalToolCapabilitiesMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      pageNo: 1,
+      pageSize: 50
+    });
+  });
+
+  it('saves data sources and blueprints through backend without audit fields', async () => {
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+    pageLegalToolDataSourcesMock.mockClear();
+    pageLegalToolInteractionBlueprintsMock.mockClear();
+
+    const vm = wrapper.vm as unknown as {
+      openDataSourceDialog: (row?: typeof dataSource) => void;
+      dataSourceForm: typeof dataSource;
+      submitDataSource: () => Promise<void>;
+      openBlueprintDialog: (row?: typeof blueprint) => void;
+      blueprintForm: typeof blueprint;
+      submitBlueprint: () => Promise<void>;
+    };
+
+    vm.openDataSourceDialog(dataSource);
+    Object.assign(vm.dataSourceForm, dataSource);
+    await vm.submitDataSource();
+
+    vm.openBlueprintDialog(blueprint);
+    Object.assign(vm.blueprintForm, blueprint);
+    await vm.submitBlueprint();
+    await flushAsyncUpdates();
+
+    expect(saveLegalToolDataSourceMock).toHaveBeenCalledWith({
+      id: 31,
+      appCode: 'lawsuit-material-assistant',
+      sourceKey: 'civil_case_cause_2026',
+      sourceName: '民事案件案由规定（第三次修正）',
+      sourceType: 'official_rule',
+      issuer: '最高人民法院',
+      sourceUrl: 'https://www.court.gov.cn/zixun/xiangqing/484231.html',
+      citation: '法〔2025〕166号',
+      effectiveDate: '2026-01-01',
+      sourceVersion: '2025-third-amendment',
+      lastCheckedDate: '2026-05-30',
+      status: 'verified',
+      riskLevel: 'medium',
+      linkedToolKeys: 'civil_cause_of_action',
+      ownerNote: '',
+      sortOrder: 10,
+      enabled: true
+    });
+    expect(saveLegalToolInteractionBlueprintMock).toHaveBeenCalledWith({
+      id: 41,
+      appCode: 'lawsuit-material-assistant',
+      blueprintKey: 'litigation_fee_v1',
+      toolKey: 'litigation_fee',
+      blueprintName: '诉讼费用计算交互蓝图',
+      referenceType: 'competitor_observation',
+      referenceNote: '吸收表单分组和结果块结构。',
+      formGroupsJson: '[{"key":"amount"}]',
+      resultBlocksJson: '[{"key":"summary"}]',
+      ctaRulesJson: '[]',
+      validationNotes: '金额为非负数',
+      status: 'draft',
+      reviewedBy: '',
+      lastReviewedDate: '',
+      ownerNote: '',
+      sortOrder: 10,
+      enabled: true
+    });
+    expect(pageLegalToolDataSourcesMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      pageNo: 1,
+      pageSize: 50
+    });
+    expect(pageLegalToolInteractionBlueprintsMock).toHaveBeenCalledWith({
       appCode: 'lawsuit-material-assistant',
       pageNo: 1,
       pageSize: 50
