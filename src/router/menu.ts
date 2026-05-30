@@ -67,6 +67,12 @@ export const adminMenuItems: AdminMenuItem[] = [
     permissionCode: 'admin:legal-tool-center:view'
   },
   {
+    path: '/data-governance',
+    title: '数据同步/发布',
+    description: '同步批次、修订记录和 LPR JSON 发布',
+    permissionCode: 'admin:data-governance:view'
+  },
+  {
     path: '/private-lending-result-template',
     title: '结果模板配置',
     description: '民间借贷结果模板和预览',

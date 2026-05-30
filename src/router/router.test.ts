@@ -89,6 +89,15 @@ describe('admin routes', () => {
     expect(route?.meta?.permissionCode).toBe('admin:legal-tool-center:view');
   });
 
+  it('declares data governance menu and route permission', () => {
+    const menuItem = adminMenuItems.find((item) => item.path === '/data-governance');
+    const route = routes.find((item) => item.path === '/data-governance');
+
+    expect(menuItem?.title).toBe('数据同步/发布');
+    expect(menuItem?.permissionCode).toBe('admin:data-governance:view');
+    expect(route?.meta?.permissionCode).toBe('admin:data-governance:view');
+  });
+
   it('declares private lending result template menu and route permission', () => {
     const menuItem = adminMenuItems.find((item) => item.path === '/private-lending-result-template');
     const route = routes.find((item) => item.path === '/private-lending-result-template');
