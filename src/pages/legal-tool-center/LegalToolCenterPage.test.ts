@@ -256,6 +256,30 @@ const elementTemplateCapability = {
   sortOrder: 100,
 };
 
+const levelJurisdictionCapability = {
+  ...capability,
+  id: 9,
+  toolKey: 'level_jurisdiction',
+  title: '级别管辖核对',
+  description: '核对一审民事案件级别管辖线索',
+  category: 'rule_query',
+  status: 'public',
+  audience: 'litigation_user',
+  sourceLevel: 'official',
+  dataDependency: 'static_rule',
+  executionMode: 'miniapp_local_calculation',
+  riskLevel: 'medium',
+  defaultIconKey: 'landmark',
+  defaultTargetPath: '/pages/level-jurisdiction/level-jurisdiction',
+  sourceName: '中华人民共和国民事诉讼法 / 最高人民法院关于调整中级人民法院管辖第一审民事案件标准的通知',
+  sourceUrl: 'https://www.court.gov.cn/fabu/xiangqing/324151.html',
+  sourceVersion: 'civil-procedure-law-2023-level-jurisdiction-and-fafa-2021-27',
+  sourceEffectiveDate: '2021-10-01',
+  lastCheckedDate: '2026-05-31',
+  ownerNote: '首片只做级别管辖线索核对，不判断地域管辖、专属管辖和具体受理法院。',
+  sortOrder: 110,
+};
+
 const group = {
   id: 11,
   appCode: 'lawsuit-material-assistant',
@@ -368,6 +392,17 @@ const elementTemplateExposureItem = {
   targetPath: '/pages/element-template/element-template',
   audience: 'litigation_user',
   sortOrder: 100,
+};
+
+const levelJurisdictionExposureItem = {
+  ...exposureItem,
+  id: 29,
+  capabilityId: 9,
+  entryKey: 'level_jurisdiction',
+  iconKey: 'landmark',
+  targetPath: '/pages/level-jurisdiction/level-jurisdiction',
+  audience: 'litigation_user',
+  sortOrder: 110,
 };
 
 const dataSource = {
@@ -555,14 +590,14 @@ describe('LegalToolCenterPage', () => {
     publishLitigationFeeRuleMock.mockReset();
 
     pageLegalToolCapabilitiesMock.mockResolvedValue({
-      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability],
-      totalCount: 8
+      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability, levelJurisdictionCapability],
+      totalCount: 9
     });
     pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource], totalCount: 1 });
     pageLegalToolExposureGroupsMock.mockResolvedValue({ dataList: [group], totalCount: 1 });
     pageLegalToolExposureItemsMock.mockResolvedValue({
-      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem, elementTemplateExposureItem],
-      totalCount: 8
+      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem, elementTemplateExposureItem, levelJurisdictionExposureItem],
+      totalCount: 9
     });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     pageLegalLprRatesMock.mockResolvedValue({ dataList: [lprRate], totalCount: 1 });
@@ -655,6 +690,9 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('要素式示范文本');
     expect(wrapper.text()).toContain('/pages/element-template/element-template');
     expect(wrapper.text()).toContain('file-check-2');
+    expect(wrapper.text()).toContain('级别管辖核对');
+    expect(wrapper.text()).toContain('/pages/level-jurisdiction/level-jurisdiction');
+    expect(wrapper.text()).toContain('landmark');
     expect(wrapper.text()).toContain('miniapp_local_calculation');
     expect(wrapper.text()).toContain('official');
     expect(wrapper.text()).toContain('medium');
