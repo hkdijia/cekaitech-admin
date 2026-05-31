@@ -232,6 +232,30 @@ const economicCompensationCapability = {
   sortOrder: 90,
 };
 
+const elementTemplateCapability = {
+  ...capability,
+  id: 8,
+  toolKey: 'element_template_library',
+  title: '要素式示范文本',
+  description: '按场景核对官方要素式示范文本',
+  category: 'rule_query',
+  status: 'public',
+  audience: 'litigation_user',
+  sourceLevel: 'official',
+  dataDependency: 'static_table',
+  executionMode: 'backend_data',
+  riskLevel: 'medium',
+  defaultIconKey: 'file-check-2',
+  defaultTargetPath: '/pages/element-template/element-template',
+  sourceName: '最高人民法院、司法部、中华全国律师协会要素式示范文本',
+  sourceUrl: 'https://www.court.gov.cn/',
+  sourceVersion: 'element-template-67-2025',
+  sourceEffectiveDate: '2025-07-14',
+  lastCheckedDate: '2026-05-31',
+  ownerNote: '首片只做样例目录检索，不导入完整67类全文，不生成诉讼文书。',
+  sortOrder: 100,
+};
+
 const group = {
   id: 11,
   appCode: 'lawsuit-material-assistant',
@@ -333,6 +357,17 @@ const economicCompensationExposureItem = {
   targetPath: '/pages/economic-compensation/economic-compensation',
   audience: 'labor_user',
   sortOrder: 90,
+};
+
+const elementTemplateExposureItem = {
+  ...exposureItem,
+  id: 28,
+  capabilityId: 8,
+  entryKey: 'element_template_library',
+  iconKey: 'file-check-2',
+  targetPath: '/pages/element-template/element-template',
+  audience: 'litigation_user',
+  sortOrder: 100,
 };
 
 const dataSource = {
@@ -520,14 +555,14 @@ describe('LegalToolCenterPage', () => {
     publishLitigationFeeRuleMock.mockReset();
 
     pageLegalToolCapabilitiesMock.mockResolvedValue({
-      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability],
-      totalCount: 7
+      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability],
+      totalCount: 8
     });
     pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource], totalCount: 1 });
     pageLegalToolExposureGroupsMock.mockResolvedValue({ dataList: [group], totalCount: 1 });
     pageLegalToolExposureItemsMock.mockResolvedValue({
-      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem],
-      totalCount: 7
+      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem, elementTemplateExposureItem],
+      totalCount: 8
     });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     pageLegalLprRatesMock.mockResolvedValue({ dataList: [lprRate], totalCount: 1 });
@@ -617,6 +652,9 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('经济补偿金');
     expect(wrapper.text()).toContain('/pages/economic-compensation/economic-compensation');
     expect(wrapper.text()).toContain('badge-dollar-sign');
+    expect(wrapper.text()).toContain('要素式示范文本');
+    expect(wrapper.text()).toContain('/pages/element-template/element-template');
+    expect(wrapper.text()).toContain('file-check-2');
     expect(wrapper.text()).toContain('miniapp_local_calculation');
     expect(wrapper.text()).toContain('official');
     expect(wrapper.text()).toContain('medium');
