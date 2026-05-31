@@ -53,6 +53,12 @@ export const routes: RouteRecordRaw[] = [
     children: [{ path: '', component: () => import('../pages/miniapp-home-config/MiniappHomeConfigPage.vue') }]
   },
   {
+    path: '/miniapp-orchestration',
+    component: () => import('../layouts/AdminLayout.vue'),
+    meta: { permissionCode: 'admin:miniapp-home-config:view' },
+    children: [{ path: '', component: () => import('../pages/miniapp-orchestration/MiniappOrchestrationPage.vue') }]
+  },
+  {
     path: '/miniapp-document-catalog',
     component: () => import('../layouts/AdminLayout.vue'),
     meta: { permissionCode: 'admin:miniapp-document-catalog:view' },

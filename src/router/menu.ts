@@ -55,6 +55,12 @@ export const adminMenuItems: AdminMenuItem[] = [
     permissionCode: 'admin:miniapp-home-config:view'
   },
   {
+    path: '/miniapp-orchestration',
+    title: '小程序配置中心',
+    description: '按页面、模块和功能入口编排对客展示',
+    permissionCode: 'admin:miniapp-home-config:view'
+  },
+  {
     path: '/miniapp-document-catalog',
     title: '文书目录配置',
     description: '起诉文书生成目录和页面指向',

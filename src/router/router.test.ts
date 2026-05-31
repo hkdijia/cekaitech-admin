@@ -71,6 +71,16 @@ describe('admin routes', () => {
     expect(route?.meta?.permissionCode).toBe('admin:miniapp-home-config:view');
   });
 
+  it('declares miniapp orchestration menu and route permission', () => {
+    const menuItem = adminMenuItems.find((item) => item.path === '/miniapp-orchestration');
+    const route = routes.find((item) => item.path === '/miniapp-orchestration');
+
+    expect(menuItem?.title).toBe('小程序配置中心');
+    expect(menuItem?.description).toBe('按页面、模块和功能入口编排对客展示');
+    expect(menuItem?.permissionCode).toBe('admin:miniapp-home-config:view');
+    expect(route?.meta?.permissionCode).toBe('admin:miniapp-home-config:view');
+  });
+
   it('declares miniapp document catalog menu and route permission', () => {
     const menuItem = adminMenuItems.find((item) => item.path === '/miniapp-document-catalog');
     const route = routes.find((item) => item.path === '/miniapp-document-catalog');

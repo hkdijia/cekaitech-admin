@@ -4,6 +4,7 @@ import { MINIAPP_ICON_OPTIONS } from '../../miniapp-icons/miniappIconCatalog';
 
 const props = defineProps<{
   modelValue: string;
+  disabled?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -13,6 +14,9 @@ const emit = defineEmits<{
 const currentIconText = computed(() => props.modelValue || '未选择');
 
 function selectIcon(iconKey: string) {
+  if (props.disabled) {
+    return;
+  }
   emit('update:modelValue', iconKey);
 }
 </script>
@@ -30,6 +34,7 @@ function selectIcon(iconKey: string) {
         class="miniapp-icon-choice"
         :class="{ active: modelValue === icon.key }"
         type="button"
+        :disabled="disabled"
         :data-test="`miniapp-icon-${icon.key}`"
         @click="selectIcon(icon.key)"
       >
@@ -91,6 +96,11 @@ function selectIcon(iconKey: string) {
   border-color: #1e3a8a;
   background: #f1f5ff;
   color: #1e3a8a;
+}
+
+.miniapp-icon-choice:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
 }
 
 .miniapp-icon-symbol {
