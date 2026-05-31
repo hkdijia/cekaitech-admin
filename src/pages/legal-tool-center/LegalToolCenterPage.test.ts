@@ -140,6 +140,28 @@ const dateCalculationCapability = {
   sortOrder: 50,
 };
 
+const paidAnnualLeaveCapability = {
+  ...capability,
+  id: 4,
+  toolKey: 'paid_annual_leave',
+  title: '带薪年休假',
+  description: '年休假天数和未休工资参考测算',
+  status: 'public',
+  audience: 'labor_user',
+  sourceLevel: 'official',
+  dataDependency: 'rule_tree',
+  executionMode: 'local_static',
+  riskLevel: 'medium',
+  defaultIconKey: 'calendar-check',
+  defaultTargetPath: '/pages/paid-annual-leave/paid-annual-leave',
+  sourceName: '职工带薪年休假条例',
+  sourceUrl: 'https://www.gov.cn/gongbao/content/content_859865.htm',
+  sourceVersion: 'state-council-order-514',
+  lastCheckedDate: '2026-05-31',
+  ownerNote: '首片只做年休假天数和未休工资参考测算，不判断具体不享受情形。',
+  sortOrder: 60,
+};
+
 const group = {
   id: 11,
   appCode: 'lawsuit-material-assistant',
@@ -197,6 +219,17 @@ const dateCalculationExposureItem = {
   targetPath: '/pages/date-calculation/date-calculation',
   audience: 'general_user',
   sortOrder: 50,
+};
+
+const paidAnnualLeaveExposureItem = {
+  ...exposureItem,
+  id: 24,
+  capabilityId: 4,
+  entryKey: 'paid_annual_leave',
+  iconKey: 'calendar-check',
+  targetPath: '/pages/paid-annual-leave/paid-annual-leave',
+  audience: 'labor_user',
+  sortOrder: 60,
 };
 
 const dataSource = {
@@ -384,14 +417,14 @@ describe('LegalToolCenterPage', () => {
     publishLitigationFeeRuleMock.mockReset();
 
     pageLegalToolCapabilitiesMock.mockResolvedValue({
-      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability],
-      totalCount: 3
+      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability],
+      totalCount: 4
     });
     pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource], totalCount: 1 });
     pageLegalToolExposureGroupsMock.mockResolvedValue({ dataList: [group], totalCount: 1 });
     pageLegalToolExposureItemsMock.mockResolvedValue({
-      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem],
-      totalCount: 3
+      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem],
+      totalCount: 4
     });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     pageLegalLprRatesMock.mockResolvedValue({ dataList: [lprRate], totalCount: 1 });
@@ -468,6 +501,9 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('日期推算');
     expect(wrapper.text()).toContain('/pages/date-calculation/date-calculation');
     expect(wrapper.text()).toContain('calendar-days');
+    expect(wrapper.text()).toContain('带薪年休假');
+    expect(wrapper.text()).toContain('/pages/paid-annual-leave/paid-annual-leave');
+    expect(wrapper.text()).toContain('calendar-check');
     expect(wrapper.text()).toContain('official');
     expect(wrapper.text()).toContain('medium');
     expect(wrapper.text()).toContain('民事案件案由规定');
