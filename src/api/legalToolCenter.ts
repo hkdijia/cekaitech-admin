@@ -178,6 +178,10 @@ export interface LitigationFeeBand {
   minExclusive: number;
   maxInclusive: number | null;
   fixedFee: number;
+  feeMin?: number;
+  feeMax?: number;
+  excessBase?: number;
+  excessRate?: number;
   rate: number;
   quickAdjustment: number;
   bandLabel: string;
@@ -212,7 +216,9 @@ export interface LitigationFeePreviewQuery {
 
 export interface LitigationFeePreviewResult {
   amount: number;
-  fee: number;
+  fee?: number;
+  feeMin?: number;
+  feeMax?: number;
   bandLabel: string;
 }
 

@@ -317,6 +317,16 @@ const entryStatusOptions = [
 
 const canManageLegalToolCenter = computed(() => auth.hasPermission('admin:legal-tool-center:manage'));
 const selectedGroup = computed(() => groups.value.find((item) => item.id === selectedGroupId.value));
+const litigationFeePreviewText = computed(() => {
+  if (!previewResult.value) {
+    return '';
+  }
+  const hasRange = previewResult.value.feeMin !== undefined && previewResult.value.feeMax !== undefined;
+  const feeText = hasRange
+    ? `${previewResult.value.feeMin}-${previewResult.value.feeMax}`
+    : previewResult.value.fee;
+  return `${previewResult.value.amount}：${feeText}，${previewResult.value.bandLabel}`;
+});
 
 function formatTime(value: string) {
   if (!value) {
@@ -327,6 +337,25 @@ function formatTime(value: string) {
 
 function statusTagType(enabled: boolean) {
   return enabled ? 'success' : 'info';
+}
+
+function firstLitigationFeeBandSummary(row: LitigationFeeRuleItem) {
+  const band = row.bands[0];
+  if (!band) {
+    return '-';
+  }
+  const excessBand = row.bands.find((item) => item.excessBase || item.excessRate) ?? band;
+  const parts = [`${row.bands.length}段`];
+  if (band.feeMin !== undefined && band.feeMax !== undefined) {
+    parts.push(`费用区间 ${band.feeMin}-${band.feeMax}`);
+  }
+  if (excessBand.excessBase !== undefined) {
+    parts.push(`超额基数 ${excessBand.excessBase}`);
+  }
+  if (excessBand.excessRate !== undefined) {
+    parts.push(`超额费率 ${excessBand.excessRate}`);
+  }
+  return parts.join(' / ');
 }
 
 function normalizePayloadId<T extends { id: number }>(payload: T) {
@@ -420,6 +449,10 @@ function litigationFeeRulePayload() {
       minExclusive: Number(band.minExclusive || 0),
       maxInclusive: band.maxInclusive === null ? null : Number(band.maxInclusive || 0),
       fixedFee: Number(band.fixedFee || 0),
+      feeMin: Number(band.feeMin || 0),
+      feeMax: Number(band.feeMax || 0),
+      excessBase: Number(band.excessBase || 0),
+      excessRate: Number(band.excessRate || 0),
       rate: Number(band.rate || 0),
       quickAdjustment: Number(band.quickAdjustment || 0),
       bandLabel: band.bandLabel
@@ -778,6 +811,10 @@ function addLitigationFeeBand() {
     minExclusive: 0,
     maxInclusive: null,
     fixedFee: 0,
+    feeMin: 0,
+    feeMax: 0,
+    excessBase: 0,
+    excessRate: 0,
     rate: 0,
     quickAdjustment: 0,
     bandLabel: ''
@@ -1117,8 +1154,8 @@ onMounted(async () => {
             <el-table-column prop="status" label="状态" width="110" />
             <el-table-column prop="sourceKey" label="来源标识" min-width="210" show-overflow-tooltip />
             <el-table-column prop="lastCheckedDate" label="核验日期" width="120" />
-            <el-table-column label="分段" width="90">
-              <template #default="{ row }">{{ row.bands.length }}</template>
+            <el-table-column label="分段" min-width="240" show-overflow-tooltip>
+              <template #default="{ row }">{{ firstLitigationFeeBandSummary(row) }}</template>
             </el-table-column>
             <el-table-column label="启用" width="104">
               <template #default="{ row }">
@@ -1406,10 +1443,23 @@ onMounted(async () => {
         <el-form-item label="分段规则">
           <div class="band-editor">
             <div v-for="(band, index) in litigationFeeRuleForm.bands" :key="index" class="band-row">
+              <span class="band-field-label">下限</span>
               <el-input-number v-model="band.minExclusive" :min="0" controls-position="right" placeholder="下限" />
+              <span class="band-field-label">上限</span>
               <el-input-number v-model="band.maxInclusive" :min="0" controls-position="right" placeholder="上限" />
+              <span class="band-field-label">固定费用</span>
               <el-input-number v-model="band.fixedFee" :min="0" controls-position="right" placeholder="固定费用" />
+              <span class="band-field-label">费用下限</span>
+              <el-input-number v-model="band.feeMin" :min="0" controls-position="right" placeholder="费用下限" />
+              <span class="band-field-label">费用上限</span>
+              <el-input-number v-model="band.feeMax" :min="0" controls-position="right" placeholder="费用上限" />
+              <span class="band-field-label">超额基数</span>
+              <el-input-number v-model="band.excessBase" :min="0" controls-position="right" placeholder="超额基数" />
+              <span class="band-field-label">超额费率</span>
+              <el-input-number v-model="band.excessRate" :min="0" :precision="4" :step="0.001" controls-position="right" placeholder="超额费率" />
+              <span class="band-field-label">费率</span>
               <el-input-number v-model="band.rate" :min="0" :precision="4" :step="0.001" controls-position="right" placeholder="费率" />
+              <span class="band-field-label">速算调整</span>
               <el-input-number v-model="band.quickAdjustment" :precision="2" controls-position="right" placeholder="速算调整" />
               <el-input v-model="band.bandLabel" placeholder="分段说明" />
               <el-button text type="danger" @click="removeLitigationFeeBand(index)">删除</el-button>
@@ -1422,7 +1472,7 @@ onMounted(async () => {
             <el-input-number v-model="previewAmount" :min="0" :precision="2" controls-position="right" />
             <el-button @click="previewLitigationFee">预览</el-button>
             <span v-if="previewResult" class="preview-result">
-              {{ previewResult.amount }}：{{ previewResult.fee }}，{{ previewResult.bandLabel }}
+              {{ litigationFeePreviewText }}
             </span>
           </div>
         </el-form-item>
@@ -1621,6 +1671,13 @@ onMounted(async () => {
 
 .band-row .el-input {
   min-width: 160px;
+}
+
+.band-field-label {
+  color: #667085;
+  flex: 0 0 auto;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .preview-result {

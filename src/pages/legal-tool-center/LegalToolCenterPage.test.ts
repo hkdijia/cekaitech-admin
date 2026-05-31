@@ -211,6 +211,10 @@ const litigationFeeRule = {
       minExclusive: 0,
       maxInclusive: 10000,
       fixedFee: 50,
+      feeMin: 50,
+      feeMax: 300,
+      excessBase: 0,
+      excessRate: 0,
       rate: 0,
       quickAdjustment: 0,
       bandLabel: '不超过1万元'
@@ -219,6 +223,10 @@ const litigationFeeRule = {
       minExclusive: 10000,
       maxInclusive: 100000,
       fixedFee: 0,
+      feeMin: 300,
+      feeMax: 3000,
+      excessBase: 300,
+      excessRate: 0.025,
       rate: 0.025,
       quickAdjustment: -200,
       bandLabel: '超过1万元至10万元'
@@ -232,6 +240,32 @@ const litigationFeeRule = {
   createdAt: '2026-05-31T10:00:00',
   updatedAt: '2026-05-31T10:00:00'
 };
+
+const litigationFeeRules = [
+  litigationFeeRule,
+  {
+    ...litigationFeeRule,
+    id: 62,
+    ruleKey: 'divorce_case_acceptance_fee',
+    ruleName: '离婚案件受理费',
+    bands: [{
+      minExclusive: 0,
+      maxInclusive: null,
+      fixedFee: 0,
+      feeMin: 50,
+      feeMax: 300,
+      excessBase: 0,
+      excessRate: 0,
+      rate: 0,
+      quickAdjustment: 0,
+      bandLabel: '每件50元至300元'
+    }]
+  },
+  { ...litigationFeeRule, id: 63, ruleKey: 'personality_right_case_acceptance_fee', ruleName: '人格权案件受理费' },
+  { ...litigationFeeRule, id: 64, ruleKey: 'other_non_property_case_acceptance_fee', ruleName: '其他非财产案件受理费' },
+  { ...litigationFeeRule, id: 65, ruleKey: 'intellectual_property_case_acceptance_fee', ruleName: '知识产权案件受理费' },
+  { ...litigationFeeRule, id: 66, ruleKey: 'labor_dispute_case_acceptance_fee', ruleName: '劳动争议案件受理费' }
+];
 
 function mountPage(
   permissions: string[] = ['admin:legal-tool-center:view', 'admin:legal-tool-center:manage']
@@ -289,7 +323,7 @@ describe('LegalToolCenterPage', () => {
     pageLegalToolExposureItemsMock.mockResolvedValue({ dataList: [exposureItem], totalCount: 1 });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     pageLegalLprRatesMock.mockResolvedValue({ dataList: [lprRate], totalCount: 1 });
-    pageLitigationFeeRulesMock.mockResolvedValue({ dataList: [litigationFeeRule], totalCount: 1 });
+    pageLitigationFeeRulesMock.mockResolvedValue({ dataList: litigationFeeRules, totalCount: 6 });
     saveLegalToolCapabilityMock.mockResolvedValue(capability);
     saveLegalToolDataSourceMock.mockResolvedValue(dataSource);
     saveLegalToolExposureGroupMock.mockResolvedValue(group);
@@ -366,6 +400,13 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('3');
     expect(wrapper.text()).toContain('3.5');
     expect(wrapper.text()).toContain('财产案件受理费');
+    expect(wrapper.text()).toContain('离婚案件受理费');
+    expect(wrapper.text()).toContain('人格权案件受理费');
+    expect(wrapper.text()).toContain('其他非财产案件受理费');
+    expect(wrapper.text()).toContain('知识产权案件受理费');
+    expect(wrapper.text()).toContain('劳动争议案件受理费');
+    expect(wrapper.text()).toContain('费用区间 50-300');
+    expect(wrapper.text()).toContain('超额基数 300');
     expect(wrapper.text()).toContain('state-council-order-481-v1');
   });
 
@@ -596,6 +637,53 @@ describe('LegalToolCenterPage', () => {
     );
     expect(publishLitigationFeeRuleMock).toHaveBeenCalledWith(61);
     expect(pageLitigationFeeRulesMock).toHaveBeenCalled();
+  });
+
+  it('saves litigation fee interval fields and renders divorce preview ranges', async () => {
+    previewLitigationFeeRuleMock.mockResolvedValueOnce({
+      amount: 0,
+      fee: 0,
+      feeMin: 50,
+      feeMax: 300,
+      bandLabel: '每件50元至300元'
+    });
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+
+    const divorceRule = litigationFeeRules[1];
+    const vm = wrapper.vm as unknown as {
+      openLitigationFeeRuleDialog: (row?: (typeof litigationFeeRules)[number]) => void;
+      litigationFeeRuleForm: typeof litigationFeeRule;
+      previewAmount: number;
+      previewLitigationFee: () => Promise<void>;
+      submitLitigationFeeRule: () => Promise<void>;
+    };
+
+    vm.openLitigationFeeRuleDialog(divorceRule);
+    await nextTick();
+
+    expect(wrapper.text()).toContain('费用下限');
+    expect(wrapper.text()).toContain('费用上限');
+    expect(wrapper.text()).toContain('超额基数');
+    expect(wrapper.text()).toContain('超额费率');
+
+    vm.previewAmount = 0;
+    await vm.previewLitigationFee();
+    await nextTick();
+    await vm.submitLitigationFeeRule();
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('0：50-300，每件50元至300元');
+    expect(saveLitigationFeeRuleMock).toHaveBeenCalledWith(expect.objectContaining({
+      ruleKey: 'divorce_case_acceptance_fee',
+      bands: [expect.objectContaining({
+        feeMin: 50,
+        feeMax: 300,
+        excessBase: 0,
+        excessRate: 0
+      })]
+    }));
   });
 
   it('saves and disables exposure groups through backend', async () => {

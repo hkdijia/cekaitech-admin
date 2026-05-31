@@ -456,7 +456,7 @@ describe('legal tool center api', () => {
           success: true,
           code: '0',
           msg: '',
-          data: { amount: 100000, fee: 2300, bandLabel: '超过1万元至10万元' }
+          data: { amount: 0, fee: 0, feeMin: 50, feeMax: 300, bandLabel: '每件50元至300元' }
         })
       } as Response)
       .mockResolvedValueOnce({
@@ -480,17 +480,28 @@ describe('legal tool center api', () => {
       status: 'draft',
       effectiveDate: '2007-04-01',
       lastCheckedDate: '2026-05-31',
-      bands: [],
+      bands: [{
+        minExclusive: 0,
+        maxInclusive: null,
+        fixedFee: 0,
+        feeMin: 50,
+        feeMax: 300,
+        excessBase: 0,
+        excessRate: 0,
+        rate: 0,
+        quickAdjustment: 0,
+        bandLabel: '每件50元至300元'
+      }],
       noticeText: '本结果为财产案件受理费参考估算，最终金额以法院通知为准。',
       disclaimerText: '本工具仅供参考。',
       ownerNote: '',
       sortOrder: 10,
       enabled: true
     });
-    await previewLitigationFeeRule({
+    const preview = await previewLitigationFeeRule({
       appCode: 'lawsuit-material-assistant',
-      ruleKey: 'property_case_acceptance_fee',
-      amount: 100000
+      ruleKey: 'divorce_case_acceptance_fee',
+      amount: 0
     });
     await publishLitigationFeeRule(1);
 
@@ -499,18 +510,48 @@ describe('legal tool center api', () => {
       body: JSON.stringify({ appCode: 'lawsuit-material-assistant', pageNo: 1, pageSize: 50 })
     }));
     expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/admin/legal-tool-center/litigation-fee-rules/save', expect.objectContaining({
-      method: 'POST'
+      method: 'POST',
+      body: JSON.stringify({
+        appCode: 'lawsuit-material-assistant',
+        toolKey: 'litigation_fee',
+        ruleKey: 'property_case_acceptance_fee',
+        ruleName: '财产案件受理费',
+        ruleVersion: 'state-council-order-481-v1',
+        sourceKey: 'litigation_fee_state_council_481',
+        status: 'draft',
+        effectiveDate: '2007-04-01',
+        lastCheckedDate: '2026-05-31',
+        bands: [{
+          minExclusive: 0,
+          maxInclusive: null,
+          fixedFee: 0,
+          feeMin: 50,
+          feeMax: 300,
+          excessBase: 0,
+          excessRate: 0,
+          rate: 0,
+          quickAdjustment: 0,
+          bandLabel: '每件50元至300元'
+        }],
+        noticeText: '本结果为财产案件受理费参考估算，最终金额以法院通知为准。',
+        disclaimerText: '本工具仅供参考。',
+        ownerNote: '',
+        sortOrder: 10,
+        enabled: true
+      })
     }));
     expect(fetchMock).toHaveBeenNthCalledWith(3, '/api/admin/legal-tool-center/litigation-fee-rules/preview', expect.objectContaining({
       method: 'POST',
       body: JSON.stringify({
         appCode: 'lawsuit-material-assistant',
-        ruleKey: 'property_case_acceptance_fee',
-        amount: 100000
+        ruleKey: 'divorce_case_acceptance_fee',
+        amount: 0
       })
     }));
     expect(fetchMock).toHaveBeenNthCalledWith(4, '/api/admin/legal-tool-center/litigation-fee-rules/1/publish', expect.objectContaining({
       method: 'POST'
     }));
+    expect(preview.feeMin).toBe(50);
+    expect(preview.feeMax).toBe(300);
   });
 });
