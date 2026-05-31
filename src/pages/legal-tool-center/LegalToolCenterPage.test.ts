@@ -162,6 +162,29 @@ const paidAnnualLeaveCapability = {
   sortOrder: 60,
 };
 
+const wageConversionCapability = {
+  ...capability,
+  id: 10,
+  toolKey: 'wage_conversion',
+  title: '工资折算',
+  description: '按月工资折算日工资与小时工资参考值',
+  status: 'public',
+  audience: 'labor_user',
+  sourceLevel: 'official',
+  dataDependency: 'static_rule',
+  executionMode: 'miniapp_local_calculation',
+  riskLevel: 'low',
+  defaultIconKey: 'badge-dollar-sign',
+  defaultTargetPath: '/pages/wage-conversion/wage-conversion',
+  sourceName: '人力资源社会保障部关于职工全年月平均工作时间和工资折算问题的通知',
+  sourceUrl: 'https://www.gov.cn/zhengce/zhengceku/202501/content_6995777.htm',
+  sourceVersion: 'mohrss-2025-2-wage-conversion',
+  sourceEffectiveDate: '2025-01-01',
+  lastCheckedDate: '2026-05-31',
+  ownerNote: '首片只做日工资、小时工资和天数/小时金额折算，不处理加班费和扣款。',
+  sortOrder: 65,
+};
+
 const civilCauseCapability = {
   ...capability,
   id: 5,
@@ -350,6 +373,17 @@ const paidAnnualLeaveExposureItem = {
   sortOrder: 60,
 };
 
+const wageConversionExposureItem = {
+  ...exposureItem,
+  id: 30,
+  capabilityId: 10,
+  entryKey: 'wage_conversion',
+  iconKey: 'badge-dollar-sign',
+  targetPath: '/pages/wage-conversion/wage-conversion',
+  audience: 'labor_user',
+  sortOrder: 65,
+};
+
 const civilCauseExposureItem = {
   ...exposureItem,
   id: 25,
@@ -425,6 +459,23 @@ const dataSource = {
   enabled: true,
   createdAt: '2026-05-30T20:00:00',
   updatedAt: '2026-05-30T20:00:00'
+};
+
+const wageConversionDataSource = {
+  ...dataSource,
+  id: 32,
+  sourceKey: 'mohrss_2025_2_wage_conversion',
+  sourceName: '关于职工全年月平均工作时间和工资折算问题的通知',
+  sourceType: 'official_notice',
+  issuer: '人力资源社会保障部',
+  sourceUrl: 'https://www.gov.cn/zhengce/zhengceku/202501/content_6995777.htm',
+  citation: '人社部发〔2025〕2号',
+  effectiveDate: '2025-01-01',
+  sourceVersion: 'mohrss-2025-2-wage-conversion',
+  lastCheckedDate: '2026-05-31',
+  riskLevel: 'low',
+  linkedToolKeys: 'wage_conversion',
+  sortOrder: 20,
 };
 
 const blueprint = {
@@ -590,14 +641,14 @@ describe('LegalToolCenterPage', () => {
     publishLitigationFeeRuleMock.mockReset();
 
     pageLegalToolCapabilitiesMock.mockResolvedValue({
-      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability, levelJurisdictionCapability],
-      totalCount: 9
+      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, wageConversionCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability, levelJurisdictionCapability],
+      totalCount: 10
     });
-    pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource], totalCount: 1 });
+    pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource, wageConversionDataSource], totalCount: 2 });
     pageLegalToolExposureGroupsMock.mockResolvedValue({ dataList: [group], totalCount: 1 });
     pageLegalToolExposureItemsMock.mockResolvedValue({
-      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem, elementTemplateExposureItem, levelJurisdictionExposureItem],
-      totalCount: 9
+      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, wageConversionExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem, elementTemplateExposureItem, levelJurisdictionExposureItem],
+      totalCount: 10
     });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     pageLegalLprRatesMock.mockResolvedValue({ dataList: [lprRate], totalCount: 1 });
@@ -677,6 +728,9 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('带薪年休假');
     expect(wrapper.text()).toContain('/pages/paid-annual-leave/paid-annual-leave');
     expect(wrapper.text()).toContain('calendar-check');
+    expect(wrapper.text()).toContain('工资折算');
+    expect(wrapper.text()).toContain('/pages/wage-conversion/wage-conversion');
+    expect(wrapper.text()).toContain('mohrss-2025-2-wage-conversion');
     expect(wrapper.text()).toContain('民事案由');
     expect(wrapper.text()).toContain('/pages/civil-cause/civil-cause');
     expect(wrapper.text()).toContain('search-check');
