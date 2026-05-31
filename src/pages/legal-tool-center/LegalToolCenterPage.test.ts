@@ -96,6 +96,29 @@ const capability = {
   updatedAt: '2026-05-30T20:00:00'
 };
 
+const privateLendingInterestCapability = {
+  ...capability,
+  id: 2,
+  toolKey: 'private_lending_interest',
+  title: '新民间借贷利息',
+  description: '按合同成立日 LPR 四倍保护上限估算民间借贷利息参考值',
+  status: 'public',
+  audience: 'litigation_user',
+  sourceLevel: 'official',
+  dataDependency: 'rate_series',
+  executionMode: 'backend_rule',
+  riskLevel: 'high',
+  defaultIconKey: 'calculator',
+  defaultTargetPath: '/pages/private-lending-interest/private-lending-interest',
+  defaultAction: 'navigate',
+  sourceName: '最高人民法院民间借贷司法解释 / 贷款市场报价利率 LPR',
+  sourceUrl: 'https://cicc.court.gov.cn/html/1/218/62/84/12844.html',
+  sourceVersion: 'private-lending-lpr-4x-v1',
+  lastCheckedDate: '2026-05-31',
+  ownerNote: '按合同成立日不晚于该日的最近一期一年期 LPR 计算四倍保护上限。',
+  sortOrder: 40,
+};
+
 const group = {
   id: 11,
   appCode: 'lawsuit-material-assistant',
@@ -131,6 +154,17 @@ const exposureItem = {
   enabled: true,
   createdAt: '2026-05-30T20:00:00',
   updatedAt: '2026-05-30T20:00:00'
+};
+
+const privateLendingInterestExposureItem = {
+  ...exposureItem,
+  id: 22,
+  capabilityId: 2,
+  entryKey: 'private_lending_interest',
+  iconKey: 'calculator',
+  targetPath: '/pages/private-lending-interest/private-lending-interest',
+  audience: 'litigation_user',
+  sortOrder: 40,
 };
 
 const dataSource = {
@@ -317,10 +351,16 @@ describe('LegalToolCenterPage', () => {
     previewLitigationFeeRuleMock.mockReset();
     publishLitigationFeeRuleMock.mockReset();
 
-    pageLegalToolCapabilitiesMock.mockResolvedValue({ dataList: [capability], totalCount: 1 });
+    pageLegalToolCapabilitiesMock.mockResolvedValue({
+      dataList: [capability, privateLendingInterestCapability],
+      totalCount: 2
+    });
     pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource], totalCount: 1 });
     pageLegalToolExposureGroupsMock.mockResolvedValue({ dataList: [group], totalCount: 1 });
-    pageLegalToolExposureItemsMock.mockResolvedValue({ dataList: [exposureItem], totalCount: 1 });
+    pageLegalToolExposureItemsMock.mockResolvedValue({
+      dataList: [exposureItem, privateLendingInterestExposureItem],
+      totalCount: 2
+    });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     pageLegalLprRatesMock.mockResolvedValue({ dataList: [lprRate], totalCount: 1 });
     pageLitigationFeeRulesMock.mockResolvedValue({ dataList: litigationFeeRules, totalCount: 6 });
@@ -391,6 +431,8 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('LPR利率');
     expect(wrapper.text()).toContain('诉讼费用规则');
     expect(wrapper.text()).toContain('诉讼费用');
+    expect(wrapper.text()).toContain('新民间借贷利息');
+    expect(wrapper.text()).toContain('/pages/private-lending-interest/private-lending-interest');
     expect(wrapper.text()).toContain('official');
     expect(wrapper.text()).toContain('medium');
     expect(wrapper.text()).toContain('民事案件案由规定');
