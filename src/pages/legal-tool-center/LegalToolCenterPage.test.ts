@@ -209,6 +209,29 @@ const delayedPerformanceInterestCapability = {
   sortOrder: 80,
 };
 
+const economicCompensationCapability = {
+  ...capability,
+  id: 7,
+  toolKey: 'economic_compensation',
+  title: '经济补偿金',
+  description: '劳动合同解除经济补偿参考估算',
+  status: 'public',
+  audience: 'labor_user',
+  sourceLevel: 'official',
+  dataDependency: 'static_rule',
+  executionMode: 'miniapp_local_calculation',
+  riskLevel: 'medium',
+  defaultIconKey: 'badge-dollar-sign',
+  defaultTargetPath: '/pages/economic-compensation/economic-compensation',
+  sourceName: '中华人民共和国劳动合同法',
+  sourceUrl: 'https://www.gov.cn/gongbao/content/2007/content_711013.htm',
+  sourceVersion: 'labor-contract-law-2007',
+  sourceEffectiveDate: '2008-01-01',
+  lastCheckedDate: '2026-05-31',
+  ownerNote: '首片只做第四十七条基础估算，不判断是否应付经济补偿或违法解除二倍赔偿。',
+  sortOrder: 90,
+};
+
 const group = {
   id: 11,
   appCode: 'lawsuit-material-assistant',
@@ -299,6 +322,17 @@ const delayedPerformanceInterestExposureItem = {
   targetPath: '/pages/delayed-performance-interest/delayed-performance-interest',
   audience: 'litigation_user',
   sortOrder: 80,
+};
+
+const economicCompensationExposureItem = {
+  ...exposureItem,
+  id: 27,
+  capabilityId: 7,
+  entryKey: 'economic_compensation',
+  iconKey: 'badge-dollar-sign',
+  targetPath: '/pages/economic-compensation/economic-compensation',
+  audience: 'labor_user',
+  sortOrder: 90,
 };
 
 const dataSource = {
@@ -486,14 +520,14 @@ describe('LegalToolCenterPage', () => {
     publishLitigationFeeRuleMock.mockReset();
 
     pageLegalToolCapabilitiesMock.mockResolvedValue({
-      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, civilCauseCapability, delayedPerformanceInterestCapability],
-      totalCount: 6
+      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability],
+      totalCount: 7
     });
     pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource], totalCount: 1 });
     pageLegalToolExposureGroupsMock.mockResolvedValue({ dataList: [group], totalCount: 1 });
     pageLegalToolExposureItemsMock.mockResolvedValue({
-      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem],
-      totalCount: 6
+      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem],
+      totalCount: 7
     });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     pageLegalLprRatesMock.mockResolvedValue({ dataList: [lprRate], totalCount: 1 });
@@ -580,6 +614,9 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('延迟履行利息');
     expect(wrapper.text()).toContain('/pages/delayed-performance-interest/delayed-performance-interest');
     expect(wrapper.text()).toContain('timer-reset');
+    expect(wrapper.text()).toContain('经济补偿金');
+    expect(wrapper.text()).toContain('/pages/economic-compensation/economic-compensation');
+    expect(wrapper.text()).toContain('badge-dollar-sign');
     expect(wrapper.text()).toContain('miniapp_local_calculation');
     expect(wrapper.text()).toContain('official');
     expect(wrapper.text()).toContain('medium');
