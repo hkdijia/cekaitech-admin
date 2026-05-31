@@ -119,6 +119,27 @@ const privateLendingInterestCapability = {
   sortOrder: 40,
 };
 
+const dateCalculationCapability = {
+  ...capability,
+  id: 3,
+  toolKey: 'date_calculation',
+  title: '日期推算',
+  description: '自然日差值与加减天数参考推算',
+  status: 'public',
+  audience: 'general_user',
+  sourceLevel: 'self_modeled',
+  dataDependency: 'none',
+  executionMode: 'local_static',
+  riskLevel: 'low',
+  defaultIconKey: 'calendar-days',
+  defaultTargetPath: '/pages/date-calculation/date-calculation',
+  sourceName: '阳光法律助手本地工具口径',
+  sourceVersion: 'natural-day-v1',
+  lastCheckedDate: '2026-05-31',
+  ownerNote: '首片只做自然日参考推算，不包含法定节假日顺延或诉讼期间规则判断。',
+  sortOrder: 50,
+};
+
 const group = {
   id: 11,
   appCode: 'lawsuit-material-assistant',
@@ -165,6 +186,17 @@ const privateLendingInterestExposureItem = {
   targetPath: '/pages/private-lending-interest/private-lending-interest',
   audience: 'litigation_user',
   sortOrder: 40,
+};
+
+const dateCalculationExposureItem = {
+  ...exposureItem,
+  id: 23,
+  capabilityId: 3,
+  entryKey: 'date_calculation',
+  iconKey: 'calendar-days',
+  targetPath: '/pages/date-calculation/date-calculation',
+  audience: 'general_user',
+  sortOrder: 50,
 };
 
 const dataSource = {
@@ -352,14 +384,14 @@ describe('LegalToolCenterPage', () => {
     publishLitigationFeeRuleMock.mockReset();
 
     pageLegalToolCapabilitiesMock.mockResolvedValue({
-      dataList: [capability, privateLendingInterestCapability],
-      totalCount: 2
+      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability],
+      totalCount: 3
     });
     pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource], totalCount: 1 });
     pageLegalToolExposureGroupsMock.mockResolvedValue({ dataList: [group], totalCount: 1 });
     pageLegalToolExposureItemsMock.mockResolvedValue({
-      dataList: [exposureItem, privateLendingInterestExposureItem],
-      totalCount: 2
+      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem],
+      totalCount: 3
     });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     pageLegalLprRatesMock.mockResolvedValue({ dataList: [lprRate], totalCount: 1 });
@@ -433,6 +465,9 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('诉讼费用');
     expect(wrapper.text()).toContain('新民间借贷利息');
     expect(wrapper.text()).toContain('/pages/private-lending-interest/private-lending-interest');
+    expect(wrapper.text()).toContain('日期推算');
+    expect(wrapper.text()).toContain('/pages/date-calculation/date-calculation');
+    expect(wrapper.text()).toContain('calendar-days');
     expect(wrapper.text()).toContain('official');
     expect(wrapper.text()).toContain('medium');
     expect(wrapper.text()).toContain('民事案件案由规定');
