@@ -186,6 +186,29 @@ const civilCauseCapability = {
   sortOrder: 70,
 };
 
+const delayedPerformanceInterestCapability = {
+  ...capability,
+  id: 6,
+  toolKey: 'delayed_performance_interest',
+  title: '延迟履行利息',
+  description: '执行阶段加倍部分债务利息参考估算',
+  status: 'public',
+  audience: 'litigation_user',
+  sourceLevel: 'official',
+  dataDependency: 'static_rule',
+  executionMode: 'miniapp_local_calculation',
+  riskLevel: 'medium',
+  defaultIconKey: 'timer-reset',
+  defaultTargetPath: '/pages/delayed-performance-interest/delayed-performance-interest',
+  sourceName: '最高人民法院关于执行程序中计算迟延履行期间的债务利息适用法律若干问题的解释',
+  sourceUrl: 'https://gongbao.court.gov.cn/Details/a16755bf8fffacb6bf930153dd59a7.html',
+  sourceVersion: 'spc-delayed-performance-interest-2014-v1',
+  sourceEffectiveDate: '2014-08-01',
+  lastCheckedDate: '2026-05-31',
+  ownerNote: '首片只估算加倍部分债务利息，不处理一般债务利息、分次履行和部分清偿。',
+  sortOrder: 80,
+};
+
 const group = {
   id: 11,
   appCode: 'lawsuit-material-assistant',
@@ -265,6 +288,17 @@ const civilCauseExposureItem = {
   targetPath: '/pages/civil-cause/civil-cause',
   audience: 'litigation_user',
   sortOrder: 70,
+};
+
+const delayedPerformanceInterestExposureItem = {
+  ...exposureItem,
+  id: 26,
+  capabilityId: 6,
+  entryKey: 'delayed_performance_interest',
+  iconKey: 'timer-reset',
+  targetPath: '/pages/delayed-performance-interest/delayed-performance-interest',
+  audience: 'litigation_user',
+  sortOrder: 80,
 };
 
 const dataSource = {
@@ -452,14 +486,14 @@ describe('LegalToolCenterPage', () => {
     publishLitigationFeeRuleMock.mockReset();
 
     pageLegalToolCapabilitiesMock.mockResolvedValue({
-      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, civilCauseCapability],
-      totalCount: 5
+      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, civilCauseCapability, delayedPerformanceInterestCapability],
+      totalCount: 6
     });
     pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource], totalCount: 1 });
     pageLegalToolExposureGroupsMock.mockResolvedValue({ dataList: [group], totalCount: 1 });
     pageLegalToolExposureItemsMock.mockResolvedValue({
-      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, civilCauseExposureItem],
-      totalCount: 5
+      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem],
+      totalCount: 6
     });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     pageLegalLprRatesMock.mockResolvedValue({ dataList: [lprRate], totalCount: 1 });
@@ -543,6 +577,10 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('/pages/civil-cause/civil-cause');
     expect(wrapper.text()).toContain('search-check');
     expect(wrapper.text()).toContain('backend_data');
+    expect(wrapper.text()).toContain('延迟履行利息');
+    expect(wrapper.text()).toContain('/pages/delayed-performance-interest/delayed-performance-interest');
+    expect(wrapper.text()).toContain('timer-reset');
+    expect(wrapper.text()).toContain('miniapp_local_calculation');
     expect(wrapper.text()).toContain('official');
     expect(wrapper.text()).toContain('medium');
     expect(wrapper.text()).toContain('民事案件案由规定');
