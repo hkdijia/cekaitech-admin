@@ -10,13 +10,20 @@ import {
   pageLegalToolExposureGroups,
   pageLegalToolExposureItems,
   pageLegalToolInteractionBlueprints,
+  pageLitigationFeeRules,
   pageLegalLprRates,
+  previewLitigationFeeRule,
+  publishLitigationFeeRule,
   saveLegalToolCapability,
   saveLegalToolDataSource,
   saveLegalToolExposureGroup,
   saveLegalToolExposureItem,
   saveLegalToolInteractionBlueprint,
+  saveLitigationFeeRule,
   saveLegalLprRate,
+  type LitigationFeePreviewResult,
+  type LitigationFeeRuleItem,
+  type LitigationFeeRulePayload,
   type LegalLprRateItem,
   type LegalLprRatePayload,
   type LegalToolCapabilityItem,
@@ -41,6 +48,7 @@ const activeTab = ref('capabilities');
 const loading = ref(false);
 const dataSourceLoading = ref(false);
 const lprRateLoading = ref(false);
+const litigationFeeRuleLoading = ref(false);
 const groupLoading = ref(false);
 const exposureItemLoading = ref(false);
 const blueprintLoading = ref(false);
@@ -48,6 +56,7 @@ const loadError = ref('');
 const capabilities = ref<LegalToolCapabilityItem[]>([]);
 const dataSources = ref<LegalToolDataSourceItem[]>([]);
 const lprRates = ref<LegalLprRateItem[]>([]);
+const litigationFeeRules = ref<LitigationFeeRuleItem[]>([]);
 const groups = ref<LegalToolExposureGroupItem[]>([]);
 const exposureItems = ref<LegalToolExposureItem[]>([]);
 const blueprints = ref<LegalToolInteractionBlueprintItem[]>([]);
@@ -55,10 +64,13 @@ const selectedGroupId = ref<number | null>(null);
 const capabilityDialogVisible = ref(false);
 const dataSourceDialogVisible = ref(false);
 const lprRateDialogVisible = ref(false);
+const litigationFeeRuleDialogVisible = ref(false);
 const groupDialogVisible = ref(false);
 const exposureItemDialogVisible = ref(false);
 const blueprintDialogVisible = ref(false);
 const submitting = ref(false);
+const previewAmount = ref(100000);
+const previewResult = ref<LitigationFeePreviewResult | null>(null);
 
 const capabilityForm = reactive<LegalToolCapabilityPayload>({
   id: 0,
@@ -118,6 +130,24 @@ const lprRateForm = reactive<LegalLprRatePayload>({
   sourceVersion: '',
   lastCheckedDate: '',
   status: 'verified',
+  sortOrder: 10,
+  enabled: true
+});
+
+const litigationFeeRuleForm = reactive<LitigationFeeRulePayload>({
+  appCode: APP_CODE,
+  toolKey: 'litigation_fee',
+  ruleKey: 'property_case_acceptance_fee',
+  ruleName: '财产案件受理费',
+  ruleVersion: '',
+  sourceKey: 'litigation_fee_state_council_481',
+  status: 'draft',
+  effectiveDate: '2007-04-01',
+  lastCheckedDate: '',
+  bands: [],
+  noticeText: '本结果为财产案件受理费参考估算，最终金额以法院通知为准。',
+  disclaimerText: '本工具仅供参考。',
+  ownerNote: '',
   sortOrder: 10,
   enabled: true
 });
@@ -374,6 +404,34 @@ function lprRatePayload() {
   });
 }
 
+function litigationFeeRulePayload() {
+  return normalizePayloadId({
+    id: litigationFeeRuleForm.id ?? 0,
+    appCode: litigationFeeRuleForm.appCode,
+    toolKey: litigationFeeRuleForm.toolKey,
+    ruleKey: litigationFeeRuleForm.ruleKey,
+    ruleName: litigationFeeRuleForm.ruleName,
+    ruleVersion: litigationFeeRuleForm.ruleVersion,
+    sourceKey: litigationFeeRuleForm.sourceKey,
+    status: litigationFeeRuleForm.status,
+    effectiveDate: litigationFeeRuleForm.effectiveDate,
+    lastCheckedDate: litigationFeeRuleForm.lastCheckedDate,
+    bands: litigationFeeRuleForm.bands.map((band) => ({
+      minExclusive: Number(band.minExclusive || 0),
+      maxInclusive: band.maxInclusive === null ? null : Number(band.maxInclusive || 0),
+      fixedFee: Number(band.fixedFee || 0),
+      rate: Number(band.rate || 0),
+      quickAdjustment: Number(band.quickAdjustment || 0),
+      bandLabel: band.bandLabel
+    })),
+    noticeText: litigationFeeRuleForm.noticeText,
+    disclaimerText: litigationFeeRuleForm.disclaimerText,
+    ownerNote: litigationFeeRuleForm.ownerNote,
+    sortOrder: litigationFeeRuleForm.sortOrder,
+    enabled: litigationFeeRuleForm.enabled
+  });
+}
+
 function groupPayload() {
   return normalizePayloadId({
     id: groupForm.id,
@@ -492,6 +550,24 @@ async function loadLprRates() {
     lprRates.value = [];
   } finally {
     lprRateLoading.value = false;
+  }
+}
+
+async function loadLitigationFeeRules() {
+  litigationFeeRuleLoading.value = true;
+  loadError.value = '';
+  try {
+    const result = await pageLitigationFeeRules({
+      appCode: APP_CODE,
+      pageNo: 1,
+      pageSize: PAGE_SIZE
+    });
+    litigationFeeRules.value = result.dataList;
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '诉讼费用规则加载失败';
+    litigationFeeRules.value = [];
+  } finally {
+    litigationFeeRuleLoading.value = false;
   }
 }
 
@@ -674,6 +750,83 @@ async function submitLprRate() {
   }
 }
 
+function openLitigationFeeRuleDialog(row?: LitigationFeeRuleItem) {
+  Object.assign(litigationFeeRuleForm, {
+    id: row?.id ?? 0,
+    appCode: APP_CODE,
+    toolKey: row?.toolKey ?? 'litigation_fee',
+    ruleKey: row?.ruleKey ?? 'property_case_acceptance_fee',
+    ruleName: row?.ruleName ?? '财产案件受理费',
+    ruleVersion: row?.ruleVersion ?? '',
+    sourceKey: row?.sourceKey ?? 'litigation_fee_state_council_481',
+    status: row?.status ?? 'draft',
+    effectiveDate: row?.effectiveDate ?? '2007-04-01',
+    lastCheckedDate: row?.lastCheckedDate ?? '',
+    bands: row?.bands ? row.bands.map((band) => ({ ...band })) : [],
+    noticeText: row?.noticeText ?? '本结果为财产案件受理费参考估算，最终金额以法院通知为准。',
+    disclaimerText: row?.disclaimerText ?? '本工具仅供参考。',
+    ownerNote: row?.ownerNote ?? '',
+    sortOrder: row?.sortOrder ?? 10,
+    enabled: row?.enabled ?? true
+  });
+  previewResult.value = null;
+  litigationFeeRuleDialogVisible.value = true;
+}
+
+function addLitigationFeeBand() {
+  litigationFeeRuleForm.bands.push({
+    minExclusive: 0,
+    maxInclusive: null,
+    fixedFee: 0,
+    rate: 0,
+    quickAdjustment: 0,
+    bandLabel: ''
+  });
+}
+
+function removeLitigationFeeBand(index: number) {
+  litigationFeeRuleForm.bands.splice(index, 1);
+}
+
+async function previewLitigationFee() {
+  loadError.value = '';
+  try {
+    previewResult.value = await previewLitigationFeeRule({
+      appCode: APP_CODE,
+      ruleKey: litigationFeeRuleForm.ruleKey,
+      amount: Number(previewAmount.value || 0)
+    });
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '诉讼费用规则预览失败';
+    previewResult.value = null;
+  }
+}
+
+async function submitLitigationFeeRule() {
+  submitting.value = true;
+  loadError.value = '';
+  try {
+    await saveLitigationFeeRule(litigationFeeRulePayload());
+    litigationFeeRuleDialogVisible.value = false;
+    ElMessage.success('诉讼费用规则已保存');
+    await loadLitigationFeeRules();
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '诉讼费用规则保存失败';
+  } finally {
+    submitting.value = false;
+  }
+}
+
+async function publishLitigationFeeRuleRow(row: LitigationFeeRuleItem) {
+  await ElMessageBox.confirm(
+    '发布后小程序会读取该诉讼费用规则，请确认分段、来源和核验日期已复核。',
+    '发布诉讼费用规则',
+    { type: 'warning' }
+  );
+  await publishLitigationFeeRule(row.id);
+  await loadLitigationFeeRules();
+}
+
 function openGroupDialog(row?: LegalToolExposureGroupItem) {
   Object.assign(groupForm, {
     id: row?.id ?? 0,
@@ -811,6 +964,7 @@ onMounted(async () => {
     loadCapabilities(),
     loadDataSources(),
     loadLprRates(),
+    loadLitigationFeeRules(),
     loadGroups(),
     loadBlueprints()
   ]);
@@ -938,6 +1092,43 @@ onMounted(async () => {
             <el-table-column v-if="canManageLegalToolCenter" label="操作" width="100" fixed="right">
               <template #default="{ row }">
                 <el-button :icon="EditPen" text type="primary" @click="openLprRateDialog(row)">编辑</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+
+        <el-tab-pane label="诉讼费用规则" name="litigation-fee-rules">
+          <div class="toolbar">
+            <div>
+              <div class="toolbar-title">诉讼费用规则</div>
+              <div class="toolbar-subtitle">维护财产案件受理费分段、来源标识、核验日期和发布状态。</div>
+            </div>
+            <div class="toolbar-actions">
+              <el-button :icon="Refresh" @click="loadLitigationFeeRules">刷新</el-button>
+              <el-button v-if="canManageLegalToolCenter" type="primary" :icon="Plus" @click="openLitigationFeeRuleDialog()">
+                新增规则
+              </el-button>
+            </div>
+          </div>
+
+          <el-table v-loading="litigationFeeRuleLoading" :data="litigationFeeRules" row-key="id">
+            <el-table-column prop="ruleName" label="规则名称" width="150" />
+            <el-table-column prop="ruleVersion" label="版本" min-width="220" show-overflow-tooltip />
+            <el-table-column prop="status" label="状态" width="110" />
+            <el-table-column prop="sourceKey" label="来源标识" min-width="210" show-overflow-tooltip />
+            <el-table-column prop="lastCheckedDate" label="核验日期" width="120" />
+            <el-table-column label="分段" width="90">
+              <template #default="{ row }">{{ row.bands.length }}</template>
+            </el-table-column>
+            <el-table-column label="启用" width="104">
+              <template #default="{ row }">
+                <el-tag :type="statusTagType(row.enabled)" effect="plain">{{ row.enabled ? '启用' : '禁用' }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column v-if="canManageLegalToolCenter" label="操作" width="150" fixed="right">
+              <template #default="{ row }">
+                <el-button :icon="EditPen" text type="primary" @click="openLitigationFeeRuleDialog(row)">编辑</el-button>
+                <el-button text type="primary" :disabled="!row.enabled" @click="publishLitigationFeeRuleRow(row)">发布</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -1203,6 +1394,50 @@ onMounted(async () => {
       </template>
     </el-dialog>
 
+    <el-dialog v-model="litigationFeeRuleDialogVisible" title="诉讼费用规则" width="960px">
+      <el-form label-width="112px">
+        <el-form-item label="规则名称"><el-input v-model="litigationFeeRuleForm.ruleName" /></el-form-item>
+        <el-form-item label="规则版本"><el-input v-model="litigationFeeRuleForm.ruleVersion" /></el-form-item>
+        <el-form-item label="来源标识"><el-input v-model="litigationFeeRuleForm.sourceKey" /></el-form-item>
+        <el-form-item label="规则标识"><el-input v-model="litigationFeeRuleForm.ruleKey" /></el-form-item>
+        <el-form-item label="状态"><el-input v-model="litigationFeeRuleForm.status" /></el-form-item>
+        <el-form-item label="生效日期"><el-input v-model="litigationFeeRuleForm.effectiveDate" /></el-form-item>
+        <el-form-item label="核验日期"><el-input v-model="litigationFeeRuleForm.lastCheckedDate" /></el-form-item>
+        <el-form-item label="分段规则">
+          <div class="band-editor">
+            <div v-for="(band, index) in litigationFeeRuleForm.bands" :key="index" class="band-row">
+              <el-input-number v-model="band.minExclusive" :min="0" controls-position="right" placeholder="下限" />
+              <el-input-number v-model="band.maxInclusive" :min="0" controls-position="right" placeholder="上限" />
+              <el-input-number v-model="band.fixedFee" :min="0" controls-position="right" placeholder="固定费用" />
+              <el-input-number v-model="band.rate" :min="0" :precision="4" :step="0.001" controls-position="right" placeholder="费率" />
+              <el-input-number v-model="band.quickAdjustment" :precision="2" controls-position="right" placeholder="速算调整" />
+              <el-input v-model="band.bandLabel" placeholder="分段说明" />
+              <el-button text type="danger" @click="removeLitigationFeeBand(index)">删除</el-button>
+            </div>
+            <el-button :icon="Plus" @click="addLitigationFeeBand">新增分段</el-button>
+          </div>
+        </el-form-item>
+        <el-form-item label="预览金额">
+          <div class="preview-row">
+            <el-input-number v-model="previewAmount" :min="0" :precision="2" controls-position="right" />
+            <el-button @click="previewLitigationFee">预览</el-button>
+            <span v-if="previewResult" class="preview-result">
+              {{ previewResult.amount }}：{{ previewResult.fee }}，{{ previewResult.bandLabel }}
+            </span>
+          </div>
+        </el-form-item>
+        <el-form-item label="结果提示"><el-input v-model="litigationFeeRuleForm.noticeText" type="textarea" :rows="2" /></el-form-item>
+        <el-form-item label="免责声明"><el-input v-model="litigationFeeRuleForm.disclaimerText" type="textarea" :rows="2" /></el-form-item>
+        <el-form-item label="运营备注"><el-input v-model="litigationFeeRuleForm.ownerNote" type="textarea" :rows="2" /></el-form-item>
+        <el-form-item label="排序"><el-input-number v-model="litigationFeeRuleForm.sortOrder" :min="0" /></el-form-item>
+        <el-form-item label="启用"><el-switch v-model="litigationFeeRuleForm.enabled" /></el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="litigationFeeRuleDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitLitigationFeeRule">保存</el-button>
+      </template>
+    </el-dialog>
+
     <el-dialog v-model="groupDialogVisible" title="展示分组" width="600px">
       <el-form label-width="96px">
         <el-form-item label="分组标识"><el-input v-model="groupForm.groupKey" /></el-form-item>
@@ -1368,5 +1603,28 @@ onMounted(async () => {
 
 .full-input {
   width: 100%;
+}
+
+.band-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.band-row,
+.preview-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.band-row .el-input {
+  min-width: 160px;
+}
+
+.preview-result {
+  color: #344054;
+  font-size: 13px;
 }
 </style>

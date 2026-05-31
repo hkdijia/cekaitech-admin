@@ -7,12 +7,16 @@ import {
   pageLegalToolExposureGroups,
   pageLegalToolExposureItems,
   pageLegalToolInteractionBlueprints,
+  pageLitigationFeeRules,
   pageLegalLprRates,
+  previewLitigationFeeRule,
+  publishLitigationFeeRule,
   saveLegalToolCapability,
   saveLegalToolDataSource,
   saveLegalToolExposureGroup,
   saveLegalToolExposureItem,
   saveLegalToolInteractionBlueprint,
+  saveLitigationFeeRule,
   saveLegalLprRate
 } from './legalToolCenter';
 
@@ -403,6 +407,110 @@ describe('legal tool center api', () => {
         sortOrder: 10,
         enabled: true
       })
+    }));
+  });
+
+  it('posts litigation fee rule page, save, preview and publish requests to backend endpoints', async () => {
+    const rule = {
+      id: 1,
+      appCode: 'lawsuit-material-assistant',
+      toolKey: 'litigation_fee',
+      ruleKey: 'property_case_acceptance_fee',
+      ruleName: '财产案件受理费',
+      ruleVersion: 'state-council-order-481-v1',
+      sourceKey: 'litigation_fee_state_council_481',
+      status: 'draft',
+      effectiveDate: '2007-04-01',
+      lastCheckedDate: '2026-05-31',
+      bands: [],
+      noticeText: '本结果为财产案件受理费参考估算，最终金额以法院通知为准。',
+      disclaimerText: '本工具仅供参考。',
+      ownerNote: '',
+      sortOrder: 10,
+      enabled: true,
+      createdAt: '2026-05-31T10:00:00',
+      updatedAt: '2026-05-31T10:00:00'
+    };
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          code: '0',
+          msg: '',
+          data: { dataList: [rule], totalCount: 1 }
+        })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          code: '0',
+          msg: '',
+          data: rule
+        })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          code: '0',
+          msg: '',
+          data: { amount: 100000, fee: 2300, bandLabel: '超过1万元至10万元' }
+        })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          code: '0',
+          msg: '',
+          data: { ...rule, status: 'published' }
+        })
+      } as Response);
+
+    await pageLitigationFeeRules({ appCode: 'lawsuit-material-assistant', pageNo: 1, pageSize: 50 });
+    await saveLitigationFeeRule({
+      appCode: 'lawsuit-material-assistant',
+      toolKey: 'litigation_fee',
+      ruleKey: 'property_case_acceptance_fee',
+      ruleName: '财产案件受理费',
+      ruleVersion: 'state-council-order-481-v1',
+      sourceKey: 'litigation_fee_state_council_481',
+      status: 'draft',
+      effectiveDate: '2007-04-01',
+      lastCheckedDate: '2026-05-31',
+      bands: [],
+      noticeText: '本结果为财产案件受理费参考估算，最终金额以法院通知为准。',
+      disclaimerText: '本工具仅供参考。',
+      ownerNote: '',
+      sortOrder: 10,
+      enabled: true
+    });
+    await previewLitigationFeeRule({
+      appCode: 'lawsuit-material-assistant',
+      ruleKey: 'property_case_acceptance_fee',
+      amount: 100000
+    });
+    await publishLitigationFeeRule(1);
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/admin/legal-tool-center/litigation-fee-rules/page', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ appCode: 'lawsuit-material-assistant', pageNo: 1, pageSize: 50 })
+    }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/admin/legal-tool-center/litigation-fee-rules/save', expect.objectContaining({
+      method: 'POST'
+    }));
+    expect(fetchMock).toHaveBeenNthCalledWith(3, '/api/admin/legal-tool-center/litigation-fee-rules/preview', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({
+        appCode: 'lawsuit-material-assistant',
+        ruleKey: 'property_case_acceptance_fee',
+        amount: 100000
+      })
+    }));
+    expect(fetchMock).toHaveBeenNthCalledWith(4, '/api/admin/legal-tool-center/litigation-fee-rules/1/publish', expect.objectContaining({
+      method: 'POST'
     }));
   });
 });

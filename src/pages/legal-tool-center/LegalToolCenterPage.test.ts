@@ -13,12 +13,16 @@ import {
   pageLegalToolExposureItems,
   pageLegalToolInteractionBlueprints,
   pageLegalLprRates,
+  pageLitigationFeeRules,
+  previewLitigationFeeRule,
+  publishLitigationFeeRule,
   saveLegalToolCapability,
   saveLegalToolDataSource,
   saveLegalToolExposureGroup,
   saveLegalToolExposureItem
   ,
   saveLegalToolInteractionBlueprint,
+  saveLitigationFeeRule,
   saveLegalLprRate
 } from '../../api/legalToolCenter';
 import { useAuthStore } from '../../stores/auth';
@@ -38,7 +42,11 @@ vi.mock('../../api/legalToolCenter', () => ({
   pageLegalToolInteractionBlueprints: vi.fn(),
   saveLegalToolInteractionBlueprint: vi.fn(),
   pageLegalLprRates: vi.fn(),
-  saveLegalLprRate: vi.fn()
+  saveLegalLprRate: vi.fn(),
+  pageLitigationFeeRules: vi.fn(),
+  saveLitigationFeeRule: vi.fn(),
+  previewLitigationFeeRule: vi.fn(),
+  publishLitigationFeeRule: vi.fn()
 }));
 
 const pageLegalToolCapabilitiesMock = vi.mocked(pageLegalToolCapabilities);
@@ -55,6 +63,10 @@ const pageLegalToolInteractionBlueprintsMock = vi.mocked(pageLegalToolInteractio
 const saveLegalToolInteractionBlueprintMock = vi.mocked(saveLegalToolInteractionBlueprint);
 const pageLegalLprRatesMock = vi.mocked(pageLegalLprRates);
 const saveLegalLprRateMock = vi.mocked(saveLegalLprRate);
+const pageLitigationFeeRulesMock = vi.mocked(pageLitigationFeeRules);
+const saveLitigationFeeRuleMock = vi.mocked(saveLitigationFeeRule);
+const previewLitigationFeeRuleMock = vi.mocked(previewLitigationFeeRule);
+const publishLitigationFeeRuleMock = vi.mocked(publishLitigationFeeRule);
 
 const capability = {
   id: 1,
@@ -183,6 +195,44 @@ const lprRate = {
   updatedAt: '2026-05-31T01:00:00'
 };
 
+const litigationFeeRule = {
+  id: 61,
+  appCode: 'lawsuit-material-assistant',
+  toolKey: 'litigation_fee',
+  ruleKey: 'property_case_acceptance_fee',
+  ruleName: '财产案件受理费',
+  ruleVersion: 'state-council-order-481-v1',
+  sourceKey: 'litigation_fee_state_council_481',
+  status: 'draft',
+  effectiveDate: '2007-04-01',
+  lastCheckedDate: '2026-05-31',
+  bands: [
+    {
+      minExclusive: 0,
+      maxInclusive: 10000,
+      fixedFee: 50,
+      rate: 0,
+      quickAdjustment: 0,
+      bandLabel: '不超过1万元'
+    },
+    {
+      minExclusive: 10000,
+      maxInclusive: 100000,
+      fixedFee: 0,
+      rate: 0.025,
+      quickAdjustment: -200,
+      bandLabel: '超过1万元至10万元'
+    }
+  ],
+  noticeText: '本结果为财产案件受理费参考估算，最终金额以法院通知为准。',
+  disclaimerText: '本工具仅供参考。',
+  ownerNote: '',
+  sortOrder: 10,
+  enabled: true,
+  createdAt: '2026-05-31T10:00:00',
+  updatedAt: '2026-05-31T10:00:00'
+};
+
 function mountPage(
   permissions: string[] = ['admin:legal-tool-center:view', 'admin:legal-tool-center:manage']
 ) {
@@ -228,6 +278,10 @@ describe('LegalToolCenterPage', () => {
     saveLegalToolInteractionBlueprintMock.mockReset();
     pageLegalLprRatesMock.mockReset();
     saveLegalLprRateMock.mockReset();
+    pageLitigationFeeRulesMock.mockReset();
+    saveLitigationFeeRuleMock.mockReset();
+    previewLitigationFeeRuleMock.mockReset();
+    publishLitigationFeeRuleMock.mockReset();
 
     pageLegalToolCapabilitiesMock.mockResolvedValue({ dataList: [capability], totalCount: 1 });
     pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource], totalCount: 1 });
@@ -235,12 +289,20 @@ describe('LegalToolCenterPage', () => {
     pageLegalToolExposureItemsMock.mockResolvedValue({ dataList: [exposureItem], totalCount: 1 });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     pageLegalLprRatesMock.mockResolvedValue({ dataList: [lprRate], totalCount: 1 });
+    pageLitigationFeeRulesMock.mockResolvedValue({ dataList: [litigationFeeRule], totalCount: 1 });
     saveLegalToolCapabilityMock.mockResolvedValue(capability);
     saveLegalToolDataSourceMock.mockResolvedValue(dataSource);
     saveLegalToolExposureGroupMock.mockResolvedValue(group);
     saveLegalToolExposureItemMock.mockResolvedValue(exposureItem);
     saveLegalToolInteractionBlueprintMock.mockResolvedValue(blueprint);
     saveLegalLprRateMock.mockResolvedValue(lprRate);
+    saveLitigationFeeRuleMock.mockResolvedValue(litigationFeeRule);
+    previewLitigationFeeRuleMock.mockResolvedValue({
+      amount: 100000,
+      fee: 2300,
+      bandLabel: '超过1万元至10万元'
+    });
+    publishLitigationFeeRuleMock.mockResolvedValue({ ...litigationFeeRule, status: 'published' });
     disableLegalToolExposureGroupMock.mockResolvedValue({ ...group, enabled: false });
     disableLegalToolExposureItemMock.mockResolvedValue({ ...exposureItem, enabled: false });
     vi.spyOn(ElMessageBox, 'confirm').mockResolvedValue({ action: 'confirm' } as Awaited<ReturnType<typeof ElMessageBox.confirm>>);
@@ -281,6 +343,11 @@ describe('LegalToolCenterPage', () => {
       pageNo: 1,
       pageSize: 50
     });
+    expect(pageLitigationFeeRulesMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      pageNo: 1,
+      pageSize: 50
+    });
     expect(wrapper.text()).toContain('法律工具中心');
     expect(wrapper.text()).toContain('能力库');
     expect(wrapper.text()).toContain('数据来源');
@@ -288,6 +355,7 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('曝光入口');
     expect(wrapper.text()).toContain('交互蓝图');
     expect(wrapper.text()).toContain('LPR利率');
+    expect(wrapper.text()).toContain('诉讼费用规则');
     expect(wrapper.text()).toContain('诉讼费用');
     expect(wrapper.text()).toContain('official');
     expect(wrapper.text()).toContain('medium');
@@ -297,6 +365,8 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('2025-05-20');
     expect(wrapper.text()).toContain('3');
     expect(wrapper.text()).toContain('3.5');
+    expect(wrapper.text()).toContain('财产案件受理费');
+    expect(wrapper.text()).toContain('state-council-order-481-v1');
   });
 
   it('hides write actions when operator lacks manage permission', async () => {
@@ -470,6 +540,62 @@ describe('LegalToolCenterPage', () => {
       pageNo: 1,
       pageSize: 50
     });
+  });
+
+  it('previews, saves and publishes litigation fee rules through backend', async () => {
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+    pageLitigationFeeRulesMock.mockClear();
+
+    const vm = wrapper.vm as unknown as {
+      openLitigationFeeRuleDialog: (row?: typeof litigationFeeRule) => void;
+      litigationFeeRuleForm: typeof litigationFeeRule;
+      previewAmount: number;
+      previewLitigationFee: () => Promise<void>;
+      submitLitigationFeeRule: () => Promise<void>;
+      publishLitigationFeeRuleRow: (row: typeof litigationFeeRule) => Promise<void>;
+    };
+    vm.openLitigationFeeRuleDialog(litigationFeeRule);
+    Object.assign(vm.litigationFeeRuleForm, litigationFeeRule);
+    vm.previewAmount = 100000;
+    await vm.previewLitigationFee();
+    await vm.submitLitigationFeeRule();
+    await vm.publishLitigationFeeRuleRow(litigationFeeRule);
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('2300');
+    expect(wrapper.text()).toContain('超过1万元至10万元');
+    expect(previewLitigationFeeRuleMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      ruleKey: 'property_case_acceptance_fee',
+      amount: 100000
+    });
+    expect(saveLitigationFeeRuleMock).toHaveBeenCalledWith({
+      id: 61,
+      appCode: 'lawsuit-material-assistant',
+      toolKey: 'litigation_fee',
+      ruleKey: 'property_case_acceptance_fee',
+      ruleName: '财产案件受理费',
+      ruleVersion: 'state-council-order-481-v1',
+      sourceKey: 'litigation_fee_state_council_481',
+      status: 'draft',
+      effectiveDate: '2007-04-01',
+      lastCheckedDate: '2026-05-31',
+      bands: litigationFeeRule.bands,
+      noticeText: '本结果为财产案件受理费参考估算，最终金额以法院通知为准。',
+      disclaimerText: '本工具仅供参考。',
+      ownerNote: '',
+      sortOrder: 10,
+      enabled: true
+    });
+    expect(ElMessageBox.confirm).toHaveBeenCalledWith(
+      '发布后小程序会读取该诉讼费用规则，请确认分段、来源和核验日期已复核。',
+      '发布诉讼费用规则',
+      expect.any(Object)
+    );
+    expect(publishLitigationFeeRuleMock).toHaveBeenCalledWith(61);
+    expect(pageLitigationFeeRulesMock).toHaveBeenCalled();
   });
 
   it('saves and disables exposure groups through backend', async () => {

@@ -41,6 +41,12 @@ export interface LegalLprRatePageQuery {
   pageSize: number;
 }
 
+export interface LitigationFeeRulePageQuery {
+  appCode: string;
+  pageNo: number;
+  pageSize: number;
+}
+
 export interface LegalToolCapabilityItem {
   id: number;
   appCode: string;
@@ -168,12 +174,57 @@ export interface LegalLprRateItem {
   updatedAt: string;
 }
 
+export interface LitigationFeeBand {
+  minExclusive: number;
+  maxInclusive: number | null;
+  fixedFee: number;
+  rate: number;
+  quickAdjustment: number;
+  bandLabel: string;
+}
+
+export interface LitigationFeeRuleItem {
+  id: number;
+  appCode: string;
+  toolKey: string;
+  ruleKey: string;
+  ruleName: string;
+  ruleVersion: string;
+  sourceKey: string;
+  status: string;
+  effectiveDate: string;
+  lastCheckedDate: string;
+  bands: LitigationFeeBand[];
+  noticeText: string;
+  disclaimerText: string;
+  ownerNote: string;
+  sortOrder: number;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LitigationFeePreviewQuery {
+  appCode: string;
+  ruleKey: string;
+  amount: number;
+}
+
+export interface LitigationFeePreviewResult {
+  amount: number;
+  fee: number;
+  bandLabel: string;
+}
+
 export type LegalToolCapabilityPayload = Omit<LegalToolCapabilityItem, 'createdAt' | 'updatedAt'>;
 export type LegalToolExposureGroupPayload = Omit<LegalToolExposureGroupItem, 'createdAt' | 'updatedAt'>;
 export type LegalToolExposureItemPayload = Omit<LegalToolExposureItem, 'createdAt' | 'updatedAt'>;
 export type LegalToolDataSourcePayload = Omit<LegalToolDataSourceItem, 'createdAt' | 'updatedAt'>;
 export type LegalToolInteractionBlueprintPayload = Omit<LegalToolInteractionBlueprintItem, 'createdAt' | 'updatedAt'>;
 export type LegalLprRatePayload = Omit<LegalLprRateItem, 'createdAt' | 'updatedAt'>;
+export type LitigationFeeRulePayload = Omit<LitigationFeeRuleItem, 'id' | 'createdAt' | 'updatedAt'> & {
+  id?: number;
+};
 
 export function pageLegalToolCapabilities(
   query: LegalToolCapabilityPageQuery
@@ -226,6 +277,39 @@ export function saveLegalLprRate(
   return request<LegalLprRateItem>('/api/admin/legal-tool-center/lpr-rates/save', {
     method: 'POST',
     body: JSON.stringify(payload)
+  });
+}
+
+export function pageLitigationFeeRules(
+  query: LitigationFeeRulePageQuery
+): Promise<PageResult<LitigationFeeRuleItem>> {
+  return request<PageResult<LitigationFeeRuleItem>>('/api/admin/legal-tool-center/litigation-fee-rules/page', {
+    method: 'POST',
+    body: JSON.stringify(query)
+  });
+}
+
+export function saveLitigationFeeRule(
+  payload: LitigationFeeRulePayload
+): Promise<LitigationFeeRuleItem> {
+  return request<LitigationFeeRuleItem>('/api/admin/legal-tool-center/litigation-fee-rules/save', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function previewLitigationFeeRule(
+  payload: LitigationFeePreviewQuery
+): Promise<LitigationFeePreviewResult> {
+  return request<LitigationFeePreviewResult>('/api/admin/legal-tool-center/litigation-fee-rules/preview', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function publishLitigationFeeRule(ruleId: number): Promise<LitigationFeeRuleItem> {
+  return request<LitigationFeeRuleItem>(`/api/admin/legal-tool-center/litigation-fee-rules/${ruleId}/publish`, {
+    method: 'POST'
   });
 }
 
