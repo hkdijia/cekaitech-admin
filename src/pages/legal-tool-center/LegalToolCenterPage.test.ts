@@ -162,6 +162,30 @@ const paidAnnualLeaveCapability = {
   sortOrder: 60,
 };
 
+const civilCauseCapability = {
+  ...capability,
+  id: 5,
+  toolKey: 'civil_cause_of_action',
+  title: '民事案由',
+  description: '民事案由检索与层级查询',
+  category: 'rule_query',
+  status: 'public',
+  audience: 'litigation_user',
+  sourceLevel: 'official',
+  dataDependency: 'static_table',
+  executionMode: 'backend_data',
+  riskLevel: 'medium',
+  defaultIconKey: 'search-check',
+  defaultTargetPath: '/pages/civil-cause/civil-cause',
+  sourceName: '民事案件案由规定（第三次修正）',
+  sourceUrl: 'https://www.court.gov.cn/zixun/xiangqing/484231.html',
+  sourceVersion: '2025-third-amendment',
+  sourceEffectiveDate: '2026-01-01',
+  lastCheckedDate: '2026-05-31',
+  ownerNote: '首片只开放少量官方案由样本检索，不做案件类型自动判断。',
+  sortOrder: 70,
+};
+
 const group = {
   id: 11,
   appCode: 'lawsuit-material-assistant',
@@ -230,6 +254,17 @@ const paidAnnualLeaveExposureItem = {
   targetPath: '/pages/paid-annual-leave/paid-annual-leave',
   audience: 'labor_user',
   sortOrder: 60,
+};
+
+const civilCauseExposureItem = {
+  ...exposureItem,
+  id: 25,
+  capabilityId: 5,
+  entryKey: 'civil_cause_of_action',
+  iconKey: 'search-check',
+  targetPath: '/pages/civil-cause/civil-cause',
+  audience: 'litigation_user',
+  sortOrder: 70,
 };
 
 const dataSource = {
@@ -417,14 +452,14 @@ describe('LegalToolCenterPage', () => {
     publishLitigationFeeRuleMock.mockReset();
 
     pageLegalToolCapabilitiesMock.mockResolvedValue({
-      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability],
-      totalCount: 4
+      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, civilCauseCapability],
+      totalCount: 5
     });
     pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource], totalCount: 1 });
     pageLegalToolExposureGroupsMock.mockResolvedValue({ dataList: [group], totalCount: 1 });
     pageLegalToolExposureItemsMock.mockResolvedValue({
-      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem],
-      totalCount: 4
+      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, civilCauseExposureItem],
+      totalCount: 5
     });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     pageLegalLprRatesMock.mockResolvedValue({ dataList: [lprRate], totalCount: 1 });
@@ -504,6 +539,10 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('带薪年休假');
     expect(wrapper.text()).toContain('/pages/paid-annual-leave/paid-annual-leave');
     expect(wrapper.text()).toContain('calendar-check');
+    expect(wrapper.text()).toContain('民事案由');
+    expect(wrapper.text()).toContain('/pages/civil-cause/civil-cause');
+    expect(wrapper.text()).toContain('search-check');
+    expect(wrapper.text()).toContain('backend_data');
     expect(wrapper.text()).toContain('official');
     expect(wrapper.text()).toContain('medium');
     expect(wrapper.text()).toContain('民事案件案由规定');
