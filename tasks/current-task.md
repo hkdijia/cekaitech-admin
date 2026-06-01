@@ -11,7 +11,7 @@
 - 反馈编号：`LMA-FB-033`
 - 来源文档：当前会话竞品对标延续 / 法律助手本地台账
 - 本地台账：`C:/home/work_space/myself/miniapp/lawsuit-material-assistant/docs/product-feedback.md`
-- 当前状态：已提交待推送
+- 当前状态：已验证待推送
 
 ## 当前状态
 
@@ -32,8 +32,9 @@
 - RED：`npm.cmd test -- LegalToolCenterPage.test.ts` 失败于页面缺少“工伤赔偿伤残等级参考”。
 - GREEN：`npm.cmd test -- LegalToolCenterPage.test.ts` 通过，1 个测试文件、10 项 Vitest。
 - 复核修复：补充工伤能力、曝光入口和来源 mock fixture 的结构化字段归属断言。
+- 收口验证：`npm.cmd run quality` 通过，32 个测试文件、141 项 Vitest，`vue-tsc --noEmit` 和 `vite build` 通过；`git diff --check` 无空白错误，仅提示 Windows 换行转换。
 
 ## 下一步
 
-1. 等待三仓收口验证。
-2. 配合企业微信回写。
+1. 推送本仓提交。
+2. 配合企业微信智能表格 `MR4hdW` 最终回写。
