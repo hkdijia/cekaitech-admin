@@ -46,6 +46,7 @@ const homeModule = {
   title: '工具类',
   description: '常用诉讼辅助计算与办事指引',
   tone: 'teal',
+  visibleLimit: 8,
   sortOrder: 10,
   enabled: true,
   createdAt: '2026-05-27T20:00:00',
@@ -185,6 +186,7 @@ describe('MiniappHomeConfigPage', () => {
       title: '工具类',
       description: '常用诉讼辅助计算与办事指引',
       tone: 'teal',
+      visibleLimit: 8,
       sortOrder: 10,
       enabled: true
     });
@@ -198,6 +200,7 @@ describe('MiniappHomeConfigPage', () => {
       title: '工具类',
       description: '常用诉讼辅助计算与办事指引',
       tone: 'teal',
+      visibleLimit: 8,
       sortOrder: 10,
       enabled: true
     });
@@ -231,12 +234,23 @@ describe('MiniappHomeConfigPage', () => {
     await nextTick();
 
     expect(wrapper.text()).toContain('统一开源图标库');
+    expect(wrapper.text()).toContain('图标库 50+');
     expect(wrapper.text()).toContain('计算器');
     expect(wrapper.text()).toContain('天平');
     expect(wrapper.text()).toContain('表单清单');
     expect(wrapper.find('[data-test="miniapp-icon-calculator"]').exists()).toBe(true);
     expect(wrapper.find('[data-test="miniapp-icon-scale"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="miniapp-icon-gavel"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="miniapp-icon-scroll-text"]').exists()).toBe(true);
 
+    await wrapper.find('[data-test="miniapp-icon-search"]').setValue('法院');
+    await nextTick();
+
+    expect(wrapper.find('[data-test="miniapp-icon-landmark"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="miniapp-icon-calculator"]').exists()).toBe(false);
+
+    await wrapper.find('[data-test="miniapp-icon-search"]').setValue('');
+    await nextTick();
     await wrapper.find('[data-test="miniapp-icon-scale"]').trigger('click');
     await nextTick();
 

@@ -23,8 +23,8 @@ describe('miniapp orchestration api', () => {
       nodeType: 'entry',
       sourceType: 'home_menu_item',
       sourceId: 14,
-      key: 'codex_test_entry_2159',
-      title: '近期法律工具',
+      key: 'litigation_fee',
+      title: '诉讼费计算',
       children: []
     };
     const fetchMock = vi.spyOn(globalThis, 'fetch')
@@ -51,9 +51,9 @@ describe('miniapp orchestration api', () => {
     const saved = await saveMiniappOrchestrationEntry({
       sourceType: 'home_menu_item',
       sourceId: 14,
-      title: '近期法律工具',
-      description: '查看近期吸收的法律工具',
-      targetPath: '/pages/tools/tools',
+      title: '诉讼费计算',
+      description: '估算财产案件受理费',
+      targetPath: '/pages/litigation-fee/litigation-fee',
       action: 'navigate',
       status: 'open',
       statusText: '可用',
@@ -66,7 +66,7 @@ describe('miniapp orchestration api', () => {
 
     expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/admin/miniapp-orchestration/tree', {
       method: 'POST',
-      body: JSON.stringify({ appCode: 'lawsuit-material-assistant' }),
+      body: JSON.stringify({ appCode: 'lawsuit-material-assistant', includeDisabled: false }),
       headers: {
         'Content-Type': 'application/json'
       }
@@ -76,9 +76,9 @@ describe('miniapp orchestration api', () => {
       body: JSON.stringify({
         sourceType: 'home_menu_item',
         sourceId: 14,
-        title: '近期法律工具',
-        description: '查看近期吸收的法律工具',
-        targetPath: '/pages/tools/tools',
+        title: '诉讼费计算',
+        description: '估算财产案件受理费',
+        targetPath: '/pages/litigation-fee/litigation-fee',
         action: 'navigate',
         status: 'open',
         statusText: '可用',
@@ -94,5 +94,34 @@ describe('miniapp orchestration api', () => {
     });
     expect(loaded.key).toBe('lawsuit-material-assistant');
     expect(saved.sourceId).toBe(14);
+  });
+
+  it('can request disabled nodes for admin recovery', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        code: '0',
+        msg: '',
+        data: {
+          nodeType: 'app',
+          sourceType: 'app',
+          sourceId: null,
+          key: 'lawsuit-material-assistant',
+          title: 'lawsuit-material-assistant',
+          children: []
+        }
+      })
+    } as Response);
+
+    await loadMiniappOrchestrationTree('lawsuit-material-assistant', true);
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/admin/miniapp-orchestration/tree', {
+      method: 'POST',
+      body: JSON.stringify({ appCode: 'lawsuit-material-assistant', includeDisabled: true }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
   });
 });

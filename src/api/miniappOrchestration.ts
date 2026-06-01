@@ -36,10 +36,13 @@ export interface MiniappOrchestrationEntryPayload {
   enabled: boolean;
 }
 
-export function loadMiniappOrchestrationTree(appCode: string): Promise<MiniappOrchestrationNode> {
+export function loadMiniappOrchestrationTree(
+  appCode: string,
+  includeDisabled = false
+): Promise<MiniappOrchestrationNode> {
   return request<MiniappOrchestrationNode>('/api/admin/miniapp-orchestration/tree', {
     method: 'POST',
-    body: JSON.stringify({ appCode })
+    body: JSON.stringify({ appCode, includeDisabled })
   });
 }
 

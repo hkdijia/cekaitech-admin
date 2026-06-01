@@ -30,6 +30,7 @@ export interface MiniappHomeModuleItem {
   title: string;
   description: string;
   tone: string;
+  visibleLimit: number;
   sortOrder: number;
   enabled: boolean;
   createdAt: string;

@@ -57,6 +57,7 @@ describe('miniapp home config api', () => {
       title: '工具类',
       description: '常用诉讼辅助计算与办事指引',
       tone: 'teal',
+      visibleLimit: 8,
       sortOrder: 10,
       enabled: true
     });
@@ -82,6 +83,7 @@ describe('miniapp home config api', () => {
         title: '工具类',
         description: '常用诉讼辅助计算与办事指引',
         tone: 'teal',
+        visibleLimit: 8,
         sortOrder: 10,
         enabled: true
       }),

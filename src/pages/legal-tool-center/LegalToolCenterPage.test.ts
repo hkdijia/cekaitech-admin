@@ -1191,7 +1191,10 @@ describe('LegalToolCenterPage', () => {
     await nextTick();
 
     expect(wrapper.text()).toContain('统一开源图标库');
+    expect(wrapper.text()).toContain('图标库 50+');
     expect(wrapper.find('[data-test="miniapp-icon-scale"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="miniapp-icon-gavel"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="miniapp-icon-scroll-text"]').exists()).toBe(true);
 
     await wrapper.find('[data-test="miniapp-icon-calculator"]').trigger('click');
     await nextTick();

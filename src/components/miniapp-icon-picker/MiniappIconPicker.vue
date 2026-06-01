@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { MINIAPP_ICON_OPTIONS } from '../../miniapp-icons/miniappIconCatalog';
 
 const props = defineProps<{
@@ -11,7 +11,18 @@ const emit = defineEmits<{
   'update:modelValue': [value: string];
 }>();
 
+const searchKeyword = ref('');
+
 const currentIconText = computed(() => props.modelValue || '未选择');
+const filteredIconOptions = computed(() => {
+  const keyword = searchKeyword.value.trim().toLowerCase();
+  if (!keyword) {
+    return MINIAPP_ICON_OPTIONS;
+  }
+  return MINIAPP_ICON_OPTIONS.filter((icon) => {
+    return [icon.key, icon.label, icon.scene].some((value) => value.toLowerCase().includes(keyword));
+  });
+});
 
 function selectIcon(iconKey: string) {
   if (props.disabled) {
@@ -25,11 +36,19 @@ function selectIcon(iconKey: string) {
   <div class="miniapp-icon-picker">
     <div class="miniapp-icon-picker-head">
       <span>统一开源图标库</span>
+      <span class="miniapp-icon-count">图标库 50+</span>
       <span class="miniapp-icon-current">当前图标：{{ currentIconText }}</span>
     </div>
+    <input
+      v-model="searchKeyword"
+      class="miniapp-icon-search"
+      data-test="miniapp-icon-search"
+      placeholder="搜索图标、场景或语义 key"
+      type="search"
+    >
     <div class="miniapp-icon-grid">
       <button
-        v-for="icon in MINIAPP_ICON_OPTIONS"
+        v-for="icon in filteredIconOptions"
         :key="icon.key"
         class="miniapp-icon-choice"
         :class="{ active: modelValue === icon.key }"
@@ -47,6 +66,7 @@ function selectIcon(iconKey: string) {
         <span class="miniapp-icon-scene">{{ icon.scene }}</span>
       </button>
     </div>
+    <div v-if="filteredIconOptions.length === 0" class="miniapp-icon-empty">没有匹配的图标</div>
   </div>
 </template>
 
@@ -71,10 +91,40 @@ function selectIcon(iconKey: string) {
   font-weight: 500;
 }
 
+.miniapp-icon-count {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef7f5;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.miniapp-icon-search {
+  box-sizing: border-box;
+  width: 100%;
+  height: 34px;
+  margin-bottom: 10px;
+  padding: 0 11px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  outline: none;
+  color: #344054;
+  font-size: 13px;
+}
+
+.miniapp-icon-search:focus {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.1);
+}
+
 .miniapp-icon-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
+  max-height: 340px;
+  overflow: auto;
+  padding-right: 2px;
 }
 
 .miniapp-icon-choice {
@@ -130,5 +180,12 @@ function selectIcon(iconKey: string) {
   font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.miniapp-icon-empty {
+  padding: 14px 0 2px;
+  color: #667085;
+  font-size: 13px;
+  text-align: center;
 }
 </style>

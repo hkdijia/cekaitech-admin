@@ -52,6 +52,7 @@ const moduleForm = reactive<MiniappHomeModulePayload>({
   title: '',
   description: '',
   tone: 'teal',
+  visibleLimit: 8,
   sortOrder: 10,
   enabled: true
 });
@@ -207,6 +208,7 @@ function openModuleDialog(row?: MiniappHomeModuleItem) {
     title: row?.title ?? '',
     description: row?.description ?? '',
     tone: row?.tone ?? 'teal',
+    visibleLimit: row?.visibleLimit ?? 8,
     sortOrder: row?.sortOrder ?? 10,
     enabled: row?.enabled ?? true
   });
@@ -350,6 +352,7 @@ onMounted(async () => {
             <el-table-column prop="title" label="名称" width="150" />
             <el-table-column prop="description" label="描述" min-width="240" show-overflow-tooltip />
             <el-table-column prop="tone" label="色调" width="96" />
+            <el-table-column prop="visibleLimit" label="展示数" width="96" />
             <el-table-column prop="sortOrder" label="排序" width="88" />
             <el-table-column label="状态" width="104">
               <template #default="{ row }">
@@ -457,6 +460,7 @@ onMounted(async () => {
             <el-option v-for="item in toneOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
+        <el-form-item label="展示数量"><el-input-number v-model="moduleForm.visibleLimit" :min="1" :max="20" /></el-form-item>
         <el-form-item label="排序"><el-input-number v-model="moduleForm.sortOrder" :min="0" /></el-form-item>
         <el-form-item label="启用"><el-switch v-model="moduleForm.enabled" /></el-form-item>
       </el-form>

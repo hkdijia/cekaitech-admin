@@ -56,7 +56,7 @@ export const adminMenuItems: AdminMenuItem[] = [
   },
   {
     path: '/miniapp-orchestration',
-    title: '小程序配置中心',
+    title: '页面菜单管理',
     description: '按页面、模块和功能入口编排对客展示',
     permissionCode: 'admin:miniapp-home-config:view'
   },
