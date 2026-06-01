@@ -920,6 +920,37 @@ describe('LegalToolCenterPage', () => {
       pageNo: 1,
       pageSize: 50
     });
+    const capabilityPage = await pageLegalToolCapabilitiesMock.mock.results[0].value;
+    const workInjuryCapability = capabilityPage.dataList.find((item) => item.toolKey === 'work_injury_compensation');
+    expect(workInjuryCapability).toMatchObject({
+      toolKey: 'work_injury_compensation',
+      title: '工伤赔偿伤残等级参考',
+      riskLevel: 'high',
+      executionMode: 'miniapp_local_calculation',
+      defaultIconKey: 'briefcase-medical',
+      defaultTargetPath: '/pages/work-injury-compensation/work-injury-compensation'
+    });
+
+    const exposureItemsPage = await pageLegalToolExposureItemsMock.mock.results[0].value;
+    const workInjuryExposureItem = exposureItemsPage.dataList.find((item) => item.entryKey === 'work_injury_compensation');
+    expect(workInjuryExposureItem).toMatchObject({
+      entryKey: 'work_injury_compensation',
+      capabilityId: workInjuryCapability?.id,
+      iconKey: 'briefcase-medical',
+      targetPath: '/pages/work-injury-compensation/work-injury-compensation'
+    });
+
+    const dataSourcesPage = await pageLegalToolDataSourcesMock.mock.results[0].value;
+    const workInjuryDataSource = dataSourcesPage.dataList.find((item) => item.sourceKey === 'state_council_2010_work_injury_insurance_regulation');
+    expect(workInjuryDataSource).toMatchObject({
+      sourceKey: 'state_council_2010_work_injury_insurance_regulation',
+      sourceVersion: 'state-council-2010-work-injury-insurance-regulation',
+      sourceName: '工伤保险条例',
+      citation: '国务院令第586号',
+      effectiveDate: '2011-01-01',
+      lastCheckedDate: '2026-06-01'
+    });
+
     expect(wrapper.text()).toContain('法律工具中心');
     expect(wrapper.text()).toContain('能力库');
     expect(wrapper.text()).toContain('数据来源');
@@ -956,8 +987,6 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('工伤赔偿伤残等级参考');
     expect(wrapper.text()).toContain('/pages/work-injury-compensation/work-injury-compensation');
     expect(wrapper.text()).toContain('briefcase-medical');
-    expect(wrapper.text()).toContain('high');
-    expect(wrapper.text()).toContain('miniapp_local_calculation');
     expect(wrapper.text()).toContain('state_council_2010_work_injury_insurance_regulation');
     expect(wrapper.text()).toContain('state-council-2010-work-injury-insurance-regulation');
     expect(wrapper.text()).toContain('民事案由');

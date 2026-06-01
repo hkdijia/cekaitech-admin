@@ -3,9 +3,9 @@
 ## 当前状态
 
 - 当前分支：`master`
-- 当前阶段：`LMA-FB-033` 工伤赔偿首片管理端覆盖已验证待提交。
-- 最近完成：法律工具中心测试样本新增工伤赔偿能力、曝光入口和来源记录。
-- 未完成：提交本轮变更；后续由总控协调推送和企业微信回写。
+- 当前阶段：`LMA-FB-033` 工伤赔偿首片管理端覆盖已提交待推送。
+- 最近完成：法律工具中心测试样本新增工伤赔偿能力、曝光入口、来源记录，并补充结构化字段归属断言。
+- 未完成：等待三仓收口验证和企业微信回写。
 
 ## 关键文件
 
@@ -24,13 +24,14 @@
 
 - [反馈编号：LMA-FB-033] RED：`npm.cmd test -- LegalToolCenterPage.test.ts` 失败于页面缺少“工伤赔偿伤残等级参考”。
 - [反馈编号：LMA-FB-033] GREEN：`npm.cmd test -- LegalToolCenterPage.test.ts` 通过，1 个测试文件、10 项 Vitest。
+- [反馈编号：LMA-FB-033] 复核修复：补充工伤能力、曝光入口和来源 mock fixture 的结构化字段归属断言，避免只靠整页文本中的通用 `high` / `miniapp_local_calculation`。
 
 ## 追溯信息
 
 - 反馈编号：`LMA-FB-033`
 - 来源文档：当前会话竞品对标延续 / 法律助手本地台账
 - 本地台账：`C:/home/work_space/myself/miniapp/lawsuit-material-assistant/docs/product-feedback.md`
-- 当前状态：已验证待提交
+- 当前状态：已提交待推送
 
 ## 注意事项
 
@@ -40,5 +41,5 @@
 
 ## 下一步建议
 
-1. 显式暂存本轮 4 个文件。
-2. 提交 `test: cover work injury compensation legal tool`，正文或 footer 写 `Refs: LMA-FB-033`。
+1. 等待三仓收口验证。
+2. 配合企业微信回写。
