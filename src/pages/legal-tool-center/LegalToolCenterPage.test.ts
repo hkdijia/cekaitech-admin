@@ -281,6 +281,30 @@ const workInjuryCompensationCapability = {
   sortOrder: 68,
 };
 
+const smallClaimLimitCapability = {
+  ...capability,
+  id: 15,
+  toolKey: 'small_claim_limit',
+  title: '小额诉讼限额核对参考',
+  description: '按民事诉讼法规则核对小额诉讼程序标的额限额参考',
+  category: 'rule_query',
+  status: 'public',
+  audience: 'litigation_user',
+  sourceLevel: 'official',
+  dataDependency: 'static_rule',
+  executionMode: 'miniapp_local_calculation',
+  riskLevel: 'medium',
+  defaultIconKey: 'badge-check',
+  defaultTargetPath: '/pages/small-claim-limit/small-claim-limit',
+  sourceName: '中华人民共和国民事诉讼法',
+  sourceUrl: 'https://www.gov.cn/yaowen/liebiao/202309/content_6907155.htm',
+  sourceVersion: 'civil-procedure-law-small-claim-limit',
+  sourceEffectiveDate: '2024-01-01',
+  lastCheckedDate: '2026-06-02',
+  ownerNote: '首片只做小额诉讼程序标的额限额参考核对，不判断案件类型、管辖法院适用口径和程序转换。',
+  sortOrder: 69,
+};
+
 const civilCauseCapability = {
   ...capability,
   id: 5,
@@ -524,6 +548,17 @@ const workInjuryCompensationExposureItem = {
   sortOrder: 68,
 };
 
+const smallClaimLimitExposureItem = {
+  ...exposureItem,
+  id: 35,
+  capabilityId: 15,
+  entryKey: 'small_claim_limit',
+  iconKey: 'badge-check',
+  targetPath: '/pages/small-claim-limit/small-claim-limit',
+  audience: 'litigation_user',
+  sortOrder: 69,
+};
+
 const civilCauseExposureItem = {
   ...exposureItem,
   id: 25,
@@ -685,6 +720,24 @@ const workInjuryCompensationDataSource = {
   linkedToolKeys: 'work_injury_compensation',
   ownerNote: '首片只做伤残等级对应基础待遇参考，不包含停工留薪期、护理费、医疗费、工亡待遇、地区基数、单位未缴费责任和劳动能力鉴定争议。',
   sortOrder: 33,
+};
+
+const smallClaimLimitDataSource = {
+  ...dataSource,
+  id: 37,
+  sourceKey: 'civil_procedure_law_small_claim_limit',
+  sourceName: '中华人民共和国民事诉讼法',
+  sourceType: 'official_rule',
+  issuer: '全国人民代表大会常务委员会',
+  sourceUrl: 'https://www.gov.cn/yaowen/liebiao/202309/content_6907155.htm',
+  citation: '中华人民共和国主席令第十一号',
+  effectiveDate: '2024-01-01',
+  sourceVersion: 'civil-procedure-law-small-claim-limit',
+  lastCheckedDate: '2026-06-02',
+  riskLevel: 'medium',
+  linkedToolKeys: 'small_claim_limit',
+  ownerNote: '后端最终使用 static_rule 枚举保存小额诉讼限额规则来源。',
+  sortOrder: 34,
 };
 
 const blueprint = {
@@ -850,14 +903,14 @@ describe('LegalToolCenterPage', () => {
     publishLitigationFeeRuleMock.mockReset();
 
     pageLegalToolCapabilitiesMock.mockResolvedValue({
-      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, wageConversionCapability, statutoryRetirementAgeCapability, trafficPersonalInjuryCompensationCapability, bankruptcyAdministratorRemunerationCapability, workInjuryCompensationCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability, levelJurisdictionCapability],
-      totalCount: 14
+      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, wageConversionCapability, statutoryRetirementAgeCapability, trafficPersonalInjuryCompensationCapability, bankruptcyAdministratorRemunerationCapability, workInjuryCompensationCapability, smallClaimLimitCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability, levelJurisdictionCapability],
+      totalCount: 15
     });
-    pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource, wageConversionDataSource, statutoryRetirementAgeDataSource, trafficPersonalInjuryCompensationDataSource, bankruptcyAdministratorRemunerationDataSource, workInjuryCompensationDataSource], totalCount: 6 });
+    pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource, wageConversionDataSource, statutoryRetirementAgeDataSource, trafficPersonalInjuryCompensationDataSource, bankruptcyAdministratorRemunerationDataSource, workInjuryCompensationDataSource, smallClaimLimitDataSource], totalCount: 7 });
     pageLegalToolExposureGroupsMock.mockResolvedValue({ dataList: [group], totalCount: 1 });
     pageLegalToolExposureItemsMock.mockResolvedValue({
-      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, wageConversionExposureItem, statutoryRetirementAgeExposureItem, trafficPersonalInjuryCompensationExposureItem, bankruptcyAdministratorRemunerationExposureItem, workInjuryCompensationExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem, elementTemplateExposureItem, levelJurisdictionExposureItem],
-      totalCount: 14
+      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, wageConversionExposureItem, statutoryRetirementAgeExposureItem, trafficPersonalInjuryCompensationExposureItem, bankruptcyAdministratorRemunerationExposureItem, workInjuryCompensationExposureItem, smallClaimLimitExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem, elementTemplateExposureItem, levelJurisdictionExposureItem],
+      totalCount: 15
     });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     pageLegalLprRatesMock.mockResolvedValue({ dataList: [lprRate], totalCount: 1 });
@@ -930,6 +983,16 @@ describe('LegalToolCenterPage', () => {
       defaultIconKey: 'briefcase-medical',
       defaultTargetPath: '/pages/work-injury-compensation/work-injury-compensation'
     });
+    const smallClaimLimitCapability = capabilityPage.dataList.find((item) => item.toolKey === 'small_claim_limit');
+    expect(smallClaimLimitCapability).toMatchObject({
+      toolKey: 'small_claim_limit',
+      title: '小额诉讼限额核对参考',
+      riskLevel: 'medium',
+      dataDependency: 'static_rule',
+      executionMode: 'miniapp_local_calculation',
+      defaultIconKey: 'badge-check',
+      defaultTargetPath: '/pages/small-claim-limit/small-claim-limit'
+    });
 
     const exposureItemsPage: { dataList: Array<typeof exposureItem> } = await pageLegalToolExposureItemsMock.mock.results[0].value;
     const workInjuryExposureItem = exposureItemsPage.dataList.find((item) => item.entryKey === 'work_injury_compensation');
@@ -938,6 +1001,13 @@ describe('LegalToolCenterPage', () => {
       capabilityId: workInjuryCapability?.id,
       iconKey: 'briefcase-medical',
       targetPath: '/pages/work-injury-compensation/work-injury-compensation'
+    });
+    const smallClaimLimitExposureItem = exposureItemsPage.dataList.find((item) => item.entryKey === 'small_claim_limit');
+    expect(smallClaimLimitExposureItem).toMatchObject({
+      entryKey: 'small_claim_limit',
+      capabilityId: smallClaimLimitCapability?.id,
+      iconKey: 'badge-check',
+      targetPath: '/pages/small-claim-limit/small-claim-limit'
     });
 
     const dataSourcesPage: { dataList: Array<typeof dataSource> } = await pageLegalToolDataSourcesMock.mock.results[0].value;
@@ -949,6 +1019,13 @@ describe('LegalToolCenterPage', () => {
       citation: '国务院令第586号',
       effectiveDate: '2011-01-01',
       lastCheckedDate: '2026-06-01'
+    });
+    const smallClaimLimitDataSource = dataSourcesPage.dataList.find((item) => item.sourceKey === 'civil_procedure_law_small_claim_limit');
+    expect(smallClaimLimitDataSource).toMatchObject({
+      sourceKey: 'civil_procedure_law_small_claim_limit',
+      sourceVersion: 'civil-procedure-law-small-claim-limit',
+      linkedToolKeys: 'small_claim_limit',
+      riskLevel: 'medium'
     });
 
     expect(wrapper.text()).toContain('法律工具中心');
@@ -989,6 +1066,11 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('briefcase-medical');
     expect(wrapper.text()).toContain('state_council_2010_work_injury_insurance_regulation');
     expect(wrapper.text()).toContain('state-council-2010-work-injury-insurance-regulation');
+    expect(wrapper.text()).toContain('小额诉讼限额核对参考');
+    expect(wrapper.text()).toContain('/pages/small-claim-limit/small-claim-limit');
+    expect(wrapper.text()).toContain('badge-check');
+    expect(wrapper.text()).toContain('civil_procedure_law_small_claim_limit');
+    expect(wrapper.text()).toContain('civil-procedure-law-small-claim-limit');
     expect(wrapper.text()).toContain('民事案由');
     expect(wrapper.text()).toContain('/pages/civil-cause/civil-cause');
     expect(wrapper.text()).toContain('search-check');
