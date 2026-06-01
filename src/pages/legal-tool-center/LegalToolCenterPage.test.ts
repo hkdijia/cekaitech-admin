@@ -185,6 +185,30 @@ const wageConversionCapability = {
   sortOrder: 65,
 };
 
+const statutoryRetirementAgeCapability = {
+  ...capability,
+  id: 11,
+  toolKey: 'statutory_retirement_age',
+  title: '延迟退休年龄',
+  description: '按出生年月核对渐进式延迟后的法定退休年龄',
+  category: 'compensation',
+  status: 'public',
+  audience: 'labor_user',
+  sourceLevel: 'official',
+  dataDependency: 'static_rule',
+  executionMode: 'miniapp_local_calculation',
+  riskLevel: 'medium',
+  defaultIconKey: 'hourglass',
+  defaultTargetPath: '/pages/statutory-retirement-age/statutory-retirement-age',
+  sourceName: '全国人民代表大会常务委员会关于实施渐进式延迟法定退休年龄的决定',
+  sourceUrl: 'https://www.npc.gov.cn/npc/c2/kgfb/202409/t20240913_439534.html',
+  sourceVersion: 'npc-2024-statutory-retirement-age',
+  sourceEffectiveDate: '2025-01-01',
+  lastCheckedDate: '2026-06-01',
+  ownerNote: '首片只按出生年月和原法定退休年龄类别推算，不处理缴费年限、弹性退休申请、特殊工种、地区政策和身份争议。',
+  sortOrder: 66,
+};
+
 const civilCauseCapability = {
   ...capability,
   id: 5,
@@ -384,6 +408,17 @@ const wageConversionExposureItem = {
   sortOrder: 65,
 };
 
+const statutoryRetirementAgeExposureItem = {
+  ...exposureItem,
+  id: 31,
+  capabilityId: 11,
+  entryKey: 'statutory_retirement_age',
+  iconKey: 'hourglass',
+  targetPath: '/pages/statutory-retirement-age/statutory-retirement-age',
+  audience: 'labor_user',
+  sortOrder: 66,
+};
+
 const civilCauseExposureItem = {
   ...exposureItem,
   id: 25,
@@ -476,6 +511,23 @@ const wageConversionDataSource = {
   riskLevel: 'low',
   linkedToolKeys: 'wage_conversion',
   sortOrder: 20,
+};
+
+const statutoryRetirementAgeDataSource = {
+  ...dataSource,
+  id: 33,
+  sourceKey: 'npc_2024_statutory_retirement_age',
+  sourceName: '全国人民代表大会常务委员会关于实施渐进式延迟法定退休年龄的决定',
+  sourceType: 'official_rule',
+  issuer: '全国人民代表大会常务委员会',
+  sourceUrl: 'https://www.npc.gov.cn/npc/c2/kgfb/202409/t20240913_439534.html',
+  citation: '2024年9月13日第十四届全国人民代表大会常务委员会第十一次会议通过',
+  effectiveDate: '2025-01-01',
+  sourceVersion: 'npc-2024-statutory-retirement-age',
+  lastCheckedDate: '2026-06-01',
+  riskLevel: 'medium',
+  linkedToolKeys: 'statutory_retirement_age',
+  sortOrder: 30,
 };
 
 const blueprint = {
@@ -641,14 +693,14 @@ describe('LegalToolCenterPage', () => {
     publishLitigationFeeRuleMock.mockReset();
 
     pageLegalToolCapabilitiesMock.mockResolvedValue({
-      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, wageConversionCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability, levelJurisdictionCapability],
-      totalCount: 10
+      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, wageConversionCapability, statutoryRetirementAgeCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability, levelJurisdictionCapability],
+      totalCount: 11
     });
-    pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource, wageConversionDataSource], totalCount: 2 });
+    pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource, wageConversionDataSource, statutoryRetirementAgeDataSource], totalCount: 3 });
     pageLegalToolExposureGroupsMock.mockResolvedValue({ dataList: [group], totalCount: 1 });
     pageLegalToolExposureItemsMock.mockResolvedValue({
-      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, wageConversionExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem, elementTemplateExposureItem, levelJurisdictionExposureItem],
-      totalCount: 10
+      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, wageConversionExposureItem, statutoryRetirementAgeExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem, elementTemplateExposureItem, levelJurisdictionExposureItem],
+      totalCount: 11
     });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     pageLegalLprRatesMock.mockResolvedValue({ dataList: [lprRate], totalCount: 1 });
@@ -731,6 +783,10 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('工资折算');
     expect(wrapper.text()).toContain('/pages/wage-conversion/wage-conversion');
     expect(wrapper.text()).toContain('mohrss-2025-2-wage-conversion');
+    expect(wrapper.text()).toContain('延迟退休年龄');
+    expect(wrapper.text()).toContain('/pages/statutory-retirement-age/statutory-retirement-age');
+    expect(wrapper.text()).toContain('npc-2024-statutory-retirement-age');
+    expect(wrapper.text()).toContain('hourglass');
     expect(wrapper.text()).toContain('民事案由');
     expect(wrapper.text()).toContain('/pages/civil-cause/civil-cause');
     expect(wrapper.text()).toContain('search-check');
