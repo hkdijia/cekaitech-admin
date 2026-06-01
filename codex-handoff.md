@@ -3,9 +3,9 @@
 ## 当前状态
 
 - 当前分支：`master`
-- 当前阶段：`LMA-FB-032` 交通事故等人身损害赔偿首片管理端覆盖已验证待推送。
-- 最近完成：法律工具中心测试样本新增交通事故等人身损害赔偿能力、曝光入口、来源记录和全量质量验证。
-- 未完成：推送和企业微信回写。
+- 当前阶段：`LMA-FB-033` 工伤赔偿首片管理端覆盖已验证待提交。
+- 最近完成：法律工具中心测试样本新增工伤赔偿能力、曝光入口和来源记录。
+- 未完成：提交本轮变更；后续由总控协调推送和企业微信回写。
 
 ## 关键文件
 
@@ -17,16 +17,28 @@
 ## 关键命令
 
 - `npm.cmd test -- LegalToolCenterPage.test.ts`
-- `npm.cmd run quality`
 - `git diff --check`
+- `git status --short`
 
 ## 最近验证
 
-- [反馈编号：LMA-FB-032] RED：`npm.cmd test -- LegalToolCenterPage.test.ts` 失败于页面缺少“交通事故等人身损害赔偿参考”。
-- [反馈编号：LMA-FB-032] GREEN：`npm.cmd test -- LegalToolCenterPage.test.ts` 通过，1 个测试文件、10 项 Vitest。
-- [反馈编号：LMA-FB-032] 收口验证：`npm.cmd run quality` 通过，32 个测试文件、141 项 Vitest、类型检查和构建；`git diff --check` 无空白错误。
+- [反馈编号：LMA-FB-033] RED：`npm.cmd test -- LegalToolCenterPage.test.ts` 失败于页面缺少“工伤赔偿伤残等级参考”。
+- [反馈编号：LMA-FB-033] GREEN：`npm.cmd test -- LegalToolCenterPage.test.ts` 通过，1 个测试文件、10 项 Vitest。
+
+## 追溯信息
+
+- 反馈编号：`LMA-FB-033`
+- 来源文档：当前会话竞品对标延续 / 法律助手本地台账
+- 本地台账：`C:/home/work_space/myself/miniapp/lawsuit-material-assistant/docs/product-feedback.md`
+- 当前状态：已验证待提交
 
 ## 注意事项
 
-- 本仓只做管理端结构化展示覆盖，不新增规则维护页。
+- 本仓只做管理端结构化展示覆盖，不新增工伤赔偿独立规则维护页。
+- 本轮不新增独立地区数据维护页。
 - `.runtime-logs/` 为本地运行日志，不纳入提交。
+
+## 下一步建议
+
+1. 显式暂存本轮 4 个文件。
+2. 提交 `test: cover work injury compensation legal tool`，正文或 footer 写 `Refs: LMA-FB-033`。

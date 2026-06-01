@@ -257,6 +257,30 @@ const trafficPersonalInjuryCompensationCapability = {
   sortOrder: 66,
 };
 
+const workInjuryCompensationCapability = {
+  ...capability,
+  id: 14,
+  toolKey: 'work_injury_compensation',
+  title: '工伤赔偿伤残等级参考',
+  description: '按工伤伤残等级查看一次性伤残补助金等基础待遇参考',
+  category: 'compensation',
+  status: 'public',
+  audience: 'labor_user',
+  sourceLevel: 'official',
+  dataDependency: 'static_rule',
+  executionMode: 'miniapp_local_calculation',
+  riskLevel: 'high',
+  defaultIconKey: 'briefcase-medical',
+  defaultTargetPath: '/pages/work-injury-compensation/work-injury-compensation',
+  sourceName: '工伤保险条例',
+  sourceUrl: 'https://www.gov.cn/gongbao/content/2011/content_1778064.htm',
+  sourceVersion: 'state-council-2010-work-injury-insurance-regulation',
+  sourceEffectiveDate: '2011-01-01',
+  lastCheckedDate: '2026-06-01',
+  ownerNote: '首片只做伤残等级对应基础待遇参考，不处理停工留薪期、护理费、医疗费、工亡待遇、地区基数、单位未缴费责任和劳动能力鉴定争议。',
+  sortOrder: 68,
+};
+
 const civilCauseCapability = {
   ...capability,
   id: 5,
@@ -489,6 +513,17 @@ const trafficPersonalInjuryCompensationExposureItem = {
   sortOrder: 66,
 };
 
+const workInjuryCompensationExposureItem = {
+  ...exposureItem,
+  id: 34,
+  capabilityId: 14,
+  entryKey: 'work_injury_compensation',
+  iconKey: 'briefcase-medical',
+  targetPath: '/pages/work-injury-compensation/work-injury-compensation',
+  audience: 'labor_user',
+  sortOrder: 68,
+};
+
 const civilCauseExposureItem = {
   ...exposureItem,
   id: 25,
@@ -632,6 +667,24 @@ const trafficPersonalInjuryCompensationDataSource = {
   riskLevel: 'high',
   linkedToolKeys: 'traffic_personal_injury_compensation',
   sortOrder: 32,
+};
+
+const workInjuryCompensationDataSource = {
+  ...dataSource,
+  id: 36,
+  sourceKey: 'state_council_2010_work_injury_insurance_regulation',
+  sourceName: '工伤保险条例',
+  sourceType: 'official_rule',
+  issuer: '国务院',
+  sourceUrl: 'https://www.gov.cn/gongbao/content/2011/content_1778064.htm',
+  citation: '国务院令第586号',
+  effectiveDate: '2011-01-01',
+  sourceVersion: 'state-council-2010-work-injury-insurance-regulation',
+  lastCheckedDate: '2026-06-01',
+  riskLevel: 'high',
+  linkedToolKeys: 'work_injury_compensation',
+  ownerNote: '首片只做伤残等级对应基础待遇参考，不包含停工留薪期、护理费、医疗费、工亡待遇、地区基数、单位未缴费责任和劳动能力鉴定争议。',
+  sortOrder: 33,
 };
 
 const blueprint = {
@@ -797,14 +850,14 @@ describe('LegalToolCenterPage', () => {
     publishLitigationFeeRuleMock.mockReset();
 
     pageLegalToolCapabilitiesMock.mockResolvedValue({
-      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, wageConversionCapability, statutoryRetirementAgeCapability, trafficPersonalInjuryCompensationCapability, bankruptcyAdministratorRemunerationCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability, levelJurisdictionCapability],
-      totalCount: 13
+      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, wageConversionCapability, statutoryRetirementAgeCapability, trafficPersonalInjuryCompensationCapability, bankruptcyAdministratorRemunerationCapability, workInjuryCompensationCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability, levelJurisdictionCapability],
+      totalCount: 14
     });
-    pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource, wageConversionDataSource, statutoryRetirementAgeDataSource, trafficPersonalInjuryCompensationDataSource, bankruptcyAdministratorRemunerationDataSource], totalCount: 5 });
+    pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource, wageConversionDataSource, statutoryRetirementAgeDataSource, trafficPersonalInjuryCompensationDataSource, bankruptcyAdministratorRemunerationDataSource, workInjuryCompensationDataSource], totalCount: 6 });
     pageLegalToolExposureGroupsMock.mockResolvedValue({ dataList: [group], totalCount: 1 });
     pageLegalToolExposureItemsMock.mockResolvedValue({
-      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, wageConversionExposureItem, statutoryRetirementAgeExposureItem, trafficPersonalInjuryCompensationExposureItem, bankruptcyAdministratorRemunerationExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem, elementTemplateExposureItem, levelJurisdictionExposureItem],
-      totalCount: 13
+      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, wageConversionExposureItem, statutoryRetirementAgeExposureItem, trafficPersonalInjuryCompensationExposureItem, bankruptcyAdministratorRemunerationExposureItem, workInjuryCompensationExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem, elementTemplateExposureItem, levelJurisdictionExposureItem],
+      totalCount: 14
     });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     pageLegalLprRatesMock.mockResolvedValue({ dataList: [lprRate], totalCount: 1 });
@@ -900,6 +953,13 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('/pages/traffic-personal-injury-compensation/traffic-personal-injury-compensation');
     expect(wrapper.text()).toContain('spc-2022-personal-injury-compensation');
     expect(wrapper.text()).toContain('ambulance');
+    expect(wrapper.text()).toContain('工伤赔偿伤残等级参考');
+    expect(wrapper.text()).toContain('/pages/work-injury-compensation/work-injury-compensation');
+    expect(wrapper.text()).toContain('briefcase-medical');
+    expect(wrapper.text()).toContain('high');
+    expect(wrapper.text()).toContain('miniapp_local_calculation');
+    expect(wrapper.text()).toContain('state_council_2010_work_injury_insurance_regulation');
+    expect(wrapper.text()).toContain('state-council-2010-work-injury-insurance-regulation');
     expect(wrapper.text()).toContain('民事案由');
     expect(wrapper.text()).toContain('/pages/civil-cause/civil-cause');
     expect(wrapper.text()).toContain('search-check');
