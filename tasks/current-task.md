@@ -2,43 +2,34 @@
 
 ## 当前任务
 
-- 名称：页面菜单管理、首页配置和共享图标库治理
-- OpenSpec 变更：无；当前为现场治理和配置体验收口。
+- 名称：LMA-FB-031 破产管理人报酬上限首片管理端覆盖
+- OpenSpec 变更：无。
 - 当前 HEAD：以 Git log 为准
 
 ## 追溯信息
 
-- 反馈编号：无
-- 来源文档：当前会话现场梳理
-- 本地台账：无
-- 当前状态：实施中（待提交、验证、推送）
+- 反馈编号：`LMA-FB-031`
+- 来源文档：当前会话竞品对标延续 / 法律助手本地台账
+- 本地台账：`C:/home/work_space/myself/miniapp/lawsuit-material-assistant/docs/product-feedback.md`
+- 当前状态：已提交未推送，待推送
 
 ## 当前状态
 
-- 管理端页面菜单管理改为业务人员可理解的 `Tab / 模块 / 功能` 层级，支持搜索、展开收起、停用项开关和本地账号页只读节点。
-- 首页配置补充 `visibleLimit` 展示数量字段。
-- 共享图标选择器扩展为 50+ 受控语义图标并支持搜索，首页配置、页面菜单管理和法律工具中心复用。
-- 管理端继续只通过 `miniapp-backend` 受控 API 管理结构化字段，不直连数据库，不下发任意 WXML/HTML/CSS/JS。
+- 管理端本轮只补法律工具中心测试样本覆盖。
+- 不新增破产管理人报酬独立规则维护页。
+- 管理端继续只通过 `miniapp-backend` 受控 API 管理结构化字段。
 
 ## 已完成
 
-- [反馈编号：无] 页面菜单管理新增树内搜索、展开收起、显示停用项和功能编辑体验优化。
-- [反馈编号：无] 页面菜单管理适配 `profile_local_feature` 账号页本地功能只读展示。
-- [反馈编号：无] 首页配置新增 `visibleLimit` 字段展示和编辑。
-- [反馈编号：无] 共享图标选择器扩展 50+ 受控图标，补充法律、风险、材料和账号场景 key。
-
-## 未完成
-
-- [反馈编号：无] 提交、最终验证和推送。
+- [反馈编号：LMA-FB-031] 法律工具中心测试样本新增 `bankruptcy_administrator_remuneration` 能力、曝光入口和官方来源记录。
+- [反馈编号：LMA-FB-031] 覆盖“破产管理人报酬上限”标题、`scale` 图标、目标页、`miniapp_local_calculation` 执行方式、`high` 风险等级和来源版本。
 
 ## 最近验证
 
-- RED：`npm.cmd test -- LegalToolCenterPage.test.ts` 失败于页面缺少“延迟退休年龄”。
 - GREEN：`npm.cmd test -- LegalToolCenterPage.test.ts` 通过，1 个测试文件、10 项 Vitest。
-- 全量质量：`npm.cmd run quality` 通过，32 个测试文件、141 项 Vitest，`vue-tsc --noEmit` 和 `vite build` 通过；仅保留既有 Rollup PURE 注释和 chunk size warning。
-- 本轮页面菜单/图标库治理最终验证待执行。
+- 收口验证：`npm.cmd run quality` 通过，32 个测试文件、141 项 Vitest，`vue-tsc --noEmit` 和 `vite build` 通过；`git diff --check` 无空白错误。
 
 ## 下一步
 
-1. 按显式文件列表提交本轮治理改动，提交正文包含 `Refs: none`。
-2. 运行 `npm.cmd run quality` 和 `git diff --check`。
+1. 网络恢复后推送本仓提交。
+2. 推送后配合小程序回写企业微信智能表格。

@@ -209,6 +209,30 @@ const statutoryRetirementAgeCapability = {
   sortOrder: 66,
 };
 
+const bankruptcyAdministratorRemunerationCapability = {
+  ...capability,
+  id: 12,
+  toolKey: 'bankruptcy_administrator_remuneration',
+  title: '破产管理人报酬上限',
+  description: '按最终清偿财产价值总额分段测算管理人报酬上限参考',
+  category: 'calculator',
+  status: 'public',
+  audience: 'litigation_user',
+  sourceLevel: 'official',
+  dataDependency: 'static_rule',
+  executionMode: 'miniapp_local_calculation',
+  riskLevel: 'high',
+  defaultIconKey: 'scale',
+  defaultTargetPath: '/pages/bankruptcy-administrator-remuneration/bankruptcy-administrator-remuneration',
+  sourceName: '最高人民法院关于审理企业破产案件确定管理人报酬的规定',
+  sourceUrl: 'https://www.court.gov.cn/fabu/xiangqing/1169.html',
+  sourceVersion: 'spc-2007-bankruptcy-administrator-remuneration',
+  sourceEffectiveDate: '2007-06-01',
+  lastCheckedDate: '2026-06-01',
+  ownerNote: '首片只按债务人最终清偿的财产价值总额分段测算管理人报酬上限参考，不处理法院酌定调整、担保财产另行协商报酬、无财产可清偿、多个管理人分配和债权人会议异议。',
+  sortOrder: 67,
+};
+
 const civilCauseCapability = {
   ...capability,
   id: 5,
@@ -419,6 +443,17 @@ const statutoryRetirementAgeExposureItem = {
   sortOrder: 66,
 };
 
+const bankruptcyAdministratorRemunerationExposureItem = {
+  ...exposureItem,
+  id: 32,
+  capabilityId: 12,
+  entryKey: 'bankruptcy_administrator_remuneration',
+  iconKey: 'scale',
+  targetPath: '/pages/bankruptcy-administrator-remuneration/bankruptcy-administrator-remuneration',
+  audience: 'litigation_user',
+  sortOrder: 67,
+};
+
 const civilCauseExposureItem = {
   ...exposureItem,
   id: 25,
@@ -528,6 +563,23 @@ const statutoryRetirementAgeDataSource = {
   riskLevel: 'medium',
   linkedToolKeys: 'statutory_retirement_age',
   sortOrder: 30,
+};
+
+const bankruptcyAdministratorRemunerationDataSource = {
+  ...dataSource,
+  id: 34,
+  sourceKey: 'spc_2007_bankruptcy_administrator_remuneration',
+  sourceName: '最高人民法院关于审理企业破产案件确定管理人报酬的规定',
+  sourceType: 'official_rule',
+  issuer: '最高人民法院',
+  sourceUrl: 'https://www.court.gov.cn/fabu/xiangqing/1169.html',
+  citation: '法释〔2007〕9号',
+  effectiveDate: '2007-06-01',
+  sourceVersion: 'spc-2007-bankruptcy-administrator-remuneration',
+  lastCheckedDate: '2026-06-01',
+  riskLevel: 'high',
+  linkedToolKeys: 'bankruptcy_administrator_remuneration',
+  sortOrder: 31,
 };
 
 const blueprint = {
@@ -693,14 +745,14 @@ describe('LegalToolCenterPage', () => {
     publishLitigationFeeRuleMock.mockReset();
 
     pageLegalToolCapabilitiesMock.mockResolvedValue({
-      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, wageConversionCapability, statutoryRetirementAgeCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability, levelJurisdictionCapability],
-      totalCount: 11
+      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, wageConversionCapability, statutoryRetirementAgeCapability, bankruptcyAdministratorRemunerationCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability, levelJurisdictionCapability],
+      totalCount: 12
     });
-    pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource, wageConversionDataSource, statutoryRetirementAgeDataSource], totalCount: 3 });
+    pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource, wageConversionDataSource, statutoryRetirementAgeDataSource, bankruptcyAdministratorRemunerationDataSource], totalCount: 4 });
     pageLegalToolExposureGroupsMock.mockResolvedValue({ dataList: [group], totalCount: 1 });
     pageLegalToolExposureItemsMock.mockResolvedValue({
-      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, wageConversionExposureItem, statutoryRetirementAgeExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem, elementTemplateExposureItem, levelJurisdictionExposureItem],
-      totalCount: 11
+      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, wageConversionExposureItem, statutoryRetirementAgeExposureItem, bankruptcyAdministratorRemunerationExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem, elementTemplateExposureItem, levelJurisdictionExposureItem],
+      totalCount: 12
     });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     pageLegalLprRatesMock.mockResolvedValue({ dataList: [lprRate], totalCount: 1 });
@@ -787,6 +839,11 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('/pages/statutory-retirement-age/statutory-retirement-age');
     expect(wrapper.text()).toContain('npc-2024-statutory-retirement-age');
     expect(wrapper.text()).toContain('hourglass');
+    expect(wrapper.text()).toContain('破产管理人报酬上限');
+    expect(wrapper.text()).toContain('/pages/bankruptcy-administrator-remuneration/bankruptcy-administrator-remuneration');
+    expect(wrapper.text()).toContain('spc-2007-bankruptcy-administrator-remuneration');
+    expect(wrapper.text()).toContain('scale');
+    expect(wrapper.text()).toContain('high');
     expect(wrapper.text()).toContain('民事案由');
     expect(wrapper.text()).toContain('/pages/civil-cause/civil-cause');
     expect(wrapper.text()).toContain('search-check');
