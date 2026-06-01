@@ -920,7 +920,7 @@ describe('LegalToolCenterPage', () => {
       pageNo: 1,
       pageSize: 50
     });
-    const capabilityPage = await pageLegalToolCapabilitiesMock.mock.results[0].value;
+    const capabilityPage: { dataList: Array<typeof capability> } = await pageLegalToolCapabilitiesMock.mock.results[0].value;
     const workInjuryCapability = capabilityPage.dataList.find((item) => item.toolKey === 'work_injury_compensation');
     expect(workInjuryCapability).toMatchObject({
       toolKey: 'work_injury_compensation',
@@ -931,7 +931,7 @@ describe('LegalToolCenterPage', () => {
       defaultTargetPath: '/pages/work-injury-compensation/work-injury-compensation'
     });
 
-    const exposureItemsPage = await pageLegalToolExposureItemsMock.mock.results[0].value;
+    const exposureItemsPage: { dataList: Array<typeof exposureItem> } = await pageLegalToolExposureItemsMock.mock.results[0].value;
     const workInjuryExposureItem = exposureItemsPage.dataList.find((item) => item.entryKey === 'work_injury_compensation');
     expect(workInjuryExposureItem).toMatchObject({
       entryKey: 'work_injury_compensation',
@@ -940,7 +940,7 @@ describe('LegalToolCenterPage', () => {
       targetPath: '/pages/work-injury-compensation/work-injury-compensation'
     });
 
-    const dataSourcesPage = await pageLegalToolDataSourcesMock.mock.results[0].value;
+    const dataSourcesPage: { dataList: Array<typeof dataSource> } = await pageLegalToolDataSourcesMock.mock.results[0].value;
     const workInjuryDataSource = dataSourcesPage.dataList.find((item) => item.sourceKey === 'state_council_2010_work_injury_insurance_regulation');
     expect(workInjuryDataSource).toMatchObject({
       sourceKey: 'state_council_2010_work_injury_insurance_regulation',
