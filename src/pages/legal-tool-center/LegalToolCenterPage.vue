@@ -346,8 +346,14 @@ function firstLitigationFeeBandSummary(row: LitigationFeeRuleItem) {
   }
   const excessBand = row.bands.find((item) => item.excessBase || item.excessRate) ?? band;
   const parts = [`${row.bands.length}段`];
-  if (band.feeMin !== undefined && band.feeMax !== undefined) {
+  if (band.feeMin != null && band.feeMax != null) {
     parts.push(`费用区间 ${band.feeMin}-${band.feeMax}`);
+  }
+  if (band.feeMin == null && band.feeMax != null) {
+    parts.push(`费用上限 ${band.feeMax}`);
+  }
+  if (band.feeMin != null && band.feeMax == null) {
+    parts.push(`费用下限 ${band.feeMin}`);
   }
   if (excessBand.excessBase !== undefined) {
     parts.push(`超额基数 ${excessBand.excessBase}`);

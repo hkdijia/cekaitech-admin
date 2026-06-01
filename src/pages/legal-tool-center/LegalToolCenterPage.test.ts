@@ -849,7 +849,37 @@ const litigationFeeRules = [
   { ...litigationFeeRule, id: 63, ruleKey: 'personality_right_case_acceptance_fee', ruleName: '人格权案件受理费' },
   { ...litigationFeeRule, id: 64, ruleKey: 'other_non_property_case_acceptance_fee', ruleName: '其他非财产案件受理费' },
   { ...litigationFeeRule, id: 65, ruleKey: 'intellectual_property_case_acceptance_fee', ruleName: '知识产权案件受理费' },
-  { ...litigationFeeRule, id: 66, ruleKey: 'labor_dispute_case_acceptance_fee', ruleName: '劳动争议案件受理费' }
+  { ...litigationFeeRule, id: 66, ruleKey: 'labor_dispute_case_acceptance_fee', ruleName: '劳动争议案件受理费' },
+  {
+    ...litigationFeeRule,
+    id: 67,
+    ruleKey: 'execution_application_fee',
+    ruleName: '申请执行费'
+  },
+  {
+    ...litigationFeeRule,
+    id: 68,
+    ruleKey: 'preservation_application_fee',
+    ruleName: '申请保全费',
+    bands: [{
+      minExclusive: 100000,
+      maxInclusive: null,
+      fixedFee: 0,
+      feeMin: null,
+      feeMax: 5000,
+      excessBase: 0,
+      excessRate: 0,
+      rate: 0.005,
+      quickAdjustment: 520,
+      bandLabel: '超过10万元'
+    }]
+  },
+  {
+    ...litigationFeeRule,
+    id: 69,
+    ruleKey: 'payment_order_application_fee',
+    ruleName: '申请支付令费用'
+  }
 ];
 
 function mountPage(
@@ -914,7 +944,7 @@ describe('LegalToolCenterPage', () => {
     });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     pageLegalLprRatesMock.mockResolvedValue({ dataList: [lprRate], totalCount: 1 });
-    pageLitigationFeeRulesMock.mockResolvedValue({ dataList: litigationFeeRules, totalCount: 6 });
+    pageLitigationFeeRulesMock.mockResolvedValue({ dataList: litigationFeeRules, totalCount: 9 });
     saveLegalToolCapabilityMock.mockResolvedValue(capability);
     saveLegalToolDataSourceMock.mockResolvedValue(dataSource);
     saveLegalToolExposureGroupMock.mockResolvedValue(group);
@@ -1102,7 +1132,11 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('其他非财产案件受理费');
     expect(wrapper.text()).toContain('知识产权案件受理费');
     expect(wrapper.text()).toContain('劳动争议案件受理费');
+    expect(wrapper.text()).toContain('申请执行费');
+    expect(wrapper.text()).toContain('申请保全费');
+    expect(wrapper.text()).toContain('申请支付令费用');
     expect(wrapper.text()).toContain('费用区间 50-300');
+    expect(wrapper.text()).toContain('费用上限 5000');
     expect(wrapper.text()).toContain('超额基数 300');
     expect(wrapper.text()).toContain('state-council-order-481-v1');
   });
@@ -1381,6 +1415,37 @@ describe('LegalToolCenterPage', () => {
         excessRate: 0
       })]
     }));
+  });
+
+  it('previews preservation application fee cap from litigation fee rules', async () => {
+    previewLitigationFeeRuleMock.mockResolvedValueOnce({
+      amount: 2000000,
+      fee: 5000,
+      bandLabel: '超过10万元'
+    });
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+
+    const preservationRule = litigationFeeRules.find((item) => item.ruleKey === 'preservation_application_fee');
+    const vm = wrapper.vm as unknown as {
+      openLitigationFeeRuleDialog: (row?: (typeof litigationFeeRules)[number]) => void;
+      previewAmount: number;
+      previewLitigationFee: () => Promise<void>;
+    };
+
+    vm.openLitigationFeeRuleDialog(preservationRule);
+    vm.previewAmount = 2000000;
+    await vm.previewLitigationFee();
+    await flushAsyncUpdates();
+
+    expect(previewLitigationFeeRuleMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      ruleKey: 'preservation_application_fee',
+      amount: 2000000
+    });
+    expect(wrapper.text()).toContain('5000');
+    expect(wrapper.text()).toContain('超过10万元');
   });
 
   it('saves and disables exposure groups through backend', async () => {
