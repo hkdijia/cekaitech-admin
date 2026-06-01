@@ -233,6 +233,30 @@ const bankruptcyAdministratorRemunerationCapability = {
   sortOrder: 67,
 };
 
+const trafficPersonalInjuryCompensationCapability = {
+  ...capability,
+  id: 13,
+  toolKey: 'traffic_personal_injury_compensation',
+  title: '交通事故等人身损害赔偿参考',
+  description: '按常见赔偿项目和责任比例做基础参考测算',
+  category: 'compensation',
+  status: 'public',
+  audience: 'litigation_user',
+  sourceLevel: 'official',
+  dataDependency: 'static_rule',
+  executionMode: 'miniapp_local_calculation',
+  riskLevel: 'high',
+  defaultIconKey: 'ambulance',
+  defaultTargetPath: '/pages/traffic-personal-injury-compensation/traffic-personal-injury-compensation',
+  sourceName: '最高人民法院关于审理人身损害赔偿案件适用法律若干问题的解释',
+  sourceUrl: 'https://www.court.gov.cn/fabu/xiangqing/357071.html',
+  sourceVersion: 'spc-2022-personal-injury-compensation',
+  sourceEffectiveDate: '2022-05-01',
+  lastCheckedDate: '2026-06-01',
+  ownerNote: '首片只做赔偿项目清单和基础金额参考测算，不处理伤残、死亡、被扶养人生活费、精神损害、保险分摊和最终赔偿结论。',
+  sortOrder: 66,
+};
+
 const civilCauseCapability = {
   ...capability,
   id: 5,
@@ -454,6 +478,17 @@ const bankruptcyAdministratorRemunerationExposureItem = {
   sortOrder: 67,
 };
 
+const trafficPersonalInjuryCompensationExposureItem = {
+  ...exposureItem,
+  id: 33,
+  capabilityId: 13,
+  entryKey: 'traffic_personal_injury_compensation',
+  iconKey: 'ambulance',
+  targetPath: '/pages/traffic-personal-injury-compensation/traffic-personal-injury-compensation',
+  audience: 'litigation_user',
+  sortOrder: 66,
+};
+
 const civilCauseExposureItem = {
   ...exposureItem,
   id: 25,
@@ -580,6 +615,23 @@ const bankruptcyAdministratorRemunerationDataSource = {
   riskLevel: 'high',
   linkedToolKeys: 'bankruptcy_administrator_remuneration',
   sortOrder: 31,
+};
+
+const trafficPersonalInjuryCompensationDataSource = {
+  ...dataSource,
+  id: 35,
+  sourceKey: 'spc_2022_personal_injury_compensation',
+  sourceName: '最高人民法院关于审理人身损害赔偿案件适用法律若干问题的解释',
+  sourceType: 'official_rule',
+  issuer: '最高人民法院',
+  sourceUrl: 'https://www.court.gov.cn/fabu/xiangqing/357071.html',
+  citation: '法释〔2022〕14号',
+  effectiveDate: '2022-05-01',
+  sourceVersion: 'spc-2022-personal-injury-compensation',
+  lastCheckedDate: '2026-06-01',
+  riskLevel: 'high',
+  linkedToolKeys: 'traffic_personal_injury_compensation',
+  sortOrder: 32,
 };
 
 const blueprint = {
@@ -745,14 +797,14 @@ describe('LegalToolCenterPage', () => {
     publishLitigationFeeRuleMock.mockReset();
 
     pageLegalToolCapabilitiesMock.mockResolvedValue({
-      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, wageConversionCapability, statutoryRetirementAgeCapability, bankruptcyAdministratorRemunerationCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability, levelJurisdictionCapability],
-      totalCount: 12
+      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, wageConversionCapability, statutoryRetirementAgeCapability, trafficPersonalInjuryCompensationCapability, bankruptcyAdministratorRemunerationCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability, levelJurisdictionCapability],
+      totalCount: 13
     });
-    pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource, wageConversionDataSource, statutoryRetirementAgeDataSource, bankruptcyAdministratorRemunerationDataSource], totalCount: 4 });
+    pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource, wageConversionDataSource, statutoryRetirementAgeDataSource, trafficPersonalInjuryCompensationDataSource, bankruptcyAdministratorRemunerationDataSource], totalCount: 5 });
     pageLegalToolExposureGroupsMock.mockResolvedValue({ dataList: [group], totalCount: 1 });
     pageLegalToolExposureItemsMock.mockResolvedValue({
-      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, wageConversionExposureItem, statutoryRetirementAgeExposureItem, bankruptcyAdministratorRemunerationExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem, elementTemplateExposureItem, levelJurisdictionExposureItem],
-      totalCount: 12
+      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, wageConversionExposureItem, statutoryRetirementAgeExposureItem, trafficPersonalInjuryCompensationExposureItem, bankruptcyAdministratorRemunerationExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem, elementTemplateExposureItem, levelJurisdictionExposureItem],
+      totalCount: 13
     });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     pageLegalLprRatesMock.mockResolvedValue({ dataList: [lprRate], totalCount: 1 });
@@ -844,6 +896,10 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('spc-2007-bankruptcy-administrator-remuneration');
     expect(wrapper.text()).toContain('scale');
     expect(wrapper.text()).toContain('high');
+    expect(wrapper.text()).toContain('交通事故等人身损害赔偿参考');
+    expect(wrapper.text()).toContain('/pages/traffic-personal-injury-compensation/traffic-personal-injury-compensation');
+    expect(wrapper.text()).toContain('spc-2022-personal-injury-compensation');
+    expect(wrapper.text()).toContain('ambulance');
     expect(wrapper.text()).toContain('民事案由');
     expect(wrapper.text()).toContain('/pages/civil-cause/civil-cause');
     expect(wrapper.text()).toContain('search-check');

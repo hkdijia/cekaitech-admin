@@ -3,8 +3,8 @@
 ## 当前状态
 
 - 当前分支：`master`
-- 当前阶段：`LMA-FB-031` 破产管理人报酬上限首片管理端覆盖已提交未推送。
-- 最近完成：法律工具中心测试样本新增破产管理人报酬能力、曝光入口、来源记录和全量质量验证。
+- 当前阶段：`LMA-FB-032` 交通事故等人身损害赔偿首片管理端覆盖已验证待推送。
+- 最近完成：法律工具中心测试样本新增交通事故等人身损害赔偿能力、曝光入口、来源记录和全量质量验证。
 - 未完成：推送和企业微信回写。
 
 ## 关键文件
@@ -22,8 +22,9 @@
 
 ## 最近验证
 
-- [反馈编号：LMA-FB-031] `npm.cmd test -- LegalToolCenterPage.test.ts` 通过，1 个测试文件、10 项 Vitest。
-- [反馈编号：LMA-FB-031] 收口验证：`npm.cmd run quality` 通过，32 个测试文件、141 项 Vitest、类型检查和构建；`git diff --check` 无空白错误。
+- [反馈编号：LMA-FB-032] RED：`npm.cmd test -- LegalToolCenterPage.test.ts` 失败于页面缺少“交通事故等人身损害赔偿参考”。
+- [反馈编号：LMA-FB-032] GREEN：`npm.cmd test -- LegalToolCenterPage.test.ts` 通过，1 个测试文件、10 项 Vitest。
+- [反馈编号：LMA-FB-032] 收口验证：`npm.cmd run quality` 通过，32 个测试文件、141 项 Vitest、类型检查和构建；`git diff --check` 无空白错误。
 
 ## 注意事项
 
