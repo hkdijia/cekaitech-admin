@@ -41,6 +41,12 @@ export interface LegalLprRatePageQuery {
   pageSize: number;
 }
 
+export interface AnnualCommonDataPageQuery {
+  appCode: string;
+  pageNo: number;
+  pageSize: number;
+}
+
 export interface LitigationFeeRulePageQuery {
   appCode: string;
   pageNo: number;
@@ -174,6 +180,30 @@ export interface LegalLprRateItem {
   updatedAt: string;
 }
 
+export interface AnnualCommonDataItem {
+  id: number;
+  appCode: string;
+  regionCode: string;
+  regionName: string;
+  year: number;
+  metricKey: string;
+  metricName: string;
+  value: number;
+  unit: string;
+  sourceKey: string;
+  sourceName: string;
+  sourceUrl: string;
+  sourceVersion: string;
+  lastCheckedDate: string;
+  usageScope: string;
+  notice: string;
+  status: string;
+  sortOrder: number;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface LitigationFeeBand {
   minExclusive: number;
   maxInclusive: number | null;
@@ -228,6 +258,7 @@ export type LegalToolExposureItemPayload = Omit<LegalToolExposureItem, 'createdA
 export type LegalToolDataSourcePayload = Omit<LegalToolDataSourceItem, 'createdAt' | 'updatedAt'>;
 export type LegalToolInteractionBlueprintPayload = Omit<LegalToolInteractionBlueprintItem, 'createdAt' | 'updatedAt'>;
 export type LegalLprRatePayload = Omit<LegalLprRateItem, 'createdAt' | 'updatedAt'>;
+export type AnnualCommonDataPayload = Omit<AnnualCommonDataItem, 'createdAt' | 'updatedAt'>;
 export type LitigationFeeRulePayload = Omit<LitigationFeeRuleItem, 'id' | 'createdAt' | 'updatedAt'> & {
   id?: number;
 };
@@ -281,6 +312,24 @@ export function saveLegalLprRate(
   payload: LegalLprRatePayload
 ): Promise<LegalLprRateItem> {
   return request<LegalLprRateItem>('/api/admin/legal-tool-center/lpr-rates/save', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function pageAnnualCommonData(
+  query: AnnualCommonDataPageQuery
+): Promise<PageResult<AnnualCommonDataItem>> {
+  return request<PageResult<AnnualCommonDataItem>>('/api/admin/legal-tool-center/annual-common-data/page', {
+    method: 'POST',
+    body: JSON.stringify(query)
+  });
+}
+
+export function saveAnnualCommonData(
+  payload: AnnualCommonDataPayload
+): Promise<AnnualCommonDataItem> {
+  return request<AnnualCommonDataItem>('/api/admin/legal-tool-center/annual-common-data/save', {
     method: 'POST',
     body: JSON.stringify(payload)
   });

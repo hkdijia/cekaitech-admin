@@ -10,6 +10,7 @@ import {
   pageLegalToolExposureGroups,
   pageLegalToolExposureItems,
   pageLegalToolInteractionBlueprints,
+  pageAnnualCommonData,
   pageLitigationFeeRules,
   pageLegalLprRates,
   previewLitigationFeeRule,
@@ -19,8 +20,11 @@ import {
   saveLegalToolExposureGroup,
   saveLegalToolExposureItem,
   saveLegalToolInteractionBlueprint,
+  saveAnnualCommonData,
   saveLitigationFeeRule,
   saveLegalLprRate,
+  type AnnualCommonDataItem,
+  type AnnualCommonDataPayload,
   type LitigationFeePreviewResult,
   type LitigationFeeRuleItem,
   type LitigationFeeRulePayload,
@@ -47,6 +51,7 @@ const auth = useAuthStore();
 const activeTab = ref('capabilities');
 const loading = ref(false);
 const dataSourceLoading = ref(false);
+const annualCommonDataLoading = ref(false);
 const lprRateLoading = ref(false);
 const litigationFeeRuleLoading = ref(false);
 const groupLoading = ref(false);
@@ -55,6 +60,7 @@ const blueprintLoading = ref(false);
 const loadError = ref('');
 const capabilities = ref<LegalToolCapabilityItem[]>([]);
 const dataSources = ref<LegalToolDataSourceItem[]>([]);
+const annualCommonData = ref<AnnualCommonDataItem[]>([]);
 const lprRates = ref<LegalLprRateItem[]>([]);
 const litigationFeeRules = ref<LitigationFeeRuleItem[]>([]);
 const groups = ref<LegalToolExposureGroupItem[]>([]);
@@ -63,6 +69,7 @@ const blueprints = ref<LegalToolInteractionBlueprintItem[]>([]);
 const selectedGroupId = ref<number | null>(null);
 const capabilityDialogVisible = ref(false);
 const dataSourceDialogVisible = ref(false);
+const annualCommonDataDialogVisible = ref(false);
 const lprRateDialogVisible = ref(false);
 const litigationFeeRuleDialogVisible = ref(false);
 const groupDialogVisible = ref(false);
@@ -129,6 +136,28 @@ const lprRateForm = reactive<LegalLprRatePayload>({
   sourceUrl: 'https://www.chinamoney.com.cn/chinese/bklpr/',
   sourceVersion: '',
   lastCheckedDate: '',
+  status: 'verified',
+  sortOrder: 10,
+  enabled: true
+});
+
+const annualCommonDataForm = reactive<AnnualCommonDataPayload>({
+  id: 0,
+  appCode: APP_CODE,
+  regionCode: '',
+  regionName: '',
+  year: 2024,
+  metricKey: '',
+  metricName: '',
+  value: 0,
+  unit: '元/年',
+  sourceKey: '',
+  sourceName: '',
+  sourceUrl: '',
+  sourceVersion: '',
+  lastCheckedDate: '',
+  usageScope: '',
+  notice: '',
   status: 'verified',
   sortOrder: 10,
   enabled: true
@@ -439,6 +468,30 @@ function lprRatePayload() {
   });
 }
 
+function annualCommonDataPayload() {
+  return normalizePayloadId({
+    id: annualCommonDataForm.id,
+    appCode: annualCommonDataForm.appCode,
+    regionCode: annualCommonDataForm.regionCode,
+    regionName: annualCommonDataForm.regionName,
+    year: Number(annualCommonDataForm.year || 0),
+    metricKey: annualCommonDataForm.metricKey,
+    metricName: annualCommonDataForm.metricName,
+    value: Number(annualCommonDataForm.value || 0),
+    unit: annualCommonDataForm.unit,
+    sourceKey: annualCommonDataForm.sourceKey,
+    sourceName: annualCommonDataForm.sourceName,
+    sourceUrl: annualCommonDataForm.sourceUrl,
+    sourceVersion: annualCommonDataForm.sourceVersion,
+    lastCheckedDate: annualCommonDataForm.lastCheckedDate,
+    usageScope: annualCommonDataForm.usageScope,
+    notice: annualCommonDataForm.notice,
+    status: annualCommonDataForm.status,
+    sortOrder: annualCommonDataForm.sortOrder,
+    enabled: annualCommonDataForm.enabled
+  });
+}
+
 function litigationFeeRulePayload() {
   return normalizePayloadId({
     id: litigationFeeRuleForm.id ?? 0,
@@ -589,6 +642,24 @@ async function loadLprRates() {
     lprRates.value = [];
   } finally {
     lprRateLoading.value = false;
+  }
+}
+
+async function loadAnnualCommonData() {
+  annualCommonDataLoading.value = true;
+  loadError.value = '';
+  try {
+    const result = await pageAnnualCommonData({
+      appCode: APP_CODE,
+      pageNo: 1,
+      pageSize: PAGE_SIZE
+    });
+    annualCommonData.value = result.dataList;
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '常用年度数据加载失败';
+    annualCommonData.value = [];
+  } finally {
+    annualCommonDataLoading.value = false;
   }
 }
 
@@ -784,6 +855,46 @@ async function submitLprRate() {
     await loadLprRates();
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : 'LPR 利率保存失败';
+  } finally {
+    submitting.value = false;
+  }
+}
+
+function openAnnualCommonDataDialog(row?: AnnualCommonDataItem) {
+  Object.assign(annualCommonDataForm, {
+    id: row?.id ?? 0,
+    appCode: APP_CODE,
+    regionCode: row?.regionCode ?? '',
+    regionName: row?.regionName ?? '',
+    year: row?.year ?? 2024,
+    metricKey: row?.metricKey ?? '',
+    metricName: row?.metricName ?? '',
+    value: row?.value ?? 0,
+    unit: row?.unit ?? '元/年',
+    sourceKey: row?.sourceKey ?? '',
+    sourceName: row?.sourceName ?? '',
+    sourceUrl: row?.sourceUrl ?? '',
+    sourceVersion: row?.sourceVersion ?? '',
+    lastCheckedDate: row?.lastCheckedDate ?? '',
+    usageScope: row?.usageScope ?? '',
+    notice: row?.notice ?? '',
+    status: row?.status ?? 'verified',
+    sortOrder: row?.sortOrder ?? 10,
+    enabled: row?.enabled ?? true
+  });
+  annualCommonDataDialogVisible.value = true;
+}
+
+async function submitAnnualCommonData() {
+  submitting.value = true;
+  loadError.value = '';
+  try {
+    await saveAnnualCommonData(annualCommonDataPayload());
+    annualCommonDataDialogVisible.value = false;
+    ElMessage.success('常用年度数据已保存');
+    await loadAnnualCommonData();
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '常用年度数据保存失败';
   } finally {
     submitting.value = false;
   }
@@ -1006,6 +1117,7 @@ onMounted(async () => {
   await Promise.all([
     loadCapabilities(),
     loadDataSources(),
+    loadAnnualCommonData(),
     loadLprRates(),
     loadLitigationFeeRules(),
     loadGroups(),
@@ -1098,6 +1210,44 @@ onMounted(async () => {
             <el-table-column v-if="canManageLegalToolCenter" label="操作" width="100" fixed="right">
               <template #default="{ row }">
                 <el-button :icon="EditPen" text type="primary" @click="openDataSourceDialog(row)">编辑</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+
+        <el-tab-pane label="常用年度数据" name="annual-common-data">
+          <div class="toolbar">
+            <div>
+              <div class="toolbar-title">常用年度数据</div>
+              <div class="toolbar-subtitle">维护地区、年度、指标、数值、来源版本和核验状态，供小程序只读查询。</div>
+            </div>
+            <div class="toolbar-actions">
+              <el-button :icon="Refresh" @click="loadAnnualCommonData">刷新</el-button>
+              <el-button v-if="canManageLegalToolCenter" type="primary" :icon="Plus" @click="openAnnualCommonDataDialog()">
+                新增年度数据
+              </el-button>
+            </div>
+          </div>
+
+          <el-table v-loading="annualCommonDataLoading" :data="annualCommonData" row-key="id">
+            <el-table-column prop="regionName" label="地区" width="120" />
+            <el-table-column prop="year" label="年度" width="90" />
+            <el-table-column prop="metricName" label="指标" min-width="180" show-overflow-tooltip />
+            <el-table-column prop="value" label="数值" width="120" />
+            <el-table-column prop="unit" label="单位" width="90" />
+            <el-table-column prop="sourceKey" label="来源标识" min-width="190" show-overflow-tooltip />
+            <el-table-column prop="sourceVersion" label="来源版本" min-width="210" show-overflow-tooltip />
+            <el-table-column prop="lastCheckedDate" label="核验日期" width="120" />
+            <el-table-column prop="status" label="状态" width="110" />
+            <el-table-column prop="sortOrder" label="排序" width="80" />
+            <el-table-column label="启用" width="104">
+              <template #default="{ row }">
+                <el-tag :type="statusTagType(row.enabled)" effect="plain">{{ row.enabled ? '启用' : '禁用' }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column v-if="canManageLegalToolCenter" label="操作" width="100" fixed="right">
+              <template #default="{ row }">
+                <el-button :icon="EditPen" text type="primary" @click="openAnnualCommonDataDialog(row)">编辑</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -1406,6 +1556,38 @@ onMounted(async () => {
       <template #footer>
         <el-button @click="dataSourceDialogVisible = false">取消</el-button>
         <el-button type="primary" :loading="submitting" @click="submitDataSource">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="annualCommonDataDialogVisible" title="常用年度数据" width="760px">
+      <el-form label-width="116px">
+        <el-form-item label="地区编码"><el-input v-model="annualCommonDataForm.regionCode" /></el-form-item>
+        <el-form-item label="地区名称"><el-input v-model="annualCommonDataForm.regionName" /></el-form-item>
+        <el-form-item label="年度"><el-input-number v-model="annualCommonDataForm.year" :min="2000" :max="2100" /></el-form-item>
+        <el-form-item label="指标标识"><el-input v-model="annualCommonDataForm.metricKey" /></el-form-item>
+        <el-form-item label="指标名称"><el-input v-model="annualCommonDataForm.metricName" /></el-form-item>
+        <el-form-item label="数值">
+          <el-input-number v-model="annualCommonDataForm.value" :min="0" :precision="2" controls-position="right" />
+        </el-form-item>
+        <el-form-item label="单位"><el-input v-model="annualCommonDataForm.unit" /></el-form-item>
+        <el-form-item label="来源标识"><el-input v-model="annualCommonDataForm.sourceKey" /></el-form-item>
+        <el-form-item label="来源名称"><el-input v-model="annualCommonDataForm.sourceName" /></el-form-item>
+        <el-form-item label="来源链接"><el-input v-model="annualCommonDataForm.sourceUrl" /></el-form-item>
+        <el-form-item label="来源版本"><el-input v-model="annualCommonDataForm.sourceVersion" /></el-form-item>
+        <el-form-item label="核验日期"><el-input v-model="annualCommonDataForm.lastCheckedDate" /></el-form-item>
+        <el-form-item label="使用范围"><el-input v-model="annualCommonDataForm.usageScope" type="textarea" :rows="2" /></el-form-item>
+        <el-form-item label="提示文案"><el-input v-model="annualCommonDataForm.notice" type="textarea" :rows="2" /></el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="annualCommonDataForm.status" class="full-input">
+            <el-option v-for="item in sourceStatusOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="排序"><el-input-number v-model="annualCommonDataForm.sortOrder" :min="0" /></el-form-item>
+        <el-form-item label="启用"><el-switch v-model="annualCommonDataForm.enabled" /></el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="annualCommonDataDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitAnnualCommonData">保存</el-button>
       </template>
     </el-dialog>
 

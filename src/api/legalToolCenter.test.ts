@@ -7,6 +7,7 @@ import {
   pageLegalToolExposureGroups,
   pageLegalToolExposureItems,
   pageLegalToolInteractionBlueprints,
+  pageAnnualCommonData,
   pageLitigationFeeRules,
   pageLegalLprRates,
   previewLitigationFeeRule,
@@ -16,6 +17,7 @@ import {
   saveLegalToolExposureGroup,
   saveLegalToolExposureItem,
   saveLegalToolInteractionBlueprint,
+  saveAnnualCommonData,
   saveLitigationFeeRule,
   saveLegalLprRate
 } from './legalToolCenter';
@@ -407,6 +409,53 @@ describe('legal tool center api', () => {
         sortOrder: 10,
         enabled: true
       })
+    }));
+  });
+
+  it('posts annual common data page and save requests to backend endpoints', async () => {
+    const annualData = {
+      id: 71,
+      appCode: 'lawsuit-material-assistant',
+      regionCode: '430000',
+      regionName: '湖南省',
+      year: 2024,
+      metricKey: 'annual_employees_average_wage',
+      metricName: '就业人员年平均工资',
+      value: 100000,
+      unit: '元/年',
+      sourceKey: 'hunan_stats_2024_sample',
+      sourceName: '公开统计数据样例',
+      sourceUrl: 'https://example.com/hunan-stats-2024',
+      sourceVersion: 'annual-common-data-sample-2024',
+      lastCheckedDate: '2026-06-02',
+      usageScope: '小额诉讼限额金额区间核对',
+      notice: '样例数据需核对地区统计公报和最新发布口径。',
+      status: 'verified',
+      sortOrder: 10,
+      enabled: true,
+      createdAt: '2026-06-02T10:00:00',
+      updatedAt: '2026-06-02T10:00:00'
+    };
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, code: '0', msg: '', data: { dataList: [annualData], totalCount: 1 } })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, code: '0', msg: '', data: annualData })
+      } as Response);
+
+    await pageAnnualCommonData({ appCode: 'lawsuit-material-assistant', pageNo: 1, pageSize: 50 });
+    await saveAnnualCommonData(annualData);
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/admin/legal-tool-center/annual-common-data/page', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ appCode: 'lawsuit-material-assistant', pageNo: 1, pageSize: 50 })
+    }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/admin/legal-tool-center/annual-common-data/save', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify(annualData)
     }));
   });
 

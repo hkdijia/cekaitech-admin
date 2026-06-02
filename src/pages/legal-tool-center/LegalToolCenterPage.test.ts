@@ -12,6 +12,7 @@ import {
   pageLegalToolExposureGroups,
   pageLegalToolExposureItems,
   pageLegalToolInteractionBlueprints,
+  pageAnnualCommonData,
   pageLegalLprRates,
   pageLitigationFeeRules,
   previewLitigationFeeRule,
@@ -22,6 +23,7 @@ import {
   saveLegalToolExposureItem
   ,
   saveLegalToolInteractionBlueprint,
+  saveAnnualCommonData,
   saveLitigationFeeRule,
   saveLegalLprRate
 } from '../../api/legalToolCenter';
@@ -41,6 +43,8 @@ vi.mock('../../api/legalToolCenter', () => ({
   disableLegalToolExposureItem: vi.fn(),
   pageLegalToolInteractionBlueprints: vi.fn(),
   saveLegalToolInteractionBlueprint: vi.fn(),
+  pageAnnualCommonData: vi.fn(),
+  saveAnnualCommonData: vi.fn(),
   pageLegalLprRates: vi.fn(),
   saveLegalLprRate: vi.fn(),
   pageLitigationFeeRules: vi.fn(),
@@ -61,6 +65,8 @@ const saveLegalToolExposureItemMock = vi.mocked(saveLegalToolExposureItem);
 const disableLegalToolExposureItemMock = vi.mocked(disableLegalToolExposureItem);
 const pageLegalToolInteractionBlueprintsMock = vi.mocked(pageLegalToolInteractionBlueprints);
 const saveLegalToolInteractionBlueprintMock = vi.mocked(saveLegalToolInteractionBlueprint);
+const pageAnnualCommonDataMock = vi.mocked(pageAnnualCommonData);
+const saveAnnualCommonDataMock = vi.mocked(saveAnnualCommonData);
 const pageLegalLprRatesMock = vi.mocked(pageLegalLprRates);
 const saveLegalLprRateMock = vi.mocked(saveLegalLprRate);
 const pageLitigationFeeRulesMock = vi.mocked(pageLitigationFeeRules);
@@ -780,6 +786,30 @@ const lprRate = {
   updatedAt: '2026-05-31T01:00:00'
 };
 
+const annualCommonData = {
+  id: 71,
+  appCode: 'lawsuit-material-assistant',
+  regionCode: '430000',
+  regionName: '湖南省',
+  year: 2024,
+  metricKey: 'annual_employees_average_wage',
+  metricName: '就业人员年平均工资',
+  value: 100000,
+  unit: '元/年',
+  sourceKey: 'hunan_stats_2024_sample',
+  sourceName: '公开统计数据样例',
+  sourceUrl: 'https://example.com/hunan-stats-2024',
+  sourceVersion: 'annual-common-data-sample-2024',
+  lastCheckedDate: '2026-06-02',
+  usageScope: '小额诉讼限额金额区间核对',
+  notice: '样例数据需核对地区统计公报和最新发布口径。',
+  status: 'verified',
+  sortOrder: 10,
+  enabled: true,
+  createdAt: '2026-06-02T10:00:00',
+  updatedAt: '2026-06-02T10:00:00'
+};
+
 const litigationFeeRule = {
   id: 61,
   appCode: 'lawsuit-material-assistant',
@@ -925,6 +955,8 @@ describe('LegalToolCenterPage', () => {
     disableLegalToolExposureItemMock.mockReset();
     pageLegalToolInteractionBlueprintsMock.mockReset();
     saveLegalToolInteractionBlueprintMock.mockReset();
+    pageAnnualCommonDataMock.mockReset();
+    saveAnnualCommonDataMock.mockReset();
     pageLegalLprRatesMock.mockReset();
     saveLegalLprRateMock.mockReset();
     pageLitigationFeeRulesMock.mockReset();
@@ -943,6 +975,7 @@ describe('LegalToolCenterPage', () => {
       totalCount: 15
     });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
+    pageAnnualCommonDataMock.mockResolvedValue({ dataList: [annualCommonData], totalCount: 1 });
     pageLegalLprRatesMock.mockResolvedValue({ dataList: [lprRate], totalCount: 1 });
     pageLitigationFeeRulesMock.mockResolvedValue({ dataList: litigationFeeRules, totalCount: 9 });
     saveLegalToolCapabilityMock.mockResolvedValue(capability);
@@ -950,6 +983,7 @@ describe('LegalToolCenterPage', () => {
     saveLegalToolExposureGroupMock.mockResolvedValue(group);
     saveLegalToolExposureItemMock.mockResolvedValue(exposureItem);
     saveLegalToolInteractionBlueprintMock.mockResolvedValue(blueprint);
+    saveAnnualCommonDataMock.mockResolvedValue(annualCommonData);
     saveLegalLprRateMock.mockResolvedValue(lprRate);
     saveLitigationFeeRuleMock.mockResolvedValue(litigationFeeRule);
     previewLitigationFeeRuleMock.mockResolvedValue({
@@ -989,6 +1023,11 @@ describe('LegalToolCenterPage', () => {
       pageSize: 50
     });
     expect(pageLegalToolInteractionBlueprintsMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      pageNo: 1,
+      pageSize: 50
+    });
+    expect(pageAnnualCommonDataMock).toHaveBeenCalledWith({
       appCode: 'lawsuit-material-assistant',
       pageNo: 1,
       pageSize: 50
@@ -1064,6 +1103,7 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('展示分组');
     expect(wrapper.text()).toContain('曝光入口');
     expect(wrapper.text()).toContain('交互蓝图');
+    expect(wrapper.text()).toContain('常用年度数据');
     expect(wrapper.text()).toContain('LPR利率');
     expect(wrapper.text()).toContain('诉讼费用规则');
     expect(wrapper.text()).toContain('诉讼费用');
@@ -1124,6 +1164,9 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('诉讼计算');
     expect(wrapper.text()).toContain('诉讼费用计算交互蓝图');
     expect(wrapper.text()).toContain('2025-05-20');
+    expect(wrapper.text()).toContain('就业人员年平均工资');
+    expect(wrapper.text()).toContain('湖南省');
+    expect(wrapper.text()).toContain('annual-common-data-sample-2024');
     expect(wrapper.text()).toContain('3');
     expect(wrapper.text()).toContain('3.5');
     expect(wrapper.text()).toContain('财产案件受理费');
@@ -1308,6 +1351,51 @@ describe('LegalToolCenterPage', () => {
       enabled: true
     });
     expect(pageLegalLprRatesMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      pageNo: 1,
+      pageSize: 50
+    });
+  });
+
+  it('saves annual common data through backend without audit fields', async () => {
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+    pageAnnualCommonDataMock.mockClear();
+
+    const vm = wrapper.vm as unknown as {
+      openAnnualCommonDataDialog: (row?: typeof annualCommonData) => void;
+      annualCommonDataForm: typeof annualCommonData;
+      submitAnnualCommonData: () => Promise<void>;
+    };
+
+    vm.openAnnualCommonDataDialog(annualCommonData);
+    Object.assign(vm.annualCommonDataForm, annualCommonData);
+    await vm.submitAnnualCommonData();
+    await flushAsyncUpdates();
+
+    expect(saveAnnualCommonDataMock).toHaveBeenCalledWith({
+      id: 71,
+      appCode: 'lawsuit-material-assistant',
+      regionCode: '430000',
+      regionName: '湖南省',
+      year: 2024,
+      metricKey: 'annual_employees_average_wage',
+      metricName: '就业人员年平均工资',
+      value: 100000,
+      unit: '元/年',
+      sourceKey: 'hunan_stats_2024_sample',
+      sourceName: '公开统计数据样例',
+      sourceUrl: 'https://example.com/hunan-stats-2024',
+      sourceVersion: 'annual-common-data-sample-2024',
+      lastCheckedDate: '2026-06-02',
+      usageScope: '小额诉讼限额金额区间核对',
+      notice: '样例数据需核对地区统计公报和最新发布口径。',
+      status: 'verified',
+      sortOrder: 10,
+      enabled: true
+    });
+    expect(pageAnnualCommonDataMock).toHaveBeenCalledWith({
       appCode: 'lawsuit-material-assistant',
       pageNo: 1,
       pageSize: 50
