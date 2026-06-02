@@ -239,6 +239,30 @@ const bankruptcyAdministratorRemunerationCapability = {
   sortOrder: 67,
 };
 
+const arbitrationFeeCapability = {
+  ...capability,
+  id: 16,
+  toolKey: 'arbitration_fee',
+  title: '仲裁费用参考',
+  description: '按争议金额分段测算仲裁案件受理费参考区间',
+  category: 'calculator',
+  status: 'public',
+  audience: 'litigation_user',
+  sourceLevel: 'public_reference',
+  dataDependency: 'static_rule',
+  executionMode: 'miniapp_local_calculation',
+  riskLevel: 'high',
+  defaultIconKey: 'scale',
+  defaultTargetPath: '/pages/arbitration-fee/arbitration-fee',
+  sourceName: '仲裁委员会仲裁收费办法',
+  sourceUrl: 'https://www.gov.cn/zhengce/content/2010-11/12/content_5152.htm',
+  sourceVersion: 'state-council-1995-arbitration-fee',
+  sourceEffectiveDate: '1995-09-01',
+  lastCheckedDate: '2026-06-02',
+  ownerNote: '首片只按案件受理费表做参考测算，不覆盖具体仲裁机构独立规则、案件处理费和其他支出。',
+  sortOrder: 75,
+};
+
 const trafficPersonalInjuryCompensationCapability = {
   ...capability,
   id: 13,
@@ -532,6 +556,17 @@ const bankruptcyAdministratorRemunerationExposureItem = {
   sortOrder: 67,
 };
 
+const arbitrationFeeExposureItem = {
+  ...exposureItem,
+  id: 36,
+  capabilityId: 16,
+  entryKey: 'arbitration_fee',
+  iconKey: 'scale',
+  targetPath: '/pages/arbitration-fee/arbitration-fee',
+  audience: 'litigation_user',
+  sortOrder: 75,
+};
+
 const trafficPersonalInjuryCompensationExposureItem = {
   ...exposureItem,
   id: 33,
@@ -744,6 +779,24 @@ const smallClaimLimitDataSource = {
   linkedToolKeys: 'small_claim_limit',
   ownerNote: '后端最终使用 static_rule 枚举保存小额诉讼限额规则来源。',
   sortOrder: 34,
+};
+
+const arbitrationFeeDataSource = {
+  ...dataSource,
+  id: 38,
+  sourceKey: 'state_council_1995_arbitration_fee',
+  sourceName: '仲裁委员会仲裁收费办法',
+  sourceType: 'public_rule',
+  issuer: '国务院办公厅',
+  sourceUrl: 'https://www.gov.cn/zhengce/content/2010-11/12/content_5152.htm',
+  citation: '国办发〔1995〕44号',
+  effectiveDate: '1995-09-01',
+  sourceVersion: 'state-council-1995-arbitration-fee',
+  lastCheckedDate: '2026-06-02',
+  riskLevel: 'high',
+  linkedToolKeys: 'arbitration_fee',
+  ownerNote: '首片只按案件受理费表做参考测算，不覆盖具体仲裁机构独立规则、案件处理费和其他支出。',
+  sortOrder: 35,
 };
 
 const blueprint = {
@@ -965,14 +1018,14 @@ describe('LegalToolCenterPage', () => {
     publishLitigationFeeRuleMock.mockReset();
 
     pageLegalToolCapabilitiesMock.mockResolvedValue({
-      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, wageConversionCapability, statutoryRetirementAgeCapability, trafficPersonalInjuryCompensationCapability, bankruptcyAdministratorRemunerationCapability, workInjuryCompensationCapability, smallClaimLimitCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability, levelJurisdictionCapability],
-      totalCount: 15
+      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, wageConversionCapability, statutoryRetirementAgeCapability, trafficPersonalInjuryCompensationCapability, bankruptcyAdministratorRemunerationCapability, workInjuryCompensationCapability, smallClaimLimitCapability, arbitrationFeeCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability, levelJurisdictionCapability],
+      totalCount: 16
     });
-    pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource, wageConversionDataSource, statutoryRetirementAgeDataSource, trafficPersonalInjuryCompensationDataSource, bankruptcyAdministratorRemunerationDataSource, workInjuryCompensationDataSource, smallClaimLimitDataSource], totalCount: 7 });
+    pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource, wageConversionDataSource, statutoryRetirementAgeDataSource, trafficPersonalInjuryCompensationDataSource, bankruptcyAdministratorRemunerationDataSource, workInjuryCompensationDataSource, smallClaimLimitDataSource, arbitrationFeeDataSource], totalCount: 8 });
     pageLegalToolExposureGroupsMock.mockResolvedValue({ dataList: [group], totalCount: 1 });
     pageLegalToolExposureItemsMock.mockResolvedValue({
-      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, wageConversionExposureItem, statutoryRetirementAgeExposureItem, trafficPersonalInjuryCompensationExposureItem, bankruptcyAdministratorRemunerationExposureItem, workInjuryCompensationExposureItem, smallClaimLimitExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem, elementTemplateExposureItem, levelJurisdictionExposureItem],
-      totalCount: 15
+      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, wageConversionExposureItem, statutoryRetirementAgeExposureItem, trafficPersonalInjuryCompensationExposureItem, bankruptcyAdministratorRemunerationExposureItem, workInjuryCompensationExposureItem, smallClaimLimitExposureItem, arbitrationFeeExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem, elementTemplateExposureItem, levelJurisdictionExposureItem],
+      totalCount: 16
     });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     pageAnnualCommonDataMock.mockResolvedValue({ dataList: [annualCommonData], totalCount: 1 });
@@ -1062,6 +1115,17 @@ describe('LegalToolCenterPage', () => {
       defaultIconKey: 'badge-check',
       defaultTargetPath: '/pages/small-claim-limit/small-claim-limit'
     });
+    const arbitrationFeeCapability = capabilityPage.dataList.find((item) => item.toolKey === 'arbitration_fee');
+    expect(arbitrationFeeCapability).toMatchObject({
+      toolKey: 'arbitration_fee',
+      title: '仲裁费用参考',
+      riskLevel: 'high',
+      dataDependency: 'static_rule',
+      executionMode: 'miniapp_local_calculation',
+      defaultIconKey: 'scale',
+      defaultTargetPath: '/pages/arbitration-fee/arbitration-fee',
+      sourceVersion: 'state-council-1995-arbitration-fee'
+    });
 
     const exposureItemsPage: { dataList: Array<typeof exposureItem> } = await pageLegalToolExposureItemsMock.mock.results[0].value;
     const workInjuryExposureItem = exposureItemsPage.dataList.find((item) => item.entryKey === 'work_injury_compensation');
@@ -1077,6 +1141,13 @@ describe('LegalToolCenterPage', () => {
       capabilityId: smallClaimLimitCapability?.id,
       iconKey: 'badge-check',
       targetPath: '/pages/small-claim-limit/small-claim-limit'
+    });
+    const arbitrationFeeExposureItem = exposureItemsPage.dataList.find((item) => item.entryKey === 'arbitration_fee');
+    expect(arbitrationFeeExposureItem).toMatchObject({
+      entryKey: 'arbitration_fee',
+      capabilityId: arbitrationFeeCapability?.id,
+      iconKey: 'scale',
+      targetPath: '/pages/arbitration-fee/arbitration-fee'
     });
 
     const dataSourcesPage: { dataList: Array<typeof dataSource> } = await pageLegalToolDataSourcesMock.mock.results[0].value;
@@ -1095,6 +1166,13 @@ describe('LegalToolCenterPage', () => {
       sourceVersion: 'civil-procedure-law-small-claim-limit',
       linkedToolKeys: 'small_claim_limit',
       riskLevel: 'medium'
+    });
+    const arbitrationFeeDataSource = dataSourcesPage.dataList.find((item) => item.sourceKey === 'state_council_1995_arbitration_fee');
+    expect(arbitrationFeeDataSource).toMatchObject({
+      sourceKey: 'state_council_1995_arbitration_fee',
+      sourceVersion: 'state-council-1995-arbitration-fee',
+      linkedToolKeys: 'arbitration_fee',
+      riskLevel: 'high'
     });
 
     expect(wrapper.text()).toContain('法律工具中心');
@@ -1141,6 +1219,10 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('badge-check');
     expect(wrapper.text()).toContain('civil_procedure_law_small_claim_limit');
     expect(wrapper.text()).toContain('civil-procedure-law-small-claim-limit');
+    expect(wrapper.text()).toContain('仲裁费用参考');
+    expect(wrapper.text()).toContain('/pages/arbitration-fee/arbitration-fee');
+    expect(wrapper.text()).toContain('state_council_1995_arbitration_fee');
+    expect(wrapper.text()).toContain('state-council-1995-arbitration-fee');
     expect(wrapper.text()).toContain('民事案由');
     expect(wrapper.text()).toContain('/pages/civil-cause/civil-cause');
     expect(wrapper.text()).toContain('search-check');
