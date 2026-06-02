@@ -263,6 +263,30 @@ const arbitrationFeeCapability = {
   sortOrder: 75,
 };
 
+const lawyerFeeReferenceCapability = {
+  ...capability,
+  id: 17,
+  toolKey: 'lawyer_fee_reference',
+  title: '律师费参考',
+  description: '按案件类型、阶段和标的额展示律师费参考说明',
+  category: 'rule_query',
+  status: 'public',
+  audience: 'general_user',
+  sourceLevel: 'public_reference',
+  dataDependency: 'static_rule',
+  executionMode: 'miniapp_local_calculation',
+  riskLevel: 'high',
+  defaultIconKey: 'scale',
+  defaultTargetPath: '/pages/lawyer-fee-reference/lawyer-fee-reference',
+  sourceName: '律师费参考资料样例',
+  sourceUrl: '',
+  sourceVersion: 'lawyer-fee-reference-sample-2026',
+  sourceEffectiveDate: '',
+  lastCheckedDate: '2026-06-02',
+  ownerNote: '首片只展示律师费参考说明和样例区间，不给出最终收费结论，不覆盖风险代理、计时收费和完整地区收费表。',
+  sortOrder: 76,
+};
+
 const trafficPersonalInjuryCompensationCapability = {
   ...capability,
   id: 13,
@@ -567,6 +591,17 @@ const arbitrationFeeExposureItem = {
   sortOrder: 75,
 };
 
+const lawyerFeeReferenceExposureItem = {
+  ...exposureItem,
+  id: 37,
+  capabilityId: 17,
+  entryKey: 'lawyer_fee_reference',
+  iconKey: 'scale',
+  targetPath: '/pages/lawyer-fee-reference/lawyer-fee-reference',
+  audience: 'litigation_user',
+  sortOrder: 76,
+};
+
 const trafficPersonalInjuryCompensationExposureItem = {
   ...exposureItem,
   id: 33,
@@ -799,6 +834,24 @@ const arbitrationFeeDataSource = {
   sortOrder: 35,
 };
 
+const lawyerFeeReferenceDataSource = {
+  ...dataSource,
+  id: 39,
+  sourceKey: 'lawyer_fee_reference_sample_2026',
+  sourceName: '律师费参考资料样例',
+  sourceType: 'public_reference',
+  issuer: '公开收费指导口径',
+  sourceUrl: '',
+  citation: '首片为参考资料样例，实际收费以当地公开口径、律师事务所报价和双方委托合同为准',
+  effectiveDate: '',
+  sourceVersion: 'lawyer-fee-reference-sample-2026',
+  lastCheckedDate: '2026-06-02',
+  riskLevel: 'high',
+  linkedToolKeys: 'lawyer_fee_reference',
+  ownerNote: '首片只展示律师费参考说明和样例区间，不给出最终收费结论。',
+  sortOrder: 36,
+};
+
 const blueprint = {
   id: 41,
   appCode: 'lawsuit-material-assistant',
@@ -1018,14 +1071,14 @@ describe('LegalToolCenterPage', () => {
     publishLitigationFeeRuleMock.mockReset();
 
     pageLegalToolCapabilitiesMock.mockResolvedValue({
-      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, wageConversionCapability, statutoryRetirementAgeCapability, trafficPersonalInjuryCompensationCapability, bankruptcyAdministratorRemunerationCapability, workInjuryCompensationCapability, smallClaimLimitCapability, arbitrationFeeCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability, levelJurisdictionCapability],
-      totalCount: 16
+      dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, wageConversionCapability, statutoryRetirementAgeCapability, trafficPersonalInjuryCompensationCapability, bankruptcyAdministratorRemunerationCapability, workInjuryCompensationCapability, smallClaimLimitCapability, arbitrationFeeCapability, lawyerFeeReferenceCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability, levelJurisdictionCapability],
+      totalCount: 17
     });
-    pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource, wageConversionDataSource, statutoryRetirementAgeDataSource, trafficPersonalInjuryCompensationDataSource, bankruptcyAdministratorRemunerationDataSource, workInjuryCompensationDataSource, smallClaimLimitDataSource, arbitrationFeeDataSource], totalCount: 8 });
+    pageLegalToolDataSourcesMock.mockResolvedValue({ dataList: [dataSource, wageConversionDataSource, statutoryRetirementAgeDataSource, trafficPersonalInjuryCompensationDataSource, bankruptcyAdministratorRemunerationDataSource, workInjuryCompensationDataSource, smallClaimLimitDataSource, arbitrationFeeDataSource, lawyerFeeReferenceDataSource], totalCount: 9 });
     pageLegalToolExposureGroupsMock.mockResolvedValue({ dataList: [group], totalCount: 1 });
     pageLegalToolExposureItemsMock.mockResolvedValue({
-      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, wageConversionExposureItem, statutoryRetirementAgeExposureItem, trafficPersonalInjuryCompensationExposureItem, bankruptcyAdministratorRemunerationExposureItem, workInjuryCompensationExposureItem, smallClaimLimitExposureItem, arbitrationFeeExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem, elementTemplateExposureItem, levelJurisdictionExposureItem],
-      totalCount: 16
+      dataList: [exposureItem, privateLendingInterestExposureItem, dateCalculationExposureItem, paidAnnualLeaveExposureItem, wageConversionExposureItem, statutoryRetirementAgeExposureItem, trafficPersonalInjuryCompensationExposureItem, bankruptcyAdministratorRemunerationExposureItem, workInjuryCompensationExposureItem, smallClaimLimitExposureItem, arbitrationFeeExposureItem, lawyerFeeReferenceExposureItem, civilCauseExposureItem, delayedPerformanceInterestExposureItem, economicCompensationExposureItem, elementTemplateExposureItem, levelJurisdictionExposureItem],
+      totalCount: 17
     });
     pageLegalToolInteractionBlueprintsMock.mockResolvedValue({ dataList: [blueprint], totalCount: 1 });
     pageAnnualCommonDataMock.mockResolvedValue({ dataList: [annualCommonData], totalCount: 1 });
@@ -1126,6 +1179,17 @@ describe('LegalToolCenterPage', () => {
       defaultTargetPath: '/pages/arbitration-fee/arbitration-fee',
       sourceVersion: 'state-council-1995-arbitration-fee'
     });
+    const lawyerFeeReferenceCapability = capabilityPage.dataList.find((item) => item.toolKey === 'lawyer_fee_reference');
+    expect(lawyerFeeReferenceCapability).toMatchObject({
+      toolKey: 'lawyer_fee_reference',
+      title: '律师费参考',
+      riskLevel: 'high',
+      dataDependency: 'static_rule',
+      executionMode: 'miniapp_local_calculation',
+      defaultIconKey: 'scale',
+      defaultTargetPath: '/pages/lawyer-fee-reference/lawyer-fee-reference',
+      sourceVersion: 'lawyer-fee-reference-sample-2026'
+    });
 
     const exposureItemsPage: { dataList: Array<typeof exposureItem> } = await pageLegalToolExposureItemsMock.mock.results[0].value;
     const workInjuryExposureItem = exposureItemsPage.dataList.find((item) => item.entryKey === 'work_injury_compensation');
@@ -1148,6 +1212,13 @@ describe('LegalToolCenterPage', () => {
       capabilityId: arbitrationFeeCapability?.id,
       iconKey: 'scale',
       targetPath: '/pages/arbitration-fee/arbitration-fee'
+    });
+    const lawyerFeeReferenceExposureItem = exposureItemsPage.dataList.find((item) => item.entryKey === 'lawyer_fee_reference');
+    expect(lawyerFeeReferenceExposureItem).toMatchObject({
+      entryKey: 'lawyer_fee_reference',
+      capabilityId: lawyerFeeReferenceCapability?.id,
+      iconKey: 'scale',
+      targetPath: '/pages/lawyer-fee-reference/lawyer-fee-reference'
     });
 
     const dataSourcesPage: { dataList: Array<typeof dataSource> } = await pageLegalToolDataSourcesMock.mock.results[0].value;
@@ -1172,6 +1243,13 @@ describe('LegalToolCenterPage', () => {
       sourceKey: 'state_council_1995_arbitration_fee',
       sourceVersion: 'state-council-1995-arbitration-fee',
       linkedToolKeys: 'arbitration_fee',
+      riskLevel: 'high'
+    });
+    const lawyerFeeReferenceDataSource = dataSourcesPage.dataList.find((item) => item.sourceKey === 'lawyer_fee_reference_sample_2026');
+    expect(lawyerFeeReferenceDataSource).toMatchObject({
+      sourceKey: 'lawyer_fee_reference_sample_2026',
+      sourceVersion: 'lawyer-fee-reference-sample-2026',
+      linkedToolKeys: 'lawyer_fee_reference',
       riskLevel: 'high'
     });
 
@@ -1223,6 +1301,10 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).toContain('/pages/arbitration-fee/arbitration-fee');
     expect(wrapper.text()).toContain('state_council_1995_arbitration_fee');
     expect(wrapper.text()).toContain('state-council-1995-arbitration-fee');
+    expect(wrapper.text()).toContain('律师费参考');
+    expect(wrapper.text()).toContain('/pages/lawyer-fee-reference/lawyer-fee-reference');
+    expect(wrapper.text()).toContain('lawyer_fee_reference_sample_2026');
+    expect(wrapper.text()).toContain('lawyer-fee-reference-sample-2026');
     expect(wrapper.text()).toContain('民事案由');
     expect(wrapper.text()).toContain('/pages/civil-cause/civil-cause');
     expect(wrapper.text()).toContain('search-check');
