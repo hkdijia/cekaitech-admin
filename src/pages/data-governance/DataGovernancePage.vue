@@ -3,8 +3,15 @@ import { onMounted, ref } from 'vue';
 import { Refresh, Upload } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import {
+  pageAnnualCommonDataRevisions,
+  pageAnnualCommonDataSyncBatches,
   pageLprRateRevisions,
   pageLprSyncBatches,
+  syncAnnualCommonData,
+  type AnnualCommonDataRevisionItem,
+  type AnnualCommonDataSyncBatchItem,
+  type AnnualCommonDataSyncItem,
+  type AnnualCommonDataSyncPayload,
   syncLprRates,
   type LprRateRevisionItem,
   type LprRateSyncItem,
@@ -22,6 +29,8 @@ const publishing = ref(false);
 const loadError = ref('');
 const batches = ref<LprSyncBatchItem[]>([]);
 const revisions = ref<LprRateRevisionItem[]>([]);
+const annualBatches = ref<AnnualCommonDataSyncBatchItem[]>([]);
+const annualRevisions = ref<AnnualCommonDataRevisionItem[]>([]);
 const lprSyncJson = ref(JSON.stringify({
   items: [
     {
@@ -29,6 +38,29 @@ const lprSyncJson = ref(JSON.stringify({
       oneYearRate: 3,
       fiveYearPlusRate: 3.5,
       sourceVersion: 'pbc-2025-05-20'
+    }
+  ]
+}, null, 2));
+const annualCommonDataSyncJson = ref(JSON.stringify({
+  requestId: 'crawler-annual-2024',
+  sourceKey: 'annual_public_stats',
+  sourceVersion: 'public-stats-2024',
+  sourceClient: 'crawler-local',
+  collectedAt: '2026-06-02T02:00:00+08:00',
+  lastCheckedDate: '2026-06-02',
+  mode: 'strict',
+  payloadHash: 'hash-annual-2024',
+  items: [
+    {
+      regionCode: 'cn-shanghai',
+      regionName: '上海市',
+      year: 2024,
+      metricKey: 'average_salary',
+      metricName: '平均工资',
+      value: 120000,
+      unit: '元/年',
+      sourceName: '统计公报',
+      sourceUrl: 'https://tjj.sh.gov.cn/'
     }
   ]
 }, null, 2));
@@ -64,6 +96,34 @@ function parseLprSyncJson(value: string): LprRateSyncItem[] {
     throw new Error('LPR JSON 必须包含 items 数组');
   }
   return parsed.items as LprRateSyncItem[];
+}
+
+function parseAnnualCommonDataSyncJson(value: string): Omit<AnnualCommonDataSyncPayload, 'appCode'> {
+  const parsed = JSON.parse(value) as {
+    requestId?: unknown;
+    sourceKey?: unknown;
+    sourceVersion?: unknown;
+    sourceClient?: unknown;
+    collectedAt?: unknown;
+    lastCheckedDate?: unknown;
+    mode?: unknown;
+    payloadHash?: unknown;
+    items?: unknown;
+  };
+  if (!Array.isArray(parsed.items)) {
+    throw new Error('年度数据 JSON 必须包含 items 数组');
+  }
+  return {
+    requestId: String(parsed.requestId ?? ''),
+    sourceKey: String(parsed.sourceKey ?? ''),
+    sourceVersion: typeof parsed.sourceVersion === 'string' ? parsed.sourceVersion : undefined,
+    sourceClient: typeof parsed.sourceClient === 'string' ? parsed.sourceClient : undefined,
+    collectedAt: typeof parsed.collectedAt === 'string' ? parsed.collectedAt : undefined,
+    lastCheckedDate: typeof parsed.lastCheckedDate === 'string' ? parsed.lastCheckedDate : undefined,
+    mode: typeof parsed.mode === 'string' ? parsed.mode : undefined,
+    payloadHash: String(parsed.payloadHash ?? ''),
+    items: parsed.items as AnnualCommonDataSyncItem[]
+  };
 }
 
 async function loadBatches() {
@@ -102,8 +162,44 @@ async function loadRevisions() {
   }
 }
 
+async function loadAnnualBatches() {
+  loadingBatches.value = true;
+  loadError.value = '';
+  try {
+    const result = await pageAnnualCommonDataSyncBatches({
+      appCode: currentAppCode(),
+      pageNo: 1,
+      pageSize: PAGE_SIZE
+    });
+    annualBatches.value = result.dataList;
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '年度数据同步批次加载失败';
+    annualBatches.value = [];
+  } finally {
+    loadingBatches.value = false;
+  }
+}
+
+async function loadAnnualRevisions() {
+  loadingRevisions.value = true;
+  loadError.value = '';
+  try {
+    const result = await pageAnnualCommonDataRevisions({
+      appCode: currentAppCode(),
+      pageNo: 1,
+      pageSize: PAGE_SIZE
+    });
+    annualRevisions.value = result.dataList;
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '年度数据修订记录加载失败';
+    annualRevisions.value = [];
+  } finally {
+    loadingRevisions.value = false;
+  }
+}
+
 async function refreshAll() {
-  await Promise.all([loadBatches(), loadRevisions()]);
+  await Promise.all([loadBatches(), loadRevisions(), loadAnnualBatches(), loadAnnualRevisions()]);
 }
 
 async function publishLprSync() {
@@ -124,13 +220,31 @@ async function publishLprSync() {
   }
 }
 
+async function publishAnnualCommonDataSync() {
+  publishing.value = true;
+  loadError.value = '';
+  try {
+    const parsed = parseAnnualCommonDataSyncJson(annualCommonDataSyncJson.value);
+    const result = await syncAnnualCommonData({
+      appCode: currentAppCode(),
+      ...parsed
+    });
+    ElMessage.success(`年度数据 JSON 已导入：${result.requestId}`);
+    await Promise.all([loadAnnualBatches(), loadAnnualRevisions()]);
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '年度数据 JSON 导入失败';
+  } finally {
+    publishing.value = false;
+  }
+}
+
 onMounted(refreshAll);
 </script>
 
 <template>
   <section>
     <h1 class="page-title">数据同步/发布</h1>
-    <p class="page-subtitle">通过 miniapp-backend 受控 API 管理法律助手业务数据同步批次、修订记录和 LPR JSON 发布。</p>
+    <p class="page-subtitle">通过 miniapp-backend 受控 API 管理法律助手业务数据同步批次、修订记录、LPR JSON 发布和年度数据 JSON 导入。</p>
 
     <el-alert v-if="loadError" class="error-alert" type="error" :title="loadError" show-icon />
 
@@ -187,6 +301,48 @@ onMounted(refreshAll);
           </el-table>
         </el-tab-pane>
 
+        <el-tab-pane label="年度数据同步批次" name="annual-batches">
+          <div class="section-heading">
+            <div class="toolbar-title">年度数据同步批次</div>
+            <div class="toolbar-subtitle">展示年度常用数据受控同步形成的批次、状态和冲突统计。</div>
+          </div>
+          <el-table v-loading="loadingBatches" :data="annualBatches" row-key="id">
+            <el-table-column prop="requestId" label="请求标识" min-width="190" show-overflow-tooltip />
+            <el-table-column prop="sourceKey" label="来源标识" min-width="160" show-overflow-tooltip />
+            <el-table-column prop="sourceVersion" label="来源版本" min-width="160" show-overflow-tooltip />
+            <el-table-column prop="itemCount" label="条目数" width="90" />
+            <el-table-column prop="createdCount" label="新增" width="80" />
+            <el-table-column prop="updatedCount" label="更新" width="80" />
+            <el-table-column prop="conflictCount" label="冲突" width="80" />
+            <el-table-column label="状态" width="120">
+              <template #default="{ row }">
+                <el-tag :type="statusTagType(row.status)" effect="plain">{{ row.status }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="创建时间" width="180">
+              <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+
+        <el-tab-pane label="年度数据修订记录" name="annual-revisions">
+          <div class="section-heading">
+            <div class="toolbar-title">年度数据修订记录</div>
+            <div class="toolbar-subtitle">按地区、年度和指标跟踪新增、更新、跳过和冲突记录。</div>
+          </div>
+          <el-table v-loading="loadingRevisions" :data="annualRevisions" row-key="id">
+            <el-table-column prop="batchId" label="批次 ID" width="100" />
+            <el-table-column prop="regionCode" label="地区编码" min-width="140" show-overflow-tooltip />
+            <el-table-column prop="year" label="年度" width="90" />
+            <el-table-column prop="metricKey" label="指标标识" min-width="180" show-overflow-tooltip />
+            <el-table-column prop="changeType" label="修订类型" width="120" />
+            <el-table-column prop="message" label="说明" min-width="160" show-overflow-tooltip />
+            <el-table-column label="创建时间" width="180">
+              <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+
         <el-tab-pane label="LPR JSON 发布" name="json">
           <div class="section-heading">
             <div class="toolbar-title">LPR JSON 发布</div>
@@ -208,6 +364,31 @@ onMounted(refreshAll);
               @click="publishLprSync"
             >
               发布 LPR JSON
+            </el-button>
+          </div>
+        </el-tab-pane>
+
+        <el-tab-pane label="年度数据 JSON 导入" name="annual-json">
+          <div class="section-heading">
+            <div class="toolbar-title">年度数据 JSON 导入</div>
+            <div class="toolbar-subtitle">粘贴 crawler 规范化年度数据快照，由后端校验、落库并形成同步批次。</div>
+          </div>
+          <textarea
+            v-model="annualCommonDataSyncJson"
+            data-test="annual-common-data-sync-json"
+            class="json-editor"
+            rows="14"
+            spellcheck="false"
+          />
+          <div class="publish-actions">
+            <el-button
+              data-test="publish-annual-common-data-sync"
+              type="primary"
+              :icon="Upload"
+              :loading="publishing"
+              @click="publishAnnualCommonDataSync"
+            >
+              导入年度数据 JSON
             </el-button>
           </div>
         </el-tab-pane>

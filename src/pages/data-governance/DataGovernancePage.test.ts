@@ -4,8 +4,11 @@ import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
 import {
+  pageAnnualCommonDataRevisions,
+  pageAnnualCommonDataSyncBatches,
   pageLprRateRevisions,
   pageLprSyncBatches,
+  syncAnnualCommonData,
   syncLprRates
 } from '../../api/dataGovernance';
 import { useAuthStore } from '../../stores/auth';
@@ -14,12 +17,18 @@ import DataGovernancePage from './DataGovernancePage.vue';
 vi.mock('../../api/dataGovernance', () => ({
   pageLprSyncBatches: vi.fn(),
   pageLprRateRevisions: vi.fn(),
-  syncLprRates: vi.fn()
+  syncLprRates: vi.fn(),
+  pageAnnualCommonDataSyncBatches: vi.fn(),
+  pageAnnualCommonDataRevisions: vi.fn(),
+  syncAnnualCommonData: vi.fn()
 }));
 
 const pageLprSyncBatchesMock = vi.mocked(pageLprSyncBatches);
 const pageLprRateRevisionsMock = vi.mocked(pageLprRateRevisions);
 const syncLprRatesMock = vi.mocked(syncLprRates);
+const pageAnnualCommonDataSyncBatchesMock = vi.mocked(pageAnnualCommonDataSyncBatches);
+const pageAnnualCommonDataRevisionsMock = vi.mocked(pageAnnualCommonDataRevisions);
+const syncAnnualCommonDataMock = vi.mocked(syncAnnualCommonData);
 
 const syncBatch = {
   id: 1,
@@ -44,6 +53,42 @@ const revision = {
   revisionType: 'upsert',
   sourceVersion: 'pbc-2025-05-20',
   createdAt: '2026-05-31T10:00:00'
+};
+
+const annualBatch = {
+  id: 11,
+  appCode: 'lawsuit-material-assistant',
+  requestId: 'crawler-annual-2024',
+  sourceKey: 'annual_public_stats',
+  sourceVersion: 'public-stats-2024',
+  payloadHash: 'hash-annual-2024',
+  itemCount: 1,
+  status: 'completed',
+  createdCount: 1,
+  updatedCount: 0,
+  skippedCount: 0,
+  conflictCount: 0,
+  errorMessage: '',
+  sourceClient: 'crawler-local',
+  collectedAt: '2026-06-02T02:00:00+08:00',
+  lastCheckedDate: '2026-06-02',
+  createdAt: '2026-06-02T10:00:00',
+  updatedAt: '2026-06-02T10:00:00'
+};
+
+const annualRevision = {
+  id: 12,
+  annualDataId: 21,
+  batchId: 11,
+  appCode: 'lawsuit-material-assistant',
+  regionCode: 'cn-shanghai',
+  year: 2024,
+  metricKey: 'average_salary',
+  beforeSnapshotJson: '{}',
+  afterSnapshotJson: '{}',
+  changeType: 'created',
+  message: 'created',
+  createdAt: '2026-06-02T10:00:00'
 };
 
 function mountPage() {
@@ -78,6 +123,9 @@ describe('DataGovernancePage', () => {
     pageLprSyncBatchesMock.mockReset();
     pageLprRateRevisionsMock.mockReset();
     syncLprRatesMock.mockReset();
+    pageAnnualCommonDataSyncBatchesMock.mockReset();
+    pageAnnualCommonDataRevisionsMock.mockReset();
+    syncAnnualCommonDataMock.mockReset();
 
     pageLprSyncBatchesMock.mockResolvedValue({ dataList: [syncBatch], totalCount: 1 });
     pageLprRateRevisionsMock.mockResolvedValue({ dataList: [revision], totalCount: 1 });
@@ -85,6 +133,15 @@ describe('DataGovernancePage', () => {
       batchNo: 'LPR-20260531-002',
       importedCount: 2,
       revisionCount: 2
+    });
+    pageAnnualCommonDataSyncBatchesMock.mockResolvedValue({ dataList: [annualBatch], totalCount: 1 });
+    pageAnnualCommonDataRevisionsMock.mockResolvedValue({ dataList: [annualRevision], totalCount: 1 });
+    syncAnnualCommonDataMock.mockResolvedValue({
+      requestId: 'crawler-annual-2024',
+      createdCount: 1,
+      updatedCount: 0,
+      skippedCount: 0,
+      conflictCount: 0
     });
   });
 
@@ -103,13 +160,28 @@ describe('DataGovernancePage', () => {
       pageNo: 1,
       pageSize: 50
     });
+    expect(pageAnnualCommonDataSyncBatchesMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      pageNo: 1,
+      pageSize: 50
+    });
+    expect(pageAnnualCommonDataRevisionsMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      pageNo: 1,
+      pageSize: 50
+    });
     expect(wrapper.text()).toContain('数据同步/发布');
     expect(wrapper.text()).toContain('同步批次');
     expect(wrapper.text()).toContain('修订记录');
     expect(wrapper.text()).toContain('LPR JSON 发布');
+    expect(wrapper.text()).toContain('年度数据同步批次');
+    expect(wrapper.text()).toContain('年度数据修订记录');
+    expect(wrapper.text()).toContain('年度数据 JSON 导入');
     expect(wrapper.find('input').element.value).toBe('lawsuit-material-assistant');
     expect(wrapper.text()).toContain('LPR-20260531-001');
     expect(wrapper.text()).toContain('2025-05-20');
+    expect(wrapper.text()).toContain('crawler-annual-2024');
+    expect(wrapper.text()).toContain('average_salary');
   });
 
   it('publishes valid LPR JSON and refreshes batch list', async () => {
@@ -155,5 +227,74 @@ describe('DataGovernancePage', () => {
 
     expect(syncLprRatesMock).not.toHaveBeenCalled();
     expect(wrapper.text()).toContain('LPR JSON 必须包含 items 数组');
+  });
+
+  it('publishes valid annual common data JSON and refreshes annual lists', async () => {
+    const wrapper = mountPage();
+    await flushAsyncUpdates();
+    pageAnnualCommonDataSyncBatchesMock.mockClear();
+    (wrapper.vm as unknown as { activeTab: string }).activeTab = 'annual-json';
+    await nextTick();
+
+    const jsonText = JSON.stringify({
+      requestId: 'crawler-annual-2024',
+      sourceKey: 'annual_public_stats',
+      payloadHash: 'hash-annual-2024',
+      items: [
+        {
+          regionCode: 'cn-shanghai',
+          regionName: '上海市',
+          year: 2024,
+          metricKey: 'average_salary',
+          metricName: '平均工资',
+          value: 120000,
+          unit: '元/年',
+          sourceName: '统计公报',
+          sourceUrl: 'https://tjj.sh.gov.cn/'
+        }
+      ]
+    });
+    await wrapper.find('[data-test="annual-common-data-sync-json"]').setValue(jsonText);
+    await wrapper.find('[data-test="publish-annual-common-data-sync"]').trigger('click');
+    await flushAsyncUpdates();
+
+    expect(syncAnnualCommonDataMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      requestId: 'crawler-annual-2024',
+      sourceKey: 'annual_public_stats',
+      payloadHash: 'hash-annual-2024',
+      items: [
+        {
+          regionCode: 'cn-shanghai',
+          regionName: '上海市',
+          year: 2024,
+          metricKey: 'average_salary',
+          metricName: '平均工资',
+          value: 120000,
+          unit: '元/年',
+          sourceName: '统计公报',
+          sourceUrl: 'https://tjj.sh.gov.cn/'
+        }
+      ]
+    });
+    expect(pageAnnualCommonDataSyncBatchesMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      pageNo: 1,
+      pageSize: 50
+    });
+  });
+
+  it('rejects annual common data JSON without items array before calling backend', async () => {
+    const wrapper = mountPage();
+    await flushAsyncUpdates();
+    (wrapper.vm as unknown as { activeTab: string }).activeTab = 'annual-json';
+    await nextTick();
+
+    await wrapper.find('[data-test="annual-common-data-sync-json"]').setValue('{"data":[]}');
+    await wrapper.find('[data-test="publish-annual-common-data-sync"]').trigger('click');
+    await flushAsyncUpdates();
+
+    expect(syncAnnualCommonDataMock).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('年度数据 JSON 必须包含 items 数组');
   });
 });
