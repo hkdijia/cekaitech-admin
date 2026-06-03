@@ -47,6 +47,7 @@ const homeModule = {
   description: '常用诉讼辅助计算与办事指引',
   tone: 'teal',
   visibleLimit: 8,
+  showMoreEnabled: false,
   sortOrder: 10,
   enabled: true,
   createdAt: '2026-05-27T20:00:00',
@@ -164,6 +165,7 @@ describe('MiniappHomeConfigPage', () => {
     expect(wrapper.text()).toContain('功能入口');
     expect(wrapper.text()).toContain('Banner 公告');
     expect(wrapper.text()).toContain('工具类');
+    expect(wrapper.text()).toContain('全量展示');
     expect(wrapper.text()).toContain('试运行公告');
   });
 
@@ -187,6 +189,7 @@ describe('MiniappHomeConfigPage', () => {
       description: '常用诉讼辅助计算与办事指引',
       tone: 'teal',
       visibleLimit: 8,
+      showMoreEnabled: false,
       sortOrder: 10,
       enabled: true
     });
@@ -201,6 +204,7 @@ describe('MiniappHomeConfigPage', () => {
       description: '常用诉讼辅助计算与办事指引',
       tone: 'teal',
       visibleLimit: 8,
+      showMoreEnabled: false,
       sortOrder: 10,
       enabled: true
     });

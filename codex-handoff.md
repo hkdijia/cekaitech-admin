@@ -3,16 +3,16 @@
 ## 当前状态
 
 - 当前分支：`master`
-- 当前阶段：`LMA-FB-041-C` 年度常用数据 admin 核验发布切片实施中。
-- 最近完成：数据同步/发布页新增年度数据同步批次、revision 和 JSON 导入能力，定向测试已通过。
-- 未完成：管理端全量 quality、提交推送、小程序总台账同步和企业微信阶段回写。
+- 当前阶段：首页模块“展示更多”配置管理端支持已完成定向、全量 quality 和空白检查，待本地提交。
+- 最近完成：模块列表展示“展示更多/全量展示”，模块弹窗可维护 `showMoreEnabled`，API 类型和保存请求已同步。
+- 未完成：本地提交、用户手动推送。
 
 ## 关键文件
 
-- `src/api/dataGovernance.ts`
-- `src/api/dataGovernance.test.ts`
-- `src/pages/data-governance/DataGovernancePage.vue`
-- `src/pages/data-governance/DataGovernancePage.test.ts`
+- `src/api/miniappHomeConfig.ts`
+- `src/api/miniappHomeConfig.test.ts`
+- `src/pages/miniapp-home-config/MiniappHomeConfigPage.vue`
+- `src/pages/miniapp-home-config/MiniappHomeConfigPage.test.ts`
 - `docs/变更日志.md`
 - `tasks/current-task.md`
 - `codex-handoff.md`

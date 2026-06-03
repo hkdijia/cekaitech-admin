@@ -31,6 +31,7 @@ export interface MiniappHomeModuleItem {
   description: string;
   tone: string;
   visibleLimit: number;
+  showMoreEnabled: boolean;
   sortOrder: number;
   enabled: boolean;
   createdAt: string;
