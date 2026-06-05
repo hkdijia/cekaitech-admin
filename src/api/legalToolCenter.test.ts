@@ -7,10 +7,14 @@ import {
   pageLegalToolExposureGroups,
   pageLegalToolExposureItems,
   pageLegalToolInteractionBlueprints,
+  applyElementTemplateFileImport,
+  manifestElementTemplateFiles,
   pageAnnualCommonData,
   pageLitigationFeeRules,
   pageLegalLprRates,
+  previewElementTemplateFileImport,
   previewLitigationFeeRule,
+  validateElementTemplateFiles,
   publishLitigationFeeRule,
   saveLegalToolCapability,
   saveLegalToolDataSource,
@@ -602,5 +606,108 @@ describe('legal tool center api', () => {
     }));
     expect(preview.feeMin).toBe(50);
     expect(preview.feeMax).toBe(300);
+  });
+
+  it('posts element template file manifest, validation and import requests to backend endpoints', async () => {
+    const payload = {
+      appCode: 'lawsuit-material-assistant',
+      files: [{
+        templateKey: 'private_lending_complaint',
+        objectPath: 'element-templates/private_lending_complaint.docx',
+        fileName: '民间借贷纠纷起诉状.docx',
+        fileType: 'docx'
+      }]
+    };
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          code: '0',
+          msg: '',
+          data: {
+            appCode: 'lawsuit-material-assistant',
+            staticBaseUrl: 'https://static.cekaitech.cn',
+            totalCount: 67,
+            missingFileMetadataCount: 0,
+            files: payload.files.map((file) => ({ ...file, downloadUrl: `https://static.cekaitech.cn/${file.objectPath}`, enabled: true, status: 'published' }))
+          }
+        })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          code: '0',
+          msg: '',
+          data: {
+            appCode: 'lawsuit-material-assistant',
+            staticBaseUrl: 'https://static.cekaitech.cn',
+            totalCount: 67,
+            missingFileMetadataCount: 0,
+            invalidObjectPathCount: 0,
+            invalidFileNameCount: 0,
+            invalidFileTypeCount: 0,
+            invalidDownloadUrlCount: 0,
+            readyToPublish: true,
+            issues: []
+          }
+        })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          code: '0',
+          msg: '',
+          data: {
+            appCode: 'lawsuit-material-assistant',
+            totalCount: 1,
+            acceptedCount: 1,
+            issueCount: 0,
+            readyToImport: true,
+            issues: []
+          }
+        })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          code: '0',
+          msg: '',
+          data: {
+            appCode: 'lawsuit-material-assistant',
+            updatedCount: 1,
+            readyToPublish: true
+          }
+        })
+      } as Response);
+
+    const manifest = await manifestElementTemplateFiles({ appCode: 'lawsuit-material-assistant' });
+    const validation = await validateElementTemplateFiles({ appCode: 'lawsuit-material-assistant' });
+    const preview = await previewElementTemplateFileImport(payload);
+    const applied = await applyElementTemplateFileImport(payload);
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/admin/legal-tool-center/element-template-files/manifest', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ appCode: 'lawsuit-material-assistant' })
+    }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/admin/legal-tool-center/element-template-files/validate', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ appCode: 'lawsuit-material-assistant' })
+    }));
+    expect(fetchMock).toHaveBeenNthCalledWith(3, '/api/admin/legal-tool-center/element-template-files/import-preview', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }));
+    expect(fetchMock).toHaveBeenNthCalledWith(4, '/api/admin/legal-tool-center/element-template-files/import-apply', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }));
+    expect(manifest.totalCount).toBe(67);
+    expect(validation.readyToPublish).toBe(true);
+    expect(preview.acceptedCount).toBe(1);
+    expect(applied.updatedCount).toBe(1);
   });
 });

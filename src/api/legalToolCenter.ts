@@ -252,6 +252,73 @@ export interface LitigationFeePreviewResult {
   bandLabel: string;
 }
 
+export interface ElementTemplateFileManifestQuery {
+  appCode: string;
+}
+
+export interface ElementTemplateFileItem {
+  templateKey: string;
+  templateName?: string;
+  objectPath: string;
+  downloadUrl?: string;
+  fileName: string;
+  fileType: string;
+  enabled?: boolean;
+  status?: string;
+}
+
+export interface ElementTemplateFileManifestResult {
+  appCode: string;
+  staticBaseUrl: string;
+  totalCount: number;
+  missingFileMetadataCount: number;
+  files: ElementTemplateFileItem[];
+}
+
+export interface ElementTemplateFileValidationIssue {
+  templateKey: string;
+  type: string;
+  message: string;
+}
+
+export interface ElementTemplateFileValidationResult {
+  appCode: string;
+  staticBaseUrl: string;
+  totalCount: number;
+  missingFileMetadataCount: number;
+  invalidObjectPathCount: number;
+  invalidFileNameCount: number;
+  invalidFileTypeCount: number;
+  invalidDownloadUrlCount: number;
+  readyToPublish: boolean;
+  issues: ElementTemplateFileValidationIssue[];
+}
+
+export interface ElementTemplateFileImportPayload {
+  appCode: string;
+  files: Array<{
+    templateKey: string;
+    objectPath: string;
+    fileName: string;
+    fileType: string;
+  }>;
+}
+
+export interface ElementTemplateFileImportPreviewResult {
+  appCode: string;
+  totalCount: number;
+  acceptedCount: number;
+  issueCount: number;
+  readyToImport: boolean;
+  issues: ElementTemplateFileValidationIssue[];
+}
+
+export interface ElementTemplateFileImportApplyResult {
+  appCode: string;
+  updatedCount: number;
+  readyToPublish: boolean;
+}
+
 export type LegalToolCapabilityPayload = Omit<LegalToolCapabilityItem, 'createdAt' | 'updatedAt'>;
 export type LegalToolExposureGroupPayload = Omit<LegalToolExposureGroupItem, 'createdAt' | 'updatedAt'>;
 export type LegalToolExposureItemPayload = Omit<LegalToolExposureItem, 'createdAt' | 'updatedAt'>;
@@ -365,6 +432,42 @@ export function previewLitigationFeeRule(
 export function publishLitigationFeeRule(ruleId: number): Promise<LitigationFeeRuleItem> {
   return request<LitigationFeeRuleItem>(`/api/admin/legal-tool-center/litigation-fee-rules/${ruleId}/publish`, {
     method: 'POST'
+  });
+}
+
+export function manifestElementTemplateFiles(
+  query: ElementTemplateFileManifestQuery
+): Promise<ElementTemplateFileManifestResult> {
+  return request<ElementTemplateFileManifestResult>('/api/admin/legal-tool-center/element-template-files/manifest', {
+    method: 'POST',
+    body: JSON.stringify(query)
+  });
+}
+
+export function validateElementTemplateFiles(
+  query: ElementTemplateFileManifestQuery
+): Promise<ElementTemplateFileValidationResult> {
+  return request<ElementTemplateFileValidationResult>('/api/admin/legal-tool-center/element-template-files/validate', {
+    method: 'POST',
+    body: JSON.stringify(query)
+  });
+}
+
+export function previewElementTemplateFileImport(
+  payload: ElementTemplateFileImportPayload
+): Promise<ElementTemplateFileImportPreviewResult> {
+  return request<ElementTemplateFileImportPreviewResult>('/api/admin/legal-tool-center/element-template-files/import-preview', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function applyElementTemplateFileImport(
+  payload: ElementTemplateFileImportPayload
+): Promise<ElementTemplateFileImportApplyResult> {
+  return request<ElementTemplateFileImportApplyResult>('/api/admin/legal-tool-center/element-template-files/import-apply', {
+    method: 'POST',
+    body: JSON.stringify(payload)
   });
 }
 

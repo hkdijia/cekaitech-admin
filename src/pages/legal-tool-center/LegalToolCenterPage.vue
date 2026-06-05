@@ -3,8 +3,10 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { EditPen, Plus, Refresh, SwitchButton } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import {
+  applyElementTemplateFileImport,
   disableLegalToolExposureGroup,
   disableLegalToolExposureItem,
+  manifestElementTemplateFiles,
   pageLegalToolCapabilities,
   pageLegalToolDataSources,
   pageLegalToolExposureGroups,
@@ -13,6 +15,7 @@ import {
   pageAnnualCommonData,
   pageLitigationFeeRules,
   pageLegalLprRates,
+  previewElementTemplateFileImport,
   previewLitigationFeeRule,
   publishLitigationFeeRule,
   saveLegalToolCapability,
@@ -23,8 +26,14 @@ import {
   saveAnnualCommonData,
   saveLitigationFeeRule,
   saveLegalLprRate,
+  validateElementTemplateFiles,
   type AnnualCommonDataItem,
   type AnnualCommonDataPayload,
+  type ElementTemplateFileImportApplyResult,
+  type ElementTemplateFileImportPayload,
+  type ElementTemplateFileImportPreviewResult,
+  type ElementTemplateFileManifestResult,
+  type ElementTemplateFileValidationResult,
   type LitigationFeePreviewResult,
   type LitigationFeeRuleItem,
   type LitigationFeeRulePayload,
@@ -54,6 +63,7 @@ const dataSourceLoading = ref(false);
 const annualCommonDataLoading = ref(false);
 const lprRateLoading = ref(false);
 const litigationFeeRuleLoading = ref(false);
+const elementTemplateFileLoading = ref(false);
 const groupLoading = ref(false);
 const exposureItemLoading = ref(false);
 const blueprintLoading = ref(false);
@@ -63,6 +73,14 @@ const dataSources = ref<LegalToolDataSourceItem[]>([]);
 const annualCommonData = ref<AnnualCommonDataItem[]>([]);
 const lprRates = ref<LegalLprRateItem[]>([]);
 const litigationFeeRules = ref<LitigationFeeRuleItem[]>([]);
+const elementTemplateFileManifest = ref<ElementTemplateFileManifestResult | null>(null);
+const elementTemplateFileValidation = ref<ElementTemplateFileValidationResult | null>(null);
+const elementTemplateFilePreview = ref<ElementTemplateFileImportPreviewResult | null>(null);
+const elementTemplateFileApplyResult = ref<ElementTemplateFileImportApplyResult | null>(null);
+const elementTemplateFileImportJson = ref(JSON.stringify({
+  appCode: APP_CODE,
+  files: []
+}, null, 2));
 const groups = ref<LegalToolExposureGroupItem[]>([]);
 const exposureItems = ref<LegalToolExposureItem[]>([]);
 const blueprints = ref<LegalToolInteractionBlueprintItem[]>([]);
@@ -681,6 +699,88 @@ async function loadLitigationFeeRules() {
   }
 }
 
+async function loadElementTemplateFileManifest() {
+  elementTemplateFileLoading.value = true;
+  loadError.value = '';
+  try {
+    elementTemplateFileManifest.value = await manifestElementTemplateFiles({ appCode: APP_CODE });
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '示范文本文件清单加载失败';
+    elementTemplateFileManifest.value = null;
+  } finally {
+    elementTemplateFileLoading.value = false;
+  }
+}
+
+async function validateElementTemplateFileMetadata() {
+  elementTemplateFileLoading.value = true;
+  loadError.value = '';
+  try {
+    elementTemplateFileValidation.value = await validateElementTemplateFiles({ appCode: APP_CODE });
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '示范文本文件校验失败';
+    elementTemplateFileValidation.value = null;
+  } finally {
+    elementTemplateFileLoading.value = false;
+  }
+}
+
+function parseElementTemplateFileImportPayload(): ElementTemplateFileImportPayload | null {
+  try {
+    return JSON.parse(elementTemplateFileImportJson.value) as ElementTemplateFileImportPayload;
+  } catch {
+    ElMessage.error('导入清单 JSON 格式不正确');
+    return null;
+  }
+}
+
+async function previewElementTemplateFileImportJson() {
+  const payload = parseElementTemplateFileImportPayload();
+  if (!payload) {
+    return;
+  }
+  elementTemplateFileLoading.value = true;
+  loadError.value = '';
+  try {
+    elementTemplateFilePreview.value = await previewElementTemplateFileImport(payload);
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '示范文本文件导入预检失败';
+    elementTemplateFilePreview.value = null;
+  } finally {
+    elementTemplateFileLoading.value = false;
+  }
+}
+
+async function applyElementTemplateFileImportJson() {
+  if (!canManageLegalToolCenter.value) {
+    return;
+  }
+  const payload = parseElementTemplateFileImportPayload();
+  if (!payload) {
+    return;
+  }
+  await ElMessageBox.confirm(
+    '确认写入示范文本文件元数据？写入后小程序会按静态文件地址提供下载。',
+    '确认导入示范文本文件',
+    { type: 'warning' }
+  );
+  elementTemplateFileLoading.value = true;
+  loadError.value = '';
+  try {
+    elementTemplateFileApplyResult.value = await applyElementTemplateFileImport(payload);
+    ElMessage.success('示范文本文件元数据已导入');
+    await Promise.all([
+      loadElementTemplateFileManifest(),
+      validateElementTemplateFileMetadata()
+    ]);
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '示范文本文件导入失败';
+    elementTemplateFileApplyResult.value = null;
+  } finally {
+    elementTemplateFileLoading.value = false;
+  }
+}
+
 async function loadGroups() {
   groupLoading.value = true;
   loadError.value = '';
@@ -1120,6 +1220,8 @@ onMounted(async () => {
     loadAnnualCommonData(),
     loadLprRates(),
     loadLitigationFeeRules(),
+    loadElementTemplateFileManifest(),
+    validateElementTemplateFileMetadata(),
     loadGroups(),
     loadBlueprints()
   ]);
@@ -1325,6 +1427,102 @@ onMounted(async () => {
               </template>
             </el-table-column>
           </el-table>
+        </el-tab-pane>
+
+        <el-tab-pane label="示范文本文件" name="element-template-files">
+          <div class="toolbar">
+            <div>
+              <div class="toolbar-title">要素式示范文本静态文件</div>
+              <div class="toolbar-subtitle">维护模板文件路径、文件名和发布前校验结果，小程序只读取受控下载地址。</div>
+            </div>
+            <div class="toolbar-actions">
+              <el-button :icon="Refresh" @click="loadElementTemplateFileManifest">刷新清单</el-button>
+              <el-button :icon="Refresh" @click="validateElementTemplateFileMetadata">发布前校验</el-button>
+            </div>
+          </div>
+
+          <div class="stat-row">
+            <el-card shadow="never" class="stat-card">
+              <div class="stat-label">静态域名</div>
+              <div class="stat-value small">{{ elementTemplateFileManifest?.staticBaseUrl || '-' }}</div>
+            </el-card>
+            <el-card shadow="never" class="stat-card">
+              <div class="stat-label">文件总数</div>
+              <div class="stat-value">{{ elementTemplateFileManifest?.totalCount ?? 0 }}</div>
+            </el-card>
+            <el-card shadow="never" class="stat-card">
+              <div class="stat-label">缺失元数据</div>
+              <div class="stat-value">{{ elementTemplateFileManifest?.missingFileMetadataCount ?? 0 }}</div>
+            </el-card>
+            <el-card shadow="never" class="stat-card">
+              <div class="stat-label">发布状态</div>
+              <el-tag :type="elementTemplateFileValidation?.readyToPublish ? 'success' : 'warning'" effect="plain">
+                {{ elementTemplateFileValidation?.readyToPublish ? '可发布' : '需处理' }}
+              </el-tag>
+            </el-card>
+          </div>
+
+          <el-table
+            v-loading="elementTemplateFileLoading"
+            :data="elementTemplateFileManifest?.files || []"
+            row-key="templateKey"
+          >
+            <el-table-column prop="templateKey" label="模板标识" width="220" show-overflow-tooltip />
+            <el-table-column prop="templateName" label="模板名称" min-width="190" show-overflow-tooltip />
+            <el-table-column prop="objectPath" label="对象路径" min-width="280" show-overflow-tooltip />
+            <el-table-column prop="fileName" label="文件名" min-width="210" show-overflow-tooltip />
+            <el-table-column prop="fileType" label="类型" width="90" />
+            <el-table-column prop="status" label="状态" width="110" />
+            <el-table-column label="启用" width="104">
+              <template #default="{ row }">
+                <el-tag :type="statusTagType(row.enabled)" effect="plain">{{ row.enabled ? '启用' : '禁用' }}</el-tag>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <div class="import-panel">
+            <div class="toolbar">
+              <div>
+                <div class="toolbar-title">批量导入清单</div>
+                <div class="toolbar-subtitle">粘贴后端约定 JSON，先预检再确认导入。</div>
+              </div>
+              <div class="toolbar-actions">
+                <el-button @click="previewElementTemplateFileImportJson">导入预检</el-button>
+                <el-button
+                  v-if="canManageLegalToolCenter"
+                  type="primary"
+                  @click="applyElementTemplateFileImportJson"
+                >
+                  确认导入
+                </el-button>
+              </div>
+            </div>
+            <el-input v-model="elementTemplateFileImportJson" type="textarea" :rows="8" />
+          </div>
+
+          <div class="result-row">
+            <el-alert
+              v-if="elementTemplateFilePreview"
+              type="info"
+              :title="`预检：${elementTemplateFilePreview.acceptedCount}/${elementTemplateFilePreview.totalCount} 可导入，问题 ${elementTemplateFilePreview.issueCount} 个`"
+              show-icon
+            />
+            <el-alert
+              v-if="elementTemplateFileApplyResult"
+              type="success"
+              :title="`已更新 ${elementTemplateFileApplyResult.updatedCount} 条，${elementTemplateFileApplyResult.readyToPublish ? '可发布' : '仍需校验'}`"
+              show-icon
+            />
+            <el-table
+              v-if="elementTemplateFileValidation?.issues.length"
+              :data="elementTemplateFileValidation.issues"
+              row-key="templateKey"
+            >
+              <el-table-column prop="templateKey" label="模板标识" width="240" />
+              <el-table-column prop="type" label="问题类型" width="170" />
+              <el-table-column prop="message" label="说明" min-width="260" show-overflow-tooltip />
+            </el-table>
+          </div>
         </el-tab-pane>
 
         <el-tab-pane label="展示分组" name="groups">
@@ -1841,6 +2039,45 @@ onMounted(async () => {
 
 .full-input {
   width: 100%;
+}
+
+.stat-row {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 12px;
+}
+
+.stat-card :deep(.el-card__body) {
+  padding: 12px;
+}
+
+.stat-label {
+  color: #667085;
+  font-size: 12px;
+}
+
+.stat-value {
+  color: #344054;
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.stat-value.small {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.import-panel,
+.result-row {
+  margin-top: 16px;
+}
+
+.result-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .band-editor {

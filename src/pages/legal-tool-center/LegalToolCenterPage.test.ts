@@ -5,8 +5,10 @@ import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
 import {
+  applyElementTemplateFileImport,
   disableLegalToolExposureGroup,
   disableLegalToolExposureItem,
+  manifestElementTemplateFiles,
   pageLegalToolCapabilities,
   pageLegalToolDataSources,
   pageLegalToolExposureGroups,
@@ -15,6 +17,7 @@ import {
   pageAnnualCommonData,
   pageLegalLprRates,
   pageLitigationFeeRules,
+  previewElementTemplateFileImport,
   previewLitigationFeeRule,
   publishLitigationFeeRule,
   saveLegalToolCapability,
@@ -25,7 +28,8 @@ import {
   saveLegalToolInteractionBlueprint,
   saveAnnualCommonData,
   saveLitigationFeeRule,
-  saveLegalLprRate
+  saveLegalLprRate,
+  validateElementTemplateFiles
 } from '../../api/legalToolCenter';
 import { useAuthStore } from '../../stores/auth';
 import LegalToolCenterPage from './LegalToolCenterPage.vue';
@@ -50,7 +54,11 @@ vi.mock('../../api/legalToolCenter', () => ({
   pageLitigationFeeRules: vi.fn(),
   saveLitigationFeeRule: vi.fn(),
   previewLitigationFeeRule: vi.fn(),
-  publishLitigationFeeRule: vi.fn()
+  publishLitigationFeeRule: vi.fn(),
+  manifestElementTemplateFiles: vi.fn(),
+  validateElementTemplateFiles: vi.fn(),
+  previewElementTemplateFileImport: vi.fn(),
+  applyElementTemplateFileImport: vi.fn()
 }));
 
 const pageLegalToolCapabilitiesMock = vi.mocked(pageLegalToolCapabilities);
@@ -73,6 +81,10 @@ const pageLitigationFeeRulesMock = vi.mocked(pageLitigationFeeRules);
 const saveLitigationFeeRuleMock = vi.mocked(saveLitigationFeeRule);
 const previewLitigationFeeRuleMock = vi.mocked(previewLitigationFeeRule);
 const publishLitigationFeeRuleMock = vi.mocked(publishLitigationFeeRule);
+const manifestElementTemplateFilesMock = vi.mocked(manifestElementTemplateFiles);
+const validateElementTemplateFilesMock = vi.mocked(validateElementTemplateFiles);
+const previewElementTemplateFileImportMock = vi.mocked(previewElementTemplateFileImport);
+const applyElementTemplateFileImportMock = vi.mocked(applyElementTemplateFileImport);
 
 const capability = {
   id: 1,
@@ -1069,6 +1081,10 @@ describe('LegalToolCenterPage', () => {
     saveLitigationFeeRuleMock.mockReset();
     previewLitigationFeeRuleMock.mockReset();
     publishLitigationFeeRuleMock.mockReset();
+    manifestElementTemplateFilesMock.mockReset();
+    validateElementTemplateFilesMock.mockReset();
+    previewElementTemplateFileImportMock.mockReset();
+    applyElementTemplateFileImportMock.mockReset();
 
     pageLegalToolCapabilitiesMock.mockResolvedValue({
       dataList: [capability, privateLendingInterestCapability, dateCalculationCapability, paidAnnualLeaveCapability, wageConversionCapability, statutoryRetirementAgeCapability, trafficPersonalInjuryCompensationCapability, bankruptcyAdministratorRemunerationCapability, workInjuryCompensationCapability, smallClaimLimitCapability, arbitrationFeeCapability, lawyerFeeReferenceCapability, civilCauseCapability, delayedPerformanceInterestCapability, economicCompensationCapability, elementTemplateCapability, levelJurisdictionCapability],
@@ -1098,6 +1114,51 @@ describe('LegalToolCenterPage', () => {
       bandLabel: '超过1万元至10万元'
     });
     publishLitigationFeeRuleMock.mockResolvedValue({ ...litigationFeeRule, status: 'published' });
+    manifestElementTemplateFilesMock.mockResolvedValue({
+      appCode: 'lawsuit-material-assistant',
+      staticBaseUrl: 'https://static.cekaitech.cn/lawsuit-material-assistant',
+      totalCount: 67,
+      missingFileMetadataCount: 1,
+      files: [{
+        templateKey: 'civil_complaint_private_lending',
+        templateName: '民间借贷纠纷起诉状',
+        objectPath: 'element-templates/civil_complaint_private_lending.docx',
+        downloadUrl: 'https://static.cekaitech.cn/lawsuit-material-assistant/element-templates/civil_complaint_private_lending.docx',
+        fileName: '民间借贷纠纷起诉状.docx',
+        fileType: 'docx',
+        enabled: true,
+        status: 'published'
+      }]
+    });
+    validateElementTemplateFilesMock.mockResolvedValue({
+      appCode: 'lawsuit-material-assistant',
+      staticBaseUrl: 'https://static.cekaitech.cn/lawsuit-material-assistant',
+      totalCount: 67,
+      missingFileMetadataCount: 1,
+      invalidObjectPathCount: 0,
+      invalidFileNameCount: 0,
+      invalidFileTypeCount: 0,
+      invalidDownloadUrlCount: 0,
+      readyToPublish: false,
+      issues: [{
+        templateKey: 'labor_dispute_complaint',
+        type: 'missing_file_metadata',
+        message: '缺少文件元数据'
+      }]
+    });
+    previewElementTemplateFileImportMock.mockResolvedValue({
+      appCode: 'lawsuit-material-assistant',
+      totalCount: 1,
+      acceptedCount: 1,
+      issueCount: 0,
+      readyToImport: true,
+      issues: []
+    });
+    applyElementTemplateFileImportMock.mockResolvedValue({
+      appCode: 'lawsuit-material-assistant',
+      updatedCount: 1,
+      readyToPublish: true
+    });
     disableLegalToolExposureGroupMock.mockResolvedValue({ ...group, enabled: false });
     disableLegalToolExposureItemMock.mockResolvedValue({ ...exposureItem, enabled: false });
     vi.spyOn(ElMessageBox, 'confirm').mockResolvedValue({ action: 'confirm' } as Awaited<ReturnType<typeof ElMessageBox.confirm>>);
@@ -1357,6 +1418,55 @@ describe('LegalToolCenterPage', () => {
     expect(wrapper.text()).not.toContain('新增分组');
     expect(wrapper.text()).not.toContain('新增入口');
     expect(wrapper.text()).not.toContain('禁用');
+  });
+
+  it('loads and manages element template static file metadata', async () => {
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+
+    expect(manifestElementTemplateFilesMock).toHaveBeenCalledWith({ appCode: 'lawsuit-material-assistant' });
+    expect(validateElementTemplateFilesMock).toHaveBeenCalledWith({ appCode: 'lawsuit-material-assistant' });
+    expect(wrapper.text()).toContain('示范文本文件');
+    expect(wrapper.text()).toContain('https://static.cekaitech.cn/lawsuit-material-assistant');
+    expect(wrapper.text()).toContain('民间借贷纠纷起诉状.docx');
+    expect(wrapper.text()).toContain('缺少文件元数据');
+
+    const vm = wrapper.vm as unknown as {
+      elementTemplateFileImportJson: string;
+      previewElementTemplateFileImportJson: () => Promise<void>;
+      applyElementTemplateFileImportJson: () => Promise<void>;
+    };
+    vm.elementTemplateFileImportJson = JSON.stringify({
+      appCode: 'lawsuit-material-assistant',
+      files: [{
+        templateKey: 'civil_complaint_private_lending',
+        objectPath: 'element-templates/civil_complaint_private_lending.docx',
+        fileName: '民间借贷纠纷起诉状.docx',
+        fileType: 'docx'
+      }]
+    });
+    await vm.previewElementTemplateFileImportJson();
+    await vm.applyElementTemplateFileImportJson();
+
+    expect(previewElementTemplateFileImportMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      files: [{
+        templateKey: 'civil_complaint_private_lending',
+        objectPath: 'element-templates/civil_complaint_private_lending.docx',
+        fileName: '民间借贷纠纷起诉状.docx',
+        fileType: 'docx'
+      }]
+    });
+    expect(applyElementTemplateFileImportMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      files: [{
+        templateKey: 'civil_complaint_private_lending',
+        objectPath: 'element-templates/civil_complaint_private_lending.docx',
+        fileName: '民间借贷纠纷起诉状.docx',
+        fileType: 'docx'
+      }]
+    });
   });
 
   it('saves a capability through backend and refreshes capability list', async () => {
