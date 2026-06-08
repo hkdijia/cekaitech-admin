@@ -8,8 +8,8 @@ export interface AdminMenuItem {
 export const adminMenuItems: AdminMenuItem[] = [
   {
     path: '/dashboard',
-    title: '首页工作台',
-    description: '待办、概览和系统状态',
+    title: '平台工作台',
+    description: '公司级待办、工作区接入和系统状态',
     permissionCode: 'admin:workspace:view'
   },
   {

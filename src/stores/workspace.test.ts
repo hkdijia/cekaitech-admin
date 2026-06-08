@@ -111,6 +111,35 @@ describe('useWorkspaceStore', () => {
     expect(workspace.currentWorkspace.name).toBe('全局后台');
     expect(workspace.loadError).toBe('network down');
   });
+
+  it('does not request workspace menus for the global platform workspace', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        code: '0',
+        msg: '',
+        data: [
+          {
+            id: 0,
+            workspaceCode: 'global',
+            workspaceName: '全局后台',
+            appCode: 'global',
+            status: 'enabled'
+          }
+        ]
+      })
+    } as Response);
+
+    const workspace = useWorkspaceStore();
+
+    await workspace.loadWorkspaces();
+
+    expect(workspace.currentCode).toBe('global');
+    expect(workspace.currentMenus).toHaveLength(0);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it('filters workspace menus by permission code', () => {
     const visibleMenus = filterWorkspaceMenus(
       [

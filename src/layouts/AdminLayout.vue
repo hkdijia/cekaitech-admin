@@ -39,7 +39,7 @@ function openWorkspaceMenu(menuCode: string) {
     <el-aside width="236px" class="admin-sidebar">
       <div class="brand">
         <strong>策凯科技</strong>
-        <span>管理后台</span>
+        <span>平台管理后台</span>
       </div>
       <el-menu :default-active="activeMenu" router class="sidebar-menu">
         <el-menu-item v-for="item in visibleAdminMenuItems" :key="item.path" :index="item.path">
@@ -53,7 +53,7 @@ function openWorkspaceMenu(menuCode: string) {
         </el-menu-item>
       </el-menu>
       <div v-if="workspace.currentMenus.length > 0" class="workspace-menu">
-        <div class="workspace-menu-title">工作区菜单</div>
+        <div class="workspace-menu-title">当前工作区菜单</div>
         <button
           v-for="item in workspace.currentMenus"
           :key="item.menuCode"
