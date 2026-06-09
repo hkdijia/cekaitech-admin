@@ -4,6 +4,7 @@ import {
   pageAnnualCommonDataSyncBatches,
   pageLprRateRevisions,
   pageLprSyncBatches,
+  getProductionStatus,
   syncAnnualCommonData,
   syncLprRates
 } from './dataGovernance';
@@ -113,6 +114,40 @@ describe('data governance api', () => {
     });
     expect(result.batchNo).toBe('LPR-20260531-002');
     expect(result.importedCount).toBe(2);
+  });
+
+  it('posts production status request to backend endpoint', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        code: '0',
+        msg: '',
+        data: {
+          appCode: 'lawsuit-material-assistant',
+          ready: true,
+          flyway: { version: '131', success: true },
+          lpr: { count: 82, minQuoteDate: '2019-08-20', maxQuoteDate: '2026-05-20' },
+          elementTemplate: { count: 126, missingFileMetadataCount: 0 },
+          civilCause: { count: 1043 }
+        }
+      })
+    } as Response);
+
+    const result = await getProductionStatus({ appCode: 'lawsuit-material-assistant' });
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/admin/data-governance/production-status', {
+      method: 'POST',
+      body: JSON.stringify({
+        appCode: 'lawsuit-material-assistant'
+      }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    expect(result.ready).toBe(true);
+    expect(result.lpr.count).toBe(82);
+    expect(result.civilCause.count).toBe(1043);
   });
 
   it('posts annual common data sync batch page request to backend endpoint', async () => {

@@ -8,6 +8,7 @@ import {
   pageAnnualCommonDataSyncBatches,
   pageLprRateRevisions,
   pageLprSyncBatches,
+  getProductionStatus,
   syncAnnualCommonData,
   syncLprRates
 } from '../../api/dataGovernance';
@@ -20,6 +21,7 @@ vi.mock('../../api/dataGovernance', () => ({
   syncLprRates: vi.fn(),
   pageAnnualCommonDataSyncBatches: vi.fn(),
   pageAnnualCommonDataRevisions: vi.fn(),
+  getProductionStatus: vi.fn(),
   syncAnnualCommonData: vi.fn()
 }));
 
@@ -28,6 +30,7 @@ const pageLprRateRevisionsMock = vi.mocked(pageLprRateRevisions);
 const syncLprRatesMock = vi.mocked(syncLprRates);
 const pageAnnualCommonDataSyncBatchesMock = vi.mocked(pageAnnualCommonDataSyncBatches);
 const pageAnnualCommonDataRevisionsMock = vi.mocked(pageAnnualCommonDataRevisions);
+const getProductionStatusMock = vi.mocked(getProductionStatus);
 const syncAnnualCommonDataMock = vi.mocked(syncAnnualCommonData);
 
 const syncBatch = {
@@ -91,6 +94,38 @@ const annualRevision = {
   createdAt: '2026-06-02T10:00:00'
 };
 
+const productionStatus = {
+  appCode: 'lawsuit-material-assistant',
+  checkedAt: '2026-06-09T20:00:00',
+  ready: true,
+  flyway: {
+    version: '131',
+    description: 'import complete civil cause catalog',
+    success: true
+  },
+  brand: {
+    oldBrandBannerCount: 0,
+    oldBrandCapabilityCount: 0
+  },
+  lpr: {
+    count: 82,
+    minQuoteDate: '2019-08-20',
+    maxQuoteDate: '2026-05-20'
+  },
+  annualCommonData: {
+    count: 13,
+    minYear: 2024,
+    maxYear: 2024
+  },
+  elementTemplate: {
+    count: 126,
+    missingFileMetadataCount: 0
+  },
+  civilCause: {
+    count: 1043
+  }
+};
+
 function mountPage() {
   const pinia = createPinia();
   setActivePinia(pinia);
@@ -125,6 +160,7 @@ describe('DataGovernancePage', () => {
     syncLprRatesMock.mockReset();
     pageAnnualCommonDataSyncBatchesMock.mockReset();
     pageAnnualCommonDataRevisionsMock.mockReset();
+    getProductionStatusMock.mockReset();
     syncAnnualCommonDataMock.mockReset();
 
     pageLprSyncBatchesMock.mockResolvedValue({ dataList: [syncBatch], totalCount: 1 });
@@ -136,6 +172,7 @@ describe('DataGovernancePage', () => {
     });
     pageAnnualCommonDataSyncBatchesMock.mockResolvedValue({ dataList: [annualBatch], totalCount: 1 });
     pageAnnualCommonDataRevisionsMock.mockResolvedValue({ dataList: [annualRevision], totalCount: 1 });
+    getProductionStatusMock.mockResolvedValue(productionStatus);
     syncAnnualCommonDataMock.mockResolvedValue({
       requestId: 'crawler-annual-2024',
       createdCount: 1,
@@ -170,7 +207,16 @@ describe('DataGovernancePage', () => {
       pageNo: 1,
       pageSize: 50
     });
+    expect(getProductionStatusMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant'
+    });
     expect(wrapper.text()).toContain('数据同步/发布');
+    expect(wrapper.text()).toContain('生产巡检');
+    expect(wrapper.text()).toContain('就绪');
+    expect(wrapper.text()).toContain('Flyway V131');
+    expect(wrapper.text()).toContain('LPR 82 条');
+    expect(wrapper.text()).toContain('民事案由 1043 项');
+    expect(wrapper.text()).toContain('示范文本 126 份');
     expect(wrapper.text()).toContain('同步批次');
     expect(wrapper.text()).toContain('修订记录');
     expect(wrapper.text()).toContain('LPR JSON 发布');

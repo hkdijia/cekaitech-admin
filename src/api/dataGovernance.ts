@@ -11,6 +11,42 @@ export interface DataGovernancePageQuery {
   pageSize: number;
 }
 
+export interface DataGovernanceAppQuery {
+  appCode: string;
+}
+
+export interface ProductionStatus {
+  appCode: string;
+  checkedAt: string;
+  ready: boolean;
+  flyway: {
+    version: string;
+    description: string;
+    success: boolean;
+  };
+  brand: {
+    oldBrandBannerCount: number;
+    oldBrandCapabilityCount: number;
+  };
+  lpr: {
+    count: number;
+    minQuoteDate: string;
+    maxQuoteDate: string;
+  };
+  annualCommonData: {
+    count: number;
+    minYear?: number;
+    maxYear?: number;
+  };
+  elementTemplate: {
+    count: number;
+    missingFileMetadataCount: number;
+  };
+  civilCause: {
+    count: number;
+  };
+}
+
 export interface LprSyncBatchItem {
   id: number;
   appCode: string;
@@ -158,6 +194,13 @@ export function syncLprRates(payload: LprRateSyncPayload): Promise<LprRateSyncRe
   return request<LprRateSyncResult>('/api/admin/data-governance/lpr-rates/sync', {
     method: 'POST',
     body: JSON.stringify(payload)
+  });
+}
+
+export function getProductionStatus(query: DataGovernanceAppQuery): Promise<ProductionStatus> {
+  return request<ProductionStatus>('/api/admin/data-governance/production-status', {
+    method: 'POST',
+    body: JSON.stringify(query)
   });
 }
 

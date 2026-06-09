@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import { Refresh, Upload } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import {
+  getProductionStatus,
   pageAnnualCommonDataRevisions,
   pageAnnualCommonDataSyncBatches,
   pageLprRateRevisions,
@@ -12,6 +13,7 @@ import {
   type AnnualCommonDataSyncBatchItem,
   type AnnualCommonDataSyncItem,
   type AnnualCommonDataSyncPayload,
+  type ProductionStatus,
   syncLprRates,
   type LprRateRevisionItem,
   type LprRateSyncItem,
@@ -23,12 +25,14 @@ const PAGE_SIZE = 50;
 
 const activeTab = ref('batches');
 const appCode = ref(APP_CODE);
+const loadingStatus = ref(false);
 const loadingBatches = ref(false);
 const loadingRevisions = ref(false);
 const publishing = ref(false);
 const loadError = ref('');
 const batches = ref<LprSyncBatchItem[]>([]);
 const revisions = ref<LprRateRevisionItem[]>([]);
+const productionStatus = ref<ProductionStatus | null>(null);
 const annualBatches = ref<AnnualCommonDataSyncBatchItem[]>([]);
 const annualRevisions = ref<AnnualCommonDataRevisionItem[]>([]);
 const lprSyncJson = ref(JSON.stringify({
@@ -88,6 +92,13 @@ function statusTagType(status: string) {
     return 'danger';
   }
   return 'info';
+}
+
+function readinessTagType(ready: boolean) {
+  if (ready) {
+    return 'success';
+  }
+  return 'danger';
 }
 
 function parseLprSyncJson(value: string): LprRateSyncItem[] {
@@ -198,8 +209,23 @@ async function loadAnnualRevisions() {
   }
 }
 
+async function loadProductionStatus() {
+  loadingStatus.value = true;
+  loadError.value = '';
+  try {
+    productionStatus.value = await getProductionStatus({
+      appCode: currentAppCode()
+    });
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '生产巡检状态加载失败';
+    productionStatus.value = null;
+  } finally {
+    loadingStatus.value = false;
+  }
+}
+
 async function refreshAll() {
-  await Promise.all([loadBatches(), loadRevisions(), loadAnnualBatches(), loadAnnualRevisions()]);
+  await Promise.all([loadProductionStatus(), loadBatches(), loadRevisions(), loadAnnualBatches(), loadAnnualRevisions()]);
 }
 
 async function publishLprSync() {
@@ -247,6 +273,53 @@ onMounted(refreshAll);
     <p class="page-subtitle">通过 miniapp-backend 受控 API 管理法律助手业务数据同步批次、修订记录、LPR JSON 发布和年度数据 JSON 导入。</p>
 
     <el-alert v-if="loadError" class="error-alert" type="error" :title="loadError" show-icon />
+
+    <el-card shadow="never" class="status-panel" v-loading="loadingStatus">
+      <div class="status-header">
+        <div>
+          <div class="toolbar-title">生产巡检</div>
+          <div class="toolbar-subtitle">只读汇总生产测试库关键数据状态，不触发采集或写入。</div>
+        </div>
+        <el-tag v-if="productionStatus" :type="readinessTagType(productionStatus.ready)" effect="plain">
+          {{ productionStatus.ready ? '就绪' : '需处理' }}
+        </el-tag>
+      </div>
+      <div v-if="productionStatus" class="status-grid">
+        <div class="status-item">
+          <div class="status-label">数据库迁移</div>
+          <div class="status-value">Flyway V{{ productionStatus.flyway.version }}</div>
+          <div class="status-note">{{ productionStatus.flyway.success ? '迁移成功' : '迁移异常' }}</div>
+        </div>
+        <div class="status-item">
+          <div class="status-label">品牌残留</div>
+          <div class="status-value">
+            {{ productionStatus.brand.oldBrandBannerCount + productionStatus.brand.oldBrandCapabilityCount }} 处
+          </div>
+          <div class="status-note">公告 / 工具来源旧文案</div>
+        </div>
+        <div class="status-item">
+          <div class="status-label">LPR</div>
+          <div class="status-value">LPR {{ productionStatus.lpr.count }} 条</div>
+          <div class="status-note">{{ productionStatus.lpr.minQuoteDate }} 至 {{ productionStatus.lpr.maxQuoteDate }}</div>
+        </div>
+        <div class="status-item">
+          <div class="status-label">年度数据</div>
+          <div class="status-value">年度数据 {{ productionStatus.annualCommonData.count }} 条</div>
+          <div class="status-note">{{ productionStatus.annualCommonData.minYear }} 至 {{ productionStatus.annualCommonData.maxYear }}</div>
+        </div>
+        <div class="status-item">
+          <div class="status-label">示范文本</div>
+          <div class="status-value">示范文本 {{ productionStatus.elementTemplate.count }} 份</div>
+          <div class="status-note">缺失文件元数据 {{ productionStatus.elementTemplate.missingFileMetadataCount }} 份</div>
+        </div>
+        <div class="status-item">
+          <div class="status-label">民事案由</div>
+          <div class="status-value">民事案由 {{ productionStatus.civilCause.count }} 项</div>
+          <div class="status-note">官方目录与业务别名合并口径</div>
+        </div>
+      </div>
+      <el-empty v-else description="暂无生产巡检数据" />
+    </el-card>
 
     <el-card shadow="never" class="governance-panel">
       <div class="toolbar">
@@ -406,6 +479,49 @@ onMounted(refreshAll);
   min-height: 560px;
 }
 
+.status-panel {
+  margin-bottom: 16px;
+}
+
+.status-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.status-item {
+  border: 1px solid #eaecf0;
+  border-radius: 6px;
+  padding: 12px;
+  background: #fcfcfd;
+}
+
+.status-label {
+  color: #667085;
+  font-size: 12px;
+}
+
+.status-value {
+  margin-top: 6px;
+  color: #101828;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.status-note {
+  margin-top: 4px;
+  color: #667085;
+  font-size: 12px;
+}
+
 .toolbar {
   display: flex;
   align-items: flex-start;
@@ -471,6 +587,10 @@ onMounted(refreshAll);
 @media (max-width: 720px) {
   .toolbar {
     flex-direction: column;
+  }
+
+  .status-grid {
+    grid-template-columns: 1fr;
   }
 
   .app-form,
