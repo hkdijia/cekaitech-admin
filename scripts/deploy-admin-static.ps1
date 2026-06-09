@@ -5,6 +5,7 @@ param(
     [string]$KnownHostsFile = "C:\home\work_space\myself\miniapp\miniapp-backend\tmp\ssh\known_hosts",
     [string]$RemoteRoot = "/data/cekaitech-admin",
     [string]$RemoteStage = "/tmp/cekaitech-admin-dist",
+    [string]$ProductionApiBaseUrl = "https://api.cekaitech.cn",
     [switch]$SkipBuild,
     [switch]$DryRun
 )
@@ -23,18 +24,33 @@ $sshOptions = @(
 Write-Host "[admin-deploy] repo: $repoRoot"
 Write-Host ("[admin-deploy] target: {0}:{1}" -f $sshTarget, $RemoteRoot)
 Write-Host "[admin-deploy] stage: $RemoteStage"
+Write-Host "[admin-deploy] api: $ProductionApiBaseUrl"
 
 if (-not $SkipBuild) {
     Push-Location $repoRoot
     try {
+        $previousApiBaseUrl = $env:VITE_API_BASE_URL
+        $env:VITE_API_BASE_URL = $ProductionApiBaseUrl
         npm.cmd run build
     } finally {
+        if ($null -eq $previousApiBaseUrl) {
+            Remove-Item Env:\VITE_API_BASE_URL -ErrorAction SilentlyContinue
+        } else {
+            $env:VITE_API_BASE_URL = $previousApiBaseUrl
+        }
         Pop-Location
     }
 }
 
 if (-not (Test-Path -LiteralPath (Join-Path $distDir "index.html"))) {
     throw "dist/index.html not found. Run npm.cmd run build first."
+}
+
+if (-not $SkipBuild) {
+    $apiBaseFound = Select-String -Path (Join-Path $distDir "assets\*.js") -Pattern $ProductionApiBaseUrl -SimpleMatch -Quiet
+    if (-not $apiBaseFound) {
+        throw "Production API base URL was not found in built assets: $ProductionApiBaseUrl"
+    }
 }
 
 if (Test-Path -LiteralPath $archivePath) {

@@ -58,7 +58,7 @@ dist/
 powershell -ExecutionPolicy Bypass -File scripts\deploy-admin-static.ps1
 ```
 
-脚本会执行 `npm.cmd run build`，将 `dist/` 打成临时 `tar.gz` 包，通过 SSH key 上传到服务器临时目录，远端解包后自动备份当前 `/data/cekaitech-admin/` 为 `/data/cekaitech-admin/.previous/`，再用 `rsync --delete` 同步到 `/data/cekaitech-admin/`。
+脚本会临时设置 `VITE_API_BASE_URL=https://api.cekaitech.cn` 后执行 `npm.cmd run build`，并校验构建产物包含生产 API 域名；随后将 `dist/` 打成临时 `tar.gz` 包，通过 SSH key 上传到服务器临时目录，远端解包后自动备份当前 `/data/cekaitech-admin/` 为 `/data/cekaitech-admin/.previous/`，再用 `rsync --delete` 同步到 `/data/cekaitech-admin/`。
 
 只检查构建和参数、不上传：
 
