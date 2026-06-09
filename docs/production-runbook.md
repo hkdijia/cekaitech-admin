@@ -44,13 +44,27 @@ dist/
 
 ## 4. 服务器目录
 
-建议目录：
+当前服务器目录：
 
 ```bash
-/var/www/cekaitech-admin/
+/data/cekaitech-admin/
 ```
 
 将 `dist/` 内文件上传到该目录。
+
+可在本机执行脚本完成构建、上传和远端覆盖同步：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\deploy-admin-static.ps1
+```
+
+脚本会执行 `npm.cmd run build`，将 `dist/` 打成临时 `tar.gz` 包，通过 SSH key 上传到服务器临时目录，远端解包后自动备份当前 `/data/cekaitech-admin/` 为 `/data/cekaitech-admin.previous`，再用 `rsync --delete` 同步到 `/data/cekaitech-admin/`。
+
+只检查构建和参数、不上传：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\deploy-admin-static.ps1 -DryRun
+```
 
 ## 5. Nginx 配置
 
@@ -60,7 +74,7 @@ dist/
 server {
     listen 80;
     server_name admin.cekaitech.cn;
-    root /var/www/cekaitech-admin;
+    root /data/cekaitech-admin;
     index index.html;
 
     location / {
@@ -194,14 +208,16 @@ https://admin.cekaitech.cn
 每次发布前保留上一版静态产物：
 
 ```bash
-cp -r /var/www/cekaitech-admin /var/www/cekaitech-admin.previous
+cp -r /data/cekaitech-admin /data/cekaitech-admin.previous
 ```
+
+使用 `scripts/deploy-admin-static.ps1` 发布时，脚本会自动执行上一版备份。
 
 回滚：
 
 ```bash
-rm -rf /var/www/cekaitech-admin
-mv /var/www/cekaitech-admin.previous /var/www/cekaitech-admin
+rm -rf /data/cekaitech-admin
+mv /data/cekaitech-admin.previous /data/cekaitech-admin
 sudo nginx -t
 sudo systemctl reload nginx
 ```

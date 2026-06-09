@@ -35,6 +35,24 @@ describe('admin routes', () => {
     expect(visibleItems.map((item) => item.path)).toEqual(['/users']);
   });
 
+  it('keeps miniapp business configuration out of the global platform menu', () => {
+    const visibleItems = filterAdminMenuItems(() => true, 'global');
+
+    expect(visibleItems.map((item) => item.path)).toContain('/dashboard');
+    expect(visibleItems.map((item) => item.path)).toContain('/users');
+    expect(visibleItems.map((item) => item.path)).not.toContain('/miniapp-home-config');
+    expect(visibleItems.map((item) => item.path)).not.toContain('/legal-tool-center');
+    expect(visibleItems.map((item) => item.path)).not.toContain('/data-governance');
+  });
+
+  it('shows miniapp configuration menu after selecting a business workspace', () => {
+    const visibleItems = filterAdminMenuItems(() => true, 'legal-material-assistant');
+
+    expect(visibleItems.map((item) => item.path)).toContain('/miniapp-home-config');
+    expect(visibleItems.map((item) => item.path)).toContain('/legal-tool-center');
+    expect(visibleItems.map((item) => item.path)).toContain('/data-governance');
+  });
+
   it('declares legal form events menu and route permission', () => {
     const menuItem = adminMenuItems.find((item) => item.path === '/legal-form-events');
     const route = routes.find((item) => item.path === '/legal-form-events');

@@ -17,7 +17,7 @@ export interface WorkspaceOption {
 
 export const workspaceOptions: WorkspaceOption[] = [
   { id: 0, code: 'global', name: '全局后台', appCode: 'global', status: 'enabled' },
-  { id: 1, code: 'legal-material-assistant', name: '阳光法律助手', appCode: 'lawsuit-material-assistant', status: 'enabled' },
+  { id: 1, code: 'legal-material-assistant', name: '阳律通', appCode: 'lawsuit-material-assistant', status: 'enabled' },
   { id: 2, code: 'scorekeeper', name: '聚会计分器', appCode: 'party-scorekeeper-miniapp', status: 'enabled' },
   { id: 3, code: 'appointment', name: '预约服务', appCode: 'rehab-appointment-miniapp', status: 'enabled' }
 ];
@@ -42,13 +42,10 @@ export const useWorkspaceStore = defineStore('workspace', {
       this.loadError = '';
       try {
         const backendWorkspaces = await listAccessibleWorkspaces();
-        const options = backendWorkspaces.map(toWorkspaceOption);
-        if (options.length === 0) {
-          return;
-        }
+        const options = mergeGlobalWorkspace(backendWorkspaces.map(toWorkspaceOption));
         this.options = options;
         if (!this.options.some((item) => item.code === this.currentCode)) {
-          this.currentCode = this.options[0].code;
+          this.currentCode = 'global';
         }
         await this.loadCurrentWorkspaceMenus();
       } catch (error) {
@@ -92,6 +89,12 @@ function toWorkspaceOption(item: BackendWorkspace): WorkspaceOption {
     appCode: item.appCode,
     status: item.status
   };
+}
+
+function mergeGlobalWorkspace(options: WorkspaceOption[]): WorkspaceOption[] {
+  const globalWorkspace = workspaceOptions[0];
+  const businessWorkspaces = options.filter((item) => item.code !== globalWorkspace.code);
+  return [globalWorkspace, ...businessWorkspaces];
 }
 
 export function filterWorkspaceMenus(

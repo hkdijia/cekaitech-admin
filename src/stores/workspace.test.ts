@@ -40,7 +40,8 @@ describe('useWorkspaceStore', () => {
     await workspace.loadWorkspaces();
     workspace.switchWorkspace('rehab-appointment-assistant');
 
-    expect(workspace.options).toHaveLength(2);
+    expect(workspace.options).toHaveLength(3);
+    expect(workspace.options[0].code).toBe('global');
     expect(workspace.currentWorkspace.name).toBe('康复预约助手');
     expect(workspace.currentWorkspace.appCode).toBe('rehab-appointment-miniapp');
   });
@@ -94,6 +95,7 @@ describe('useWorkspaceStore', () => {
     auth.token = 'workspace-token';
 
     await workspace.loadWorkspaces();
+    await workspace.switchWorkspace('legal-material-assistant');
 
     expect(workspace.currentMenus).toHaveLength(1);
     expect(workspace.currentMenus[0].menuName).toBe('律师认证审核');
@@ -136,6 +138,36 @@ describe('useWorkspaceStore', () => {
     await workspace.loadWorkspaces();
 
     expect(workspace.currentCode).toBe('global');
+    expect(workspace.currentMenus).toHaveLength(0);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps global platform workspace selected after loading business workspaces', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        code: '0',
+        msg: '',
+        data: [
+          {
+            id: 1,
+            workspaceCode: 'legal-material-assistant',
+            workspaceName: '阳律通',
+            appCode: 'lawsuit-material-assistant',
+            status: 'enabled'
+          }
+        ]
+      })
+    } as Response);
+
+    const workspace = useWorkspaceStore();
+
+    await workspace.loadWorkspaces();
+
+    expect(workspace.currentCode).toBe('global');
+    expect(workspace.currentWorkspace.name).toBe('全局后台');
+    expect(workspace.options.map((item) => item.code)).toEqual(['global', 'legal-material-assistant']);
     expect(workspace.currentMenus).toHaveLength(0);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });

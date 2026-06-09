@@ -12,7 +12,7 @@ const auth = useAuthStore();
 const workspace = useWorkspaceStore();
 
 const activeMenu = computed(() => route.path);
-const visibleAdminMenuItems = computed(() => filterAdminMenuItems(auth.hasPermission));
+const visibleAdminMenuItems = computed(() => filterAdminMenuItems(auth.hasPermission, workspace.currentCode));
 
 onMounted(() => {
   workspace.loadWorkspaces();

@@ -7,8 +7,8 @@ const router = useRouter();
 const auth = useAuthStore();
 
 const form = reactive({
-  username: 'admin',
-  password: '123456'
+  username: '',
+  password: ''
 });
 
 const submitting = ref(false);
