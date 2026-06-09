@@ -67,7 +67,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "Failed to upload dist archive."
 }
 
-& ssh.exe @sshOptions $sshTarget "tar -xzf '$RemoteStage/dist.tar.gz' -C '$RemoteStage' && rm -f '$RemoteStage/dist.tar.gz' && if [ -d '$RemoteRoot' ]; then rm -rf '$RemoteRoot.previous' && cp -a '$RemoteRoot' '$RemoteRoot.previous'; fi && rsync -a --delete '$RemoteStage/' '$RemoteRoot/' && find '$RemoteRoot' -maxdepth 2 -type f | sed 's#^#[admin-deploy] deployed #' | head -20"
+& ssh.exe @sshOptions $sshTarget "tar -xzf '$RemoteStage/dist.tar.gz' -C '$RemoteStage' && rm -f '$RemoteStage/dist.tar.gz' && if [ -d '$RemoteRoot' ]; then rm -rf '$RemoteStage.previous' && mkdir -p '$RemoteStage.previous' && rsync -a --delete --exclude='.previous/' '$RemoteRoot/' '$RemoteStage.previous/'; fi && rsync -a --delete --exclude='.previous/' '$RemoteStage/' '$RemoteRoot/' && if [ -d '$RemoteStage.previous' ]; then rm -rf '$RemoteRoot/.previous' && mkdir -p '$RemoteRoot/.previous' && rsync -a --delete '$RemoteStage.previous/' '$RemoteRoot/.previous/'; fi && find '$RemoteRoot' -maxdepth 2 -type f | sed 's#^#[admin-deploy] deployed #' | head -20"
 if ($LASTEXITCODE -ne 0) {
     throw "Failed to sync staged files to remote root."
 }

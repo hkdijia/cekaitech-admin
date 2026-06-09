@@ -58,7 +58,7 @@ dist/
 powershell -ExecutionPolicy Bypass -File scripts\deploy-admin-static.ps1
 ```
 
-脚本会执行 `npm.cmd run build`，将 `dist/` 打成临时 `tar.gz` 包，通过 SSH key 上传到服务器临时目录，远端解包后自动备份当前 `/data/cekaitech-admin/` 为 `/data/cekaitech-admin.previous`，再用 `rsync --delete` 同步到 `/data/cekaitech-admin/`。
+脚本会执行 `npm.cmd run build`，将 `dist/` 打成临时 `tar.gz` 包，通过 SSH key 上传到服务器临时目录，远端解包后自动备份当前 `/data/cekaitech-admin/` 为 `/data/cekaitech-admin/.previous/`，再用 `rsync --delete` 同步到 `/data/cekaitech-admin/`。
 
 只检查构建和参数、不上传：
 
@@ -208,7 +208,8 @@ https://admin.cekaitech.cn
 每次发布前保留上一版静态产物：
 
 ```bash
-cp -r /data/cekaitech-admin /data/cekaitech-admin.previous
+mkdir -p /data/cekaitech-admin/.previous
+rsync -a --delete --exclude='.previous/' /data/cekaitech-admin/ /data/cekaitech-admin/.previous/
 ```
 
 使用 `scripts/deploy-admin-static.ps1` 发布时，脚本会自动执行上一版备份。
@@ -216,8 +217,7 @@ cp -r /data/cekaitech-admin /data/cekaitech-admin.previous
 回滚：
 
 ```bash
-rm -rf /data/cekaitech-admin
-mv /data/cekaitech-admin.previous /data/cekaitech-admin
+rsync -a --delete /data/cekaitech-admin/.previous/ /data/cekaitech-admin/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
