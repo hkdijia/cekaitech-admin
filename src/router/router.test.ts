@@ -53,6 +53,15 @@ describe('admin routes', () => {
     expect(visibleItems.map((item) => item.path)).toContain('/data-governance');
   });
 
+  it('does not reuse legal assistant menus for other business workspaces', () => {
+    const visibleItems = filterAdminMenuItems(() => true, 'scorekeeper');
+
+    expect(visibleItems.map((item) => item.path)).not.toContain('/miniapp-home-config');
+    expect(visibleItems.map((item) => item.path)).not.toContain('/legal-tool-center');
+    expect(visibleItems.map((item) => item.path)).not.toContain('/data-governance');
+    expect(visibleItems).toHaveLength(0);
+  });
+
   it('declares legal form events menu and route permission', () => {
     const menuItem = adminMenuItems.find((item) => item.path === '/legal-form-events');
     const route = routes.find((item) => item.path === '/legal-form-events');
