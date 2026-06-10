@@ -48,6 +48,7 @@ describe('admin routes', () => {
   it('shows miniapp configuration menu after selecting a business workspace', () => {
     const visibleItems = filterAdminMenuItems(() => true, 'legal-material-assistant');
 
+    expect(visibleItems.map((item) => item.path)).toContain('/miniapp-workbench');
     expect(visibleItems.map((item) => item.path)).toContain('/miniapp-home-config');
     expect(visibleItems.map((item) => item.path)).toContain('/legal-tool-center');
     expect(visibleItems.map((item) => item.path)).toContain('/data-governance');
@@ -57,9 +58,19 @@ describe('admin routes', () => {
     const visibleItems = filterAdminMenuItems(() => true, 'scorekeeper');
 
     expect(visibleItems.map((item) => item.path)).not.toContain('/miniapp-home-config');
+    expect(visibleItems.map((item) => item.path)).not.toContain('/miniapp-workbench');
     expect(visibleItems.map((item) => item.path)).not.toContain('/legal-tool-center');
     expect(visibleItems.map((item) => item.path)).not.toContain('/data-governance');
     expect(visibleItems).toHaveLength(0);
+  });
+
+  it('declares miniapp workbench menu and route permission', () => {
+    const menuItem = adminMenuItems.find((item) => item.path === '/miniapp-workbench');
+    const route = routes.find((item) => item.path === '/miniapp-workbench');
+
+    expect(menuItem?.title).toBe('小程序工作台');
+    expect(menuItem?.permissionCode).toBe('admin:workspace:view');
+    expect(route?.meta?.permissionCode).toBe('admin:workspace:view');
   });
 
   it('declares legal form events menu and route permission', () => {

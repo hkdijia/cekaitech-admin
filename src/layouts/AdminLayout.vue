@@ -23,6 +23,15 @@ function handleLogout() {
   router.push('/login');
 }
 
+async function handleWorkspaceChange(code: string) {
+  await workspace.switchWorkspace(code);
+  if (code === 'global') {
+    router.push('/dashboard');
+    return;
+  }
+  router.push('/miniapp-workbench');
+}
+
 function openWorkspaceMenu(menuCode: string) {
   router.push({
     name: 'workspace-menu',
@@ -74,7 +83,7 @@ function openWorkspaceMenu(menuCode: string) {
             v-model="workspace.currentCode"
             class="workspace-select"
             :loading="workspace.loading"
-            @change="workspace.switchWorkspace"
+            @change="handleWorkspaceChange"
           >
             <el-option v-for="item in workspace.options" :key="item.code" :label="item.name" :value="item.code" />
           </el-select>

@@ -7,6 +7,7 @@ import {
   pageLegalToolExposureGroups,
   pageLegalToolExposureItems,
   pageLegalToolInteractionBlueprints,
+  inspectLegalToolReadiness,
   applyElementTemplateFileImport,
   manifestElementTemplateFiles,
   pageAnnualCommonData,
@@ -128,6 +129,51 @@ describe('legal tool center api', () => {
     }));
     expect(capabilities.totalCount).toBe(1);
     expect(saved.toolKey).toBe('litigation_fee');
+  });
+
+  it('posts legal tool readiness inspection request to backend endpoint', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          code: '0',
+          msg: '',
+          data: {
+            appCode: 'lawsuit-material-assistant',
+            totalCapabilityCount: 26,
+            publicExposureCount: 18,
+            readyCount: 12,
+            warningCount: 3,
+            blockedCount: 11,
+            items: [
+              {
+                toolKey: 'litigation_fee',
+                title: '诉讼费用',
+                status: 'public',
+                readiness: 'pass',
+                capabilityEnabled: true,
+                publicExposure: true,
+                reviewedBlueprint: true,
+                dataSourceReady: true,
+                issues: []
+              }
+            ]
+          }
+        })
+      } as Response);
+
+    const result = await inspectLegalToolReadiness({ appCode: 'lawsuit-material-assistant' });
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/admin/legal-tool-center/readiness/inspect', {
+      method: 'POST',
+      body: JSON.stringify({ appCode: 'lawsuit-material-assistant' }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    expect(result.readyCount).toBe(12);
+    expect(result.items[0].readiness).toBe('pass');
   });
 
   it('posts exposure group page, save and disable requests to backend endpoints', async () => {

@@ -319,6 +319,38 @@ export interface ElementTemplateFileImportApplyResult {
   readyToPublish: boolean;
 }
 
+export interface LegalToolReadinessInspectQuery {
+  appCode: string;
+}
+
+export interface LegalToolReadinessIssue {
+  type: string;
+  severity: string;
+  message: string;
+}
+
+export interface LegalToolReadinessItem {
+  toolKey: string;
+  title: string;
+  status: string;
+  readiness: 'pass' | 'warning' | 'blocked' | string;
+  capabilityEnabled: boolean;
+  publicExposure: boolean;
+  reviewedBlueprint: boolean;
+  dataSourceReady: boolean;
+  issues: LegalToolReadinessIssue[];
+}
+
+export interface LegalToolReadinessInspectResult {
+  appCode: string;
+  totalCapabilityCount: number;
+  publicExposureCount: number;
+  readyCount: number;
+  warningCount: number;
+  blockedCount: number;
+  items: LegalToolReadinessItem[];
+}
+
 export type LegalToolCapabilityPayload = Omit<LegalToolCapabilityItem, 'createdAt' | 'updatedAt'>;
 export type LegalToolExposureGroupPayload = Omit<LegalToolExposureGroupItem, 'createdAt' | 'updatedAt'>;
 export type LegalToolExposureItemPayload = Omit<LegalToolExposureItem, 'createdAt' | 'updatedAt'>;
@@ -345,6 +377,15 @@ export function saveLegalToolCapability(
   return request<LegalToolCapabilityItem>('/api/admin/legal-tool-center/capabilities/save', {
     method: 'POST',
     body: JSON.stringify(payload)
+  });
+}
+
+export function inspectLegalToolReadiness(
+  query: LegalToolReadinessInspectQuery
+): Promise<LegalToolReadinessInspectResult> {
+  return request<LegalToolReadinessInspectResult>('/api/admin/legal-tool-center/readiness/inspect', {
+    method: 'POST',
+    body: JSON.stringify(query)
   });
 }
 
