@@ -101,6 +101,20 @@ function readinessTagType(ready: boolean) {
   return 'danger';
 }
 
+function expectedElementTemplateCount(status: ProductionStatus) {
+  if (status.elementTemplate.expectedCount) {
+    return status.elementTemplate.expectedCount;
+  }
+  return status.elementTemplate.count;
+}
+
+function elementTemplateSourceLabel(status: ProductionStatus) {
+  if (status.elementTemplate.sourceName) {
+    return status.elementTemplate.sourceName;
+  }
+  return '当前示范文本来源';
+}
+
 function parseLprSyncJson(value: string): LprRateSyncItem[] {
   const parsed = JSON.parse(value) as { items?: unknown };
   if (!Array.isArray(parsed.items)) {
@@ -309,8 +323,17 @@ onMounted(refreshAll);
         </div>
         <div class="status-item">
           <div class="status-label">示范文本</div>
-          <div class="status-value">示范文本 {{ productionStatus.elementTemplate.count }} 份</div>
-          <div class="status-note">缺失文件元数据 {{ productionStatus.elementTemplate.missingFileMetadataCount }} 份</div>
+          <div class="status-value">
+            示范文本 {{ productionStatus.elementTemplate.count }} / {{ expectedElementTemplateCount(productionStatus) }} 份
+          </div>
+          <div class="status-note">
+            文件元数据 {{ productionStatus.elementTemplate.filePathCount ?? productionStatus.elementTemplate.count }} /
+            {{ expectedElementTemplateCount(productionStatus) }}，缺失 {{ productionStatus.elementTemplate.missingFileMetadataCount }} 份
+          </div>
+          <div class="status-note">{{ elementTemplateSourceLabel(productionStatus) }}</div>
+          <div v-if="productionStatus.elementTemplate.sourceVersion" class="status-note">
+            {{ productionStatus.elementTemplate.sourceVersion }} · {{ productionStatus.elementTemplate.lastCheckedDate || '-' }}
+          </div>
         </div>
         <div class="status-item">
           <div class="status-label">民事案由</div>

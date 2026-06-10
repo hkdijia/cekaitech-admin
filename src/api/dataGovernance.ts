@@ -39,8 +39,15 @@ export interface ProductionStatus {
     maxYear?: number;
   };
   elementTemplate: {
+    sourceKey: string;
+    sourceName: string;
+    sourceVersion: string;
+    lastCheckedDate: string;
+    expectedCount: number;
     count: number;
+    filePathCount: number;
     missingFileMetadataCount: number;
+    ready: boolean;
   };
   civilCause: {
     count: number;

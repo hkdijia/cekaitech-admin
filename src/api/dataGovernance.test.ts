@@ -128,7 +128,14 @@ describe('data governance api', () => {
           ready: true,
           flyway: { version: '131', success: true },
           lpr: { count: 82, minQuoteDate: '2019-08-20', maxQuoteDate: '2026-05-20' },
-          elementTemplate: { count: 126, missingFileMetadataCount: 0 },
+          elementTemplate: {
+            sourceKey: 'element_template_docimax_practical_2025',
+            sourceVersion: 'element-template-docimax-practical-2025',
+            expectedCount: 226,
+            count: 226,
+            filePathCount: 226,
+            missingFileMetadataCount: 0
+          },
           civilCause: { count: 1043 }
         }
       })
@@ -147,6 +154,8 @@ describe('data governance api', () => {
     });
     expect(result.ready).toBe(true);
     expect(result.lpr.count).toBe(82);
+    expect(result.elementTemplate.sourceKey).toBe('element_template_docimax_practical_2025');
+    expect(result.elementTemplate.filePathCount).toBe(226);
     expect(result.civilCause.count).toBe(1043);
   });
 

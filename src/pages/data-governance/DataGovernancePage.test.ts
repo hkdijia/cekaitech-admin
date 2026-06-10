@@ -118,8 +118,15 @@ const productionStatus = {
     maxYear: 2024
   },
   elementTemplate: {
-    count: 126,
-    missingFileMetadataCount: 0
+    sourceKey: 'element_template_docimax_practical_2025',
+    sourceName: 'Docimax 法律文书助手要素式文本实用树源',
+    sourceVersion: 'element-template-docimax-practical-2025',
+    lastCheckedDate: '2026-06-10',
+    expectedCount: 226,
+    count: 226,
+    filePathCount: 226,
+    missingFileMetadataCount: 0,
+    ready: true
   },
   civilCause: {
     count: 1043
@@ -216,7 +223,10 @@ describe('DataGovernancePage', () => {
     expect(wrapper.text()).toContain('Flyway V131');
     expect(wrapper.text()).toContain('LPR 82 条');
     expect(wrapper.text()).toContain('民事案由 1043 项');
-    expect(wrapper.text()).toContain('示范文本 126 份');
+    expect(wrapper.text()).toContain('示范文本 226 / 226 份');
+    expect(wrapper.text()).toContain('文件元数据 226 / 226');
+    expect(wrapper.text()).toContain('Docimax 法律文书助手要素式文本实用树源');
+    expect(wrapper.text()).toContain('element-template-docimax-practical-2025');
     expect(wrapper.text()).toContain('同步批次');
     expect(wrapper.text()).toContain('修订记录');
     expect(wrapper.text()).toContain('LPR JSON 发布');
