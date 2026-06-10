@@ -9,6 +9,7 @@ import {
   pageLprRateRevisions,
   pageLprSyncBatches,
   getProductionStatus,
+  previewLprRates,
   syncAnnualCommonData,
   syncLprRates
 } from '../../api/dataGovernance';
@@ -18,6 +19,7 @@ import DataGovernancePage from './DataGovernancePage.vue';
 vi.mock('../../api/dataGovernance', () => ({
   pageLprSyncBatches: vi.fn(),
   pageLprRateRevisions: vi.fn(),
+  previewLprRates: vi.fn(),
   syncLprRates: vi.fn(),
   pageAnnualCommonDataSyncBatches: vi.fn(),
   pageAnnualCommonDataRevisions: vi.fn(),
@@ -27,6 +29,7 @@ vi.mock('../../api/dataGovernance', () => ({
 
 const pageLprSyncBatchesMock = vi.mocked(pageLprSyncBatches);
 const pageLprRateRevisionsMock = vi.mocked(pageLprRateRevisions);
+const previewLprRatesMock = vi.mocked(previewLprRates);
 const syncLprRatesMock = vi.mocked(syncLprRates);
 const pageAnnualCommonDataSyncBatchesMock = vi.mocked(pageAnnualCommonDataSyncBatches);
 const pageAnnualCommonDataRevisionsMock = vi.mocked(pageAnnualCommonDataRevisions);
@@ -164,6 +167,7 @@ describe('DataGovernancePage', () => {
     localStorage.clear();
     pageLprSyncBatchesMock.mockReset();
     pageLprRateRevisionsMock.mockReset();
+    previewLprRatesMock.mockReset();
     syncLprRatesMock.mockReset();
     pageAnnualCommonDataSyncBatchesMock.mockReset();
     pageAnnualCommonDataRevisionsMock.mockReset();
@@ -172,6 +176,20 @@ describe('DataGovernancePage', () => {
 
     pageLprSyncBatchesMock.mockResolvedValue({ dataList: [syncBatch], totalCount: 1 });
     pageLprRateRevisionsMock.mockResolvedValue({ dataList: [revision], totalCount: 1 });
+    previewLprRatesMock.mockResolvedValue({
+      batchId: null,
+      requestId: 'crawler-lpr-preview',
+      status: 'conflict',
+      createdCount: 1,
+      updatedCount: 0,
+      skippedCount: 1,
+      conflictCount: 1,
+      items: [
+        { quoteDate: '2026-05-20', action: 'skipped', message: 'same_rate' },
+        { quoteDate: '2026-04-20', action: 'created', message: 'missing_in_current' },
+        { quoteDate: '2026-03-20', action: 'conflict', message: 'verified_rate_differs' }
+      ]
+    });
     syncLprRatesMock.mockResolvedValue({
       batchNo: 'LPR-20260531-002',
       importedCount: 2,
@@ -248,6 +266,9 @@ describe('DataGovernancePage', () => {
     await nextTick();
 
     const jsonText = JSON.stringify({
+      requestId: 'crawler-lpr-2025',
+      sourceKey: 'lpr_chinamoney',
+      payloadHash: 'hash-lpr-2025',
       items: [
         { quoteDate: '2025-04-20', oneYearRate: 3.1, fiveYearPlusRate: 3.6 },
         { quoteDate: '2025-05-20', oneYearRate: 3, fiveYearPlusRate: 3.5 }
@@ -259,6 +280,9 @@ describe('DataGovernancePage', () => {
 
     expect(syncLprRatesMock).toHaveBeenCalledWith({
       appCode: 'lawsuit-material-assistant',
+      requestId: 'crawler-lpr-2025',
+      sourceKey: 'lpr_chinamoney',
+      payloadHash: 'hash-lpr-2025',
       items: [
         { quoteDate: '2025-04-20', oneYearRate: 3.1, fiveYearPlusRate: 3.6 },
         { quoteDate: '2025-05-20', oneYearRate: 3, fiveYearPlusRate: 3.5 }
@@ -338,6 +362,54 @@ describe('DataGovernancePage', () => {
       pageNo: 1,
       pageSize: 50
     });
+  });
+
+  it('previews valid LPR JSON without refreshing batch list', async () => {
+    const wrapper = mountPage();
+    await flushAsyncUpdates();
+    pageLprSyncBatchesMock.mockClear();
+    (wrapper.vm as unknown as { activeTab: string }).activeTab = 'json';
+    await nextTick();
+
+    const jsonText = JSON.stringify({
+      requestId: 'crawler-lpr-preview',
+      sourceKey: 'lpr_chinamoney',
+      payloadHash: 'hash-lpr-preview',
+      items: [
+        {
+          quoteDate: '2026-05-20',
+          oneYearRate: 3,
+          fiveYearPlusRate: 3.5,
+          sourceUrl: 'https://www.chinamoney.com.cn/chinese/bklpr/'
+        }
+      ]
+    });
+    await wrapper.find('[data-test="lpr-sync-json"]').setValue(jsonText);
+    await wrapper.find('[data-test="preview-lpr-sync"]').trigger('click');
+    await flushAsyncUpdates();
+
+    expect(previewLprRatesMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      requestId: 'crawler-lpr-preview',
+      sourceKey: 'lpr_chinamoney',
+      payloadHash: 'hash-lpr-preview',
+      items: [
+        {
+          quoteDate: '2026-05-20',
+          oneYearRate: 3,
+          fiveYearPlusRate: 3.5,
+          sourceUrl: 'https://www.chinamoney.com.cn/chinese/bklpr/'
+        }
+      ]
+    });
+    expect(syncLprRatesMock).not.toHaveBeenCalled();
+    expect(pageLprSyncBatchesMock).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('预览结果');
+    expect(wrapper.text()).toContain('新增 1');
+    expect(wrapper.text()).toContain('跳过 1');
+    expect(wrapper.text()).toContain('冲突 1');
+    expect(wrapper.text()).toContain('2026-03-20');
+    expect(wrapper.text()).toContain('verified_rate_differs');
   });
 
   it('rejects annual common data JSON without items array before calling backend', async () => {

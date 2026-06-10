@@ -91,17 +91,42 @@ export interface LprRateSyncItem {
   status?: string;
   sortOrder?: number;
   enabled?: boolean;
+  sourceRecordId?: string;
+  payloadHash?: string;
 }
 
 export interface LprRateSyncPayload {
   appCode: string;
+  requestId?: string;
+  sourceKey?: string;
+  sourceVersion?: string;
+  sourceClient?: string;
+  collectedAt?: string;
+  lastCheckedDate?: string;
+  mode?: string;
+  payloadHash?: string;
   items: LprRateSyncItem[];
 }
 
 export interface LprRateSyncResult {
-  batchNo: string;
-  importedCount: number;
+  batchId?: number | null;
+  batchNo?: string;
+  requestId?: string;
+  status?: string;
+  importedCount?: number;
+  createdCount?: number;
+  updatedCount?: number;
+  skippedCount?: number;
+  conflictCount?: number;
   revisionCount?: number;
+  items?: Array<{
+    rateId?: number | null;
+    quoteDate: string;
+    oneYearRate?: number;
+    fiveYearPlusRate?: number;
+    action: string;
+    message: string;
+  }>;
 }
 
 export interface AnnualCommonDataSyncBatchItem {
@@ -199,6 +224,13 @@ export function pageLprRateRevisions(
 
 export function syncLprRates(payload: LprRateSyncPayload): Promise<LprRateSyncResult> {
   return request<LprRateSyncResult>('/api/admin/data-governance/lpr-rates/sync', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function previewLprRates(payload: LprRateSyncPayload): Promise<LprRateSyncResult> {
+  return request<LprRateSyncResult>('/api/admin/data-governance/lpr-rates/preview', {
     method: 'POST',
     body: JSON.stringify(payload)
   });

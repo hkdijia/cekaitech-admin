@@ -5,6 +5,7 @@ import {
   pageLprRateRevisions,
   pageLprSyncBatches,
   getProductionStatus,
+  previewLprRates,
   syncAnnualCommonData,
   syncLprRates
 } from './dataGovernance';
@@ -114,6 +115,59 @@ describe('data governance api', () => {
     });
     expect(result.batchNo).toBe('LPR-20260531-002');
     expect(result.importedCount).toBe(2);
+  });
+
+  it('posts LPR JSON preview request to backend endpoint', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        code: '0',
+        msg: '',
+        data: {
+          batchId: null,
+          requestId: 'crawler-lpr-preview',
+          status: 'conflict',
+          createdCount: 1,
+          updatedCount: 0,
+          skippedCount: 1,
+          conflictCount: 1,
+          items: [
+            { quoteDate: '2026-05-20', action: 'skipped', message: 'same_rate' },
+            { quoteDate: '2026-04-20', action: 'created', message: 'missing_in_current' },
+            { quoteDate: '2026-03-20', action: 'conflict', message: 'verified_rate_differs' }
+          ]
+        }
+      })
+    } as Response);
+
+    const payload = {
+      appCode: 'lawsuit-material-assistant',
+      requestId: 'crawler-lpr-preview',
+      sourceKey: 'lpr_chinamoney',
+      payloadHash: 'hash-lpr-preview',
+      items: [
+        {
+          quoteDate: '2026-05-20',
+          oneYearRate: 3,
+          fiveYearPlusRate: 3.5,
+          sourceUrl: 'https://www.chinamoney.com.cn/chinese/bklpr/'
+        }
+      ]
+    };
+    const result = await previewLprRates(payload);
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/admin/data-governance/lpr-rates/preview', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    expect(result.batchId).toBeNull();
+    expect(result.createdCount).toBe(1);
+    expect(result.skippedCount).toBe(1);
+    expect(result.conflictCount).toBe(1);
   });
 
   it('posts production status request to backend endpoint', async () => {

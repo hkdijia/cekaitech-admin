@@ -8,6 +8,7 @@ import {
   pageAnnualCommonDataSyncBatches,
   pageLprRateRevisions,
   pageLprSyncBatches,
+  previewLprRates,
   syncAnnualCommonData,
   type AnnualCommonDataRevisionItem,
   type AnnualCommonDataSyncBatchItem,
@@ -17,6 +18,8 @@ import {
   syncLprRates,
   type LprRateRevisionItem,
   type LprRateSyncItem,
+  type LprRateSyncPayload,
+  type LprRateSyncResult,
   type LprSyncBatchItem
 } from '../../api/dataGovernance';
 
@@ -29,19 +32,31 @@ const loadingStatus = ref(false);
 const loadingBatches = ref(false);
 const loadingRevisions = ref(false);
 const publishing = ref(false);
+const previewingLpr = ref(false);
 const loadError = ref('');
 const batches = ref<LprSyncBatchItem[]>([]);
 const revisions = ref<LprRateRevisionItem[]>([]);
 const productionStatus = ref<ProductionStatus | null>(null);
 const annualBatches = ref<AnnualCommonDataSyncBatchItem[]>([]);
 const annualRevisions = ref<AnnualCommonDataRevisionItem[]>([]);
+const lprPreviewResult = ref<LprRateSyncResult | null>(null);
 const lprSyncJson = ref(JSON.stringify({
+  requestId: 'lpr-preview-2026-01-01-2026-06-11',
+  sourceKey: 'lpr_chinamoney',
+  sourceVersion: 'lpr-chinamoney-preview-2026-06-11',
+  sourceClient: 'crawler-preview-local',
+  collectedAt: '2026-06-11T02:00:00+08:00',
+  lastCheckedDate: '2026-06-11',
+  mode: 'strict',
+  payloadHash: 'replace-with-preview-payload-hash',
   items: [
     {
-      quoteDate: '2025-05-20',
+      quoteDate: '2026-05-20',
       oneYearRate: 3,
       fiveYearPlusRate: 3.5,
-      sourceVersion: 'pbc-2025-05-20'
+      sourceUrl: 'https://www.chinamoney.com.cn/chinese/bklpr/',
+      sourceRecordId: 'chinamoney-lpr-2026-05-20',
+      payloadHash: 'replace-with-item-payload-hash'
     }
   ]
 }, null, 2));
@@ -115,12 +130,32 @@ function elementTemplateSourceLabel(status: ProductionStatus) {
   return '当前示范文本来源';
 }
 
-function parseLprSyncJson(value: string): LprRateSyncItem[] {
-  const parsed = JSON.parse(value) as { items?: unknown };
+function parseLprSyncJson(value: string): Omit<LprRateSyncPayload, 'appCode'> {
+  const parsed = JSON.parse(value) as {
+    requestId?: unknown;
+    sourceKey?: unknown;
+    sourceVersion?: unknown;
+    sourceClient?: unknown;
+    collectedAt?: unknown;
+    lastCheckedDate?: unknown;
+    mode?: unknown;
+    payloadHash?: unknown;
+    items?: unknown;
+  };
   if (!Array.isArray(parsed.items)) {
     throw new Error('LPR JSON 必须包含 items 数组');
   }
-  return parsed.items as LprRateSyncItem[];
+  return {
+    requestId: typeof parsed.requestId === 'string' ? parsed.requestId : undefined,
+    sourceKey: typeof parsed.sourceKey === 'string' ? parsed.sourceKey : undefined,
+    sourceVersion: typeof parsed.sourceVersion === 'string' ? parsed.sourceVersion : undefined,
+    sourceClient: typeof parsed.sourceClient === 'string' ? parsed.sourceClient : undefined,
+    collectedAt: typeof parsed.collectedAt === 'string' ? parsed.collectedAt : undefined,
+    lastCheckedDate: typeof parsed.lastCheckedDate === 'string' ? parsed.lastCheckedDate : undefined,
+    mode: typeof parsed.mode === 'string' ? parsed.mode : undefined,
+    payloadHash: typeof parsed.payloadHash === 'string' ? parsed.payloadHash : undefined,
+    items: parsed.items as LprRateSyncItem[]
+  };
 }
 
 function parseAnnualCommonDataSyncJson(value: string): Omit<AnnualCommonDataSyncPayload, 'appCode'> {
@@ -246,17 +281,34 @@ async function publishLprSync() {
   publishing.value = true;
   loadError.value = '';
   try {
-    const items = parseLprSyncJson(lprSyncJson.value);
+    const parsed = parseLprSyncJson(lprSyncJson.value);
     const result = await syncLprRates({
       appCode: currentAppCode(),
-      items
+      ...parsed
     });
-    ElMessage.success(`LPR JSON 已发布：${result.batchNo}`);
+    ElMessage.success(`LPR JSON 已发布：${result.batchNo ?? result.requestId ?? '已完成'}`);
     await refreshAll();
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : 'LPR JSON 发布失败';
   } finally {
     publishing.value = false;
+  }
+}
+
+async function previewLprSync() {
+  previewingLpr.value = true;
+  loadError.value = '';
+  try {
+    const parsed = parseLprSyncJson(lprSyncJson.value);
+    lprPreviewResult.value = await previewLprRates({
+      appCode: currentAppCode(),
+      ...parsed
+    });
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : 'LPR JSON 预览失败';
+    lprPreviewResult.value = null;
+  } finally {
+    previewingLpr.value = false;
   }
 }
 
@@ -453,6 +505,13 @@ onMounted(refreshAll);
           />
           <div class="publish-actions">
             <el-button
+              data-test="preview-lpr-sync"
+              :loading="previewingLpr"
+              @click="previewLprSync"
+            >
+              预览 LPR JSON
+            </el-button>
+            <el-button
               data-test="publish-lpr-sync"
               type="primary"
               :icon="Upload"
@@ -461,6 +520,22 @@ onMounted(refreshAll);
             >
               发布 LPR JSON
             </el-button>
+          </div>
+          <div v-if="lprPreviewResult" class="preview-result" data-test="lpr-preview-result">
+            <div class="toolbar-title">预览结果</div>
+            <div class="preview-summary">
+              <el-tag type="success" effect="plain">新增 {{ lprPreviewResult.createdCount ?? 0 }}</el-tag>
+              <el-tag effect="plain">跳过 {{ lprPreviewResult.skippedCount ?? 0 }}</el-tag>
+              <el-tag type="warning" effect="plain">更新 {{ lprPreviewResult.updatedCount ?? 0 }}</el-tag>
+              <el-tag type="danger" effect="plain">冲突 {{ lprPreviewResult.conflictCount ?? 0 }}</el-tag>
+            </div>
+            <el-table :data="lprPreviewResult.items ?? []" row-key="quoteDate" size="small">
+              <el-table-column prop="quoteDate" label="报价日期" width="130" />
+              <el-table-column prop="oneYearRate" label="一年期" width="100" />
+              <el-table-column prop="fiveYearPlusRate" label="五年期以上" width="120" />
+              <el-table-column prop="action" label="动作" width="100" />
+              <el-table-column prop="message" label="说明" min-width="180" show-overflow-tooltip />
+            </el-table>
           </div>
         </el-tab-pane>
 
@@ -604,7 +679,23 @@ onMounted(refreshAll);
 .publish-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
   margin-top: 12px;
+}
+
+.preview-result {
+  margin-top: 16px;
+  border: 1px solid #eaecf0;
+  border-radius: 6px;
+  padding: 12px;
+  background: #fcfcfd;
+}
+
+.preview-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 12px;
 }
 
 @media (max-width: 720px) {
