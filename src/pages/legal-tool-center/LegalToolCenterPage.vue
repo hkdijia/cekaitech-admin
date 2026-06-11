@@ -22,6 +22,7 @@ import {
   saveLegalToolDataSource,
   saveLegalToolExposureGroup,
   saveLegalToolExposureItem,
+  updateLegalToolCapabilityStatus,
   saveLegalToolInteractionBlueprint,
   saveAnnualCommonData,
   saveLitigationFeeRule,
@@ -267,6 +268,22 @@ const capabilityStatusOptions = [
   { label: '人工暂缓', value: 'paused' },
   { label: '已下架', value: 'retired' }
 ];
+
+const capabilityStatusText: Record<string, string> = {
+  enabled: '已上线',
+  pending_release: '待发布',
+  blocked: '阻塞',
+  paused: '人工暂缓',
+  retired: '已下架'
+};
+
+const capabilityStatusOwnerNote: Record<string, string> = {
+  enabled: '人工确认通过门禁后上线',
+  pending_release: '回到待发布队列继续复核',
+  blocked: '门禁检查发现阻塞，暂不发布',
+  paused: '人工原因暂缓上线',
+  retired: '工具已下架，不进入前台和交付队列'
+};
 
 const audienceOptions = [
   { label: '通用用户', value: 'general_user' },
@@ -889,6 +906,32 @@ async function submitCapability() {
   }
 }
 
+async function updateCapabilityLifecycleStatus(row: LegalToolCapabilityItem, status: string) {
+  if (!canManageLegalToolCenter.value) {
+    return;
+  }
+  const statusText = capabilityStatusText[status] ?? status;
+  await ElMessageBox.confirm(
+    `确认将“${row.title}”状态调整为“${statusText}”？`,
+    '调整工具生命周期',
+    { type: status === 'enabled' ? 'warning' : 'info' }
+  );
+  submitting.value = true;
+  loadError.value = '';
+  try {
+    await updateLegalToolCapabilityStatus(row.id, {
+      status,
+      ownerNote: capabilityStatusOwnerNote[status] ?? ''
+    });
+    ElMessage.success(`工具状态已调整为${statusText}`);
+    await loadCapabilities();
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '工具状态调整失败';
+  } finally {
+    submitting.value = false;
+  }
+}
+
 function openDataSourceDialog(row?: LegalToolDataSourceItem) {
   Object.assign(dataSourceForm, {
     id: row?.id ?? 0,
@@ -1271,9 +1314,24 @@ onMounted(async () => {
             <el-table-column label="更新时间" width="180">
               <template #default="{ row }">{{ formatTime(row.updatedAt) }}</template>
             </el-table-column>
-            <el-table-column v-if="canManageLegalToolCenter" label="操作" width="100" fixed="right">
+            <el-table-column v-if="canManageLegalToolCenter" label="操作" width="168" fixed="right">
               <template #default="{ row }">
                 <el-button :icon="EditPen" text type="primary" @click="openCapabilityDialog(row)">编辑</el-button>
+                <el-dropdown trigger="click">
+                  <el-button text>状态</el-button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item
+                        v-for="item in capabilityStatusOptions"
+                        :key="item.value"
+                        :disabled="row.status === item.value"
+                        @click="updateCapabilityLifecycleStatus(row, item.value)"
+                      >
+                        {{ item.label }}
+                      </el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
               </template>
             </el-table-column>
           </el-table>

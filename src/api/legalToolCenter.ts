@@ -323,6 +323,11 @@ export interface LegalToolReadinessInspectQuery {
   appCode: string;
 }
 
+export interface LegalToolCapabilityStatusUpdatePayload {
+  status: string;
+  ownerNote?: string;
+}
+
 export interface LegalToolReadinessIssue {
   type: string;
   severity: string;
@@ -380,6 +385,16 @@ export function saveLegalToolCapability(
   payload: LegalToolCapabilityPayload
 ): Promise<LegalToolCapabilityItem> {
   return request<LegalToolCapabilityItem>('/api/admin/legal-tool-center/capabilities/save', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function updateLegalToolCapabilityStatus(
+  capabilityId: number,
+  payload: LegalToolCapabilityStatusUpdatePayload
+): Promise<LegalToolCapabilityItem> {
+  return request<LegalToolCapabilityItem>(`/api/admin/legal-tool-center/capabilities/${capabilityId}/status`, {
     method: 'POST',
     body: JSON.stringify(payload)
   });

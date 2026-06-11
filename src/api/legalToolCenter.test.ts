@@ -8,6 +8,7 @@ import {
   pageLegalToolExposureItems,
   pageLegalToolInteractionBlueprints,
   inspectLegalToolReadiness,
+  updateLegalToolCapabilityStatus,
   applyElementTemplateFileImport,
   manifestElementTemplateFiles,
   pageAnnualCommonData,
@@ -180,6 +181,63 @@ describe('legal tool center api', () => {
     expect(result.enabledCount).toBe(12);
     expect(result.readyCount).toBe(12);
     expect(result.items[0].readiness).toBe('live');
+  });
+
+  it('posts legal tool capability status update to backend endpoint', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          code: '0',
+          msg: '',
+          data: {
+            id: 1,
+            appCode: 'lawsuit-material-assistant',
+            toolKey: 'litigation_fee',
+            title: '诉讼费用',
+            description: '按标的额估算案件受理费参考值',
+            category: 'calculator',
+            status: 'paused',
+            audience: 'general_user',
+            sourceLevel: 'official',
+            dataDependency: 'static_table',
+            executionMode: 'local_static',
+            riskLevel: 'medium',
+            defaultIconKey: 'scale',
+            defaultTargetPath: '/pages/litigation-fee/litigation-fee',
+            defaultAction: 'navigate',
+            sourceName: '本地工具口径',
+            sourceUrl: '',
+            sourceVersion: 'local-v1',
+            sourceEffectiveDate: '',
+            lastCheckedDate: '2026-05-30',
+            ownerNote: '人工原因暂缓上线',
+            sortOrder: 20,
+            enabled: true,
+            createdAt: '',
+            updatedAt: ''
+          }
+        })
+      } as Response);
+
+    const result = await updateLegalToolCapabilityStatus(1, {
+      status: 'paused',
+      ownerNote: '人工原因暂缓上线'
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/admin/legal-tool-center/capabilities/1/status', {
+      method: 'POST',
+      body: JSON.stringify({
+        status: 'paused',
+        ownerNote: '人工原因暂缓上线'
+      }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    expect(result.status).toBe('paused');
+    expect(result.ownerNote).toBe('人工原因暂缓上线');
   });
 
   it('posts exposure group page, save and disable requests to backend endpoints', async () => {
