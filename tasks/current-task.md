@@ -10,7 +10,7 @@
 - 反馈编号：`无`
 - 来源文档：当前会话 / admin 功能扩张讨论
 - 本地台账：无
-- 当前状态：已实现，待最终验证、提交和用户推送。
+- 当前状态：已发布到生产测试环境，待用户在 admin 页面体验复核。
 
 ## 当前状态
 
@@ -31,16 +31,17 @@
 ## 未完成
 
 - 启用前强制门禁、批量推进工作流和状态变更审计尚未实现。
-- 本轮未部署 admin 静态资源；线上可见需要先部署 backend 新接口，再部署 admin。
+- 后续线上变更仍需通过 `scripts/deploy-admin-static.ps1` 构建并同步静态资源。
 
 ## 最近验证
 
 - 通过：`npm.cmd run test -- --run src/api/legalToolCenter.test.ts src/pages/miniapp-workbench/MiniappWorkbenchPage.test.ts src/pages/legal-tool-center/LegalToolCenterPage.test.ts`，3 个测试文件、26 项测试通过。
 - 通过：`npm.cmd run test -- --run src/api/legalToolCenter.test.ts src/pages/legal-tool-center/LegalToolCenterPage.test.ts`，2 个测试文件、24 项测试通过。
 - 通过：`npm.cmd run quality`，35 个测试文件、167 项测试通过，`vue-tsc --noEmit` 和 `vite build` 通过；构建保留既有 Rollup 注释 warning 和 chunk size warning。`git diff --check` 待复跑。
+- 通过：`scripts/deploy-admin-static.ps1`，上线资源包含 `LegalToolCenterPage-BsUFdRjP.js` 和 `MiniappWorkbenchPage-VNEwOTtl.js`；公网 smoke 确认 admin Basic Auth 返回 401、API health 返回 `UP`。
 
 ## 下一步
 
-1. 运行 admin 定向测试和空白检查。
-2. 与 backend 生命周期改动一起本地提交。
-3. 用户推送后，如需线上可见，先部署 backend 新镜像，再发布 admin 静态资源。
+1. 用户登录 `admin.cekaitech.cn`，切换到阳律通工作区，复核小程序工作台和法律工具中心“状态”下拉。
+2. 用户在小程序前台复核待发布工具不可见。
+3. 下一轮继续做启用前强制门禁、批量推进工作流和状态变更审计。
