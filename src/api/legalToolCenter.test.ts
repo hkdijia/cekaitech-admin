@@ -69,7 +69,7 @@ describe('legal tool center api', () => {
       title: '诉讼费用',
       description: '按标的额估算案件受理费参考值',
       category: 'calculator',
-      status: 'public',
+      status: 'enabled',
       audience: 'general_user',
       sourceLevel: 'official',
       dataDependency: 'static_table',
@@ -108,7 +108,7 @@ describe('legal tool center api', () => {
         title: '诉讼费用',
         description: '按标的额估算案件受理费参考值',
         category: 'calculator',
-        status: 'public',
+        status: 'enabled',
         audience: 'general_user',
         sourceLevel: 'official',
         dataDependency: 'static_table',
@@ -143,6 +143,11 @@ describe('legal tool center api', () => {
             appCode: 'lawsuit-material-assistant',
             totalCapabilityCount: 26,
             publicExposureCount: 18,
+            enabledCount: 12,
+            pendingReleaseCount: 8,
+            blockedStatusCount: 3,
+            pausedCount: 2,
+            retiredCount: 1,
             readyCount: 12,
             warningCount: 3,
             blockedCount: 11,
@@ -150,8 +155,8 @@ describe('legal tool center api', () => {
               {
                 toolKey: 'litigation_fee',
                 title: '诉讼费用',
-                status: 'public',
-                readiness: 'pass',
+                status: 'enabled',
+                readiness: 'live',
                 capabilityEnabled: true,
                 publicExposure: true,
                 reviewedBlueprint: true,
@@ -172,8 +177,9 @@ describe('legal tool center api', () => {
         'Content-Type': 'application/json'
       }
     });
+    expect(result.enabledCount).toBe(12);
     expect(result.readyCount).toBe(12);
-    expect(result.items[0].readiness).toBe('pass');
+    expect(result.items[0].readiness).toBe('live');
   });
 
   it('posts exposure group page, save and disable requests to backend endpoints', async () => {

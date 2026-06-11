@@ -3,9 +3,9 @@
 ## 当前状态
 
 - 当前分支：`master`
-- 当前阶段：admin 小程序工作台首片已实现，待最终质量检查、本地提交和用户推送。
-- 最近完成：新增 `/miniapp-workbench` 小程序工作台，切换到阳律通工作区后自动进入该工作台；页面调用 backend 工具完整性只读检查接口，展示工具总数、可启用候选、需复核、阻塞和逐工具问题。
-- 未完成：工具下架/恢复、启用前强制门禁尚未实现；如需线上可见，需要先部署 backend 新接口，再同步 admin 静态资源到服务器。
+- 当前阶段：admin 小程序工作台法律工具生命周期队列展示已实现，待最终质量检查、本地提交和用户推送。
+- 最近完成：新增 `/miniapp-workbench` 小程序工作台，切换到阳律通工作区后自动进入该工作台；页面调用 backend 工具完整性只读检查接口，按 `enabled/pending_release/blocked/paused/retired` 展示已上线、待发布、阻塞和人工暂缓队列。
+- 未完成：状态流转按钮、启用前强制门禁尚未实现；如需线上可见，需要先部署 backend 新接口，再同步 admin 静态资源到服务器。
 
 ## 关键文件
 
@@ -31,7 +31,7 @@
 
 ## 最近验证
 
-- [反馈编号：无] API RED：`legalToolCenter.test.ts` 失败于 `inspectLegalToolReadiness is not a function`。
+- [反馈编号：无] 法律工具生命周期展示：工作台摘要改为“已上线/待发布队列/阻塞/人工暂缓”，能力状态选项改为 `enabled/pending_release/blocked/paused/retired`，新增能力默认 `pending_release`；定向测试通过 3 个文件 24 项，`npm.cmd run quality` 通过 35 个文件 165 项并完成构建。- [反馈编号：无] API RED：`legalToolCenter.test.ts` 失败于 `inspectLegalToolReadiness is not a function`。
 - [反馈编号：无] 路由 RED：`router.test.ts` 失败于缺少 `/miniapp-workbench` 菜单和路由。
 - [反馈编号：无] 页面 RED：`MiniappWorkbenchPage.test.ts` 失败于页面文件不存在。
 - [反馈编号：无] 布局 RED：`AdminLayout.test.ts` 失败于切换业务工作区后未跳转小程序工作台。
@@ -43,7 +43,7 @@
 - 反馈编号：`无`
 - 来源文档：当前会话 / admin 功能扩张讨论
 - 本地台账：无
-- 当前状态：小程序工作台首片已实现，待最终质量检查
+- 当前状态：小程序工作台法律工具生命周期队列展示已实现，待最终质量检查
 
 ## 注意事项
 

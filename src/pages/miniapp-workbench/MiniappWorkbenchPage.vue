@@ -49,8 +49,14 @@ async function loadReadiness() {
 }
 
 function readinessTagType(value: string) {
+  if (value === 'live') {
+    return 'success';
+  }
   if (value === 'pass') {
     return 'success';
+  }
+  if (value === 'deferred') {
+    return 'info';
   }
   if (value === 'warning') {
     return 'warning';
@@ -59,8 +65,14 @@ function readinessTagType(value: string) {
 }
 
 function readinessText(value: string) {
+  if (value === 'live') {
+    return '已上线';
+  }
   if (value === 'pass') {
-    return '可启用';
+    return '待发布';
+  }
+  if (value === 'deferred') {
+    return '已暂缓';
   }
   if (value === 'warning') {
     return '需复核';
@@ -100,23 +112,30 @@ function issueMessages(issues: LegalToolReadinessIssue[]) {
         </el-col>
         <el-col :xs="24" :sm="12" :lg="6">
           <el-card shadow="never" class="metric-card">
-            <div class="metric-label">可启用候选</div>
-            <div class="metric-value">{{ readiness?.readyCount ?? '-' }}</div>
-            <div class="metric-hint">检查项全部通过</div>
+            <div class="metric-label">已上线</div>
+            <div class="metric-value">{{ readiness?.enabledCount ?? '-' }}</div>
+            <div class="metric-hint">前台可见工具</div>
           </el-card>
         </el-col>
         <el-col :xs="24" :sm="12" :lg="6">
           <el-card shadow="never" class="metric-card">
-            <div class="metric-label">需复核</div>
-            <div class="metric-value">{{ readiness?.warningCount ?? '-' }}</div>
-            <div class="metric-hint">可继续评估</div>
+            <div class="metric-label">待发布队列</div>
+            <div class="metric-value">{{ readiness?.pendingReleaseCount ?? '-' }}</div>
+            <div class="metric-hint">等待门禁检查和人工复核</div>
           </el-card>
         </el-col>
         <el-col :xs="24" :sm="12" :lg="6">
           <el-card shadow="never" class="metric-card">
             <div class="metric-label">阻塞</div>
             <div class="metric-value">{{ readiness?.blockedCount ?? '-' }}</div>
-            <div class="metric-hint">暂不建议启用</div>
+            <div class="metric-hint">待发布队列中的阻塞项</div>
+          </el-card>
+        </el-col>
+        <el-col :xs="24" :sm="12" :lg="6">
+          <el-card shadow="never" class="metric-card">
+            <div class="metric-label">人工暂缓</div>
+            <div class="metric-value">{{ readiness?.pausedCount ?? '-' }}</div>
+            <div class="metric-hint">不进入当前交付队列</div>
           </el-card>
         </el-col>
       </el-row>
@@ -136,6 +155,9 @@ function issueMessages(issues: LegalToolReadinessIssue[]) {
             <template #default="{ row }">
               <el-tag :type="readinessTagType(row.readiness)">{{ readinessText(row.readiness) }}</el-tag>
             </template>
+          </el-table-column>
+          <el-table-column label="生命周期" width="120">
+            <template #default="{ row }">{{ row.status }}</template>
           </el-table-column>
           <el-table-column label="公开入口" width="100">
             <template #default="{ row }">{{ row.publicExposure ? '已配置' : '缺失' }}</template>

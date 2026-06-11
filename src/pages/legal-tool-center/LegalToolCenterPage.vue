@@ -104,7 +104,7 @@ const capabilityForm = reactive<LegalToolCapabilityPayload>({
   title: '',
   description: '',
   category: 'calculator',
-  status: 'planned',
+  status: 'pending_release',
   audience: 'general_user',
   sourceLevel: 'pending_verification',
   dataDependency: 'static_table',
@@ -261,10 +261,11 @@ const categoryOptions = [
 ];
 
 const capabilityStatusOptions = [
-  { label: '公开', value: 'public' },
-  { label: '计划中', value: 'planned' },
-  { label: '灰度', value: 'pilot' },
-  { label: '隐藏', value: 'hidden' }
+  { label: '已上线', value: 'enabled' },
+  { label: '待发布', value: 'pending_release' },
+  { label: '阻塞', value: 'blocked' },
+  { label: '人工暂缓', value: 'paused' },
+  { label: '已下架', value: 'retired' }
 ];
 
 const audienceOptions = [

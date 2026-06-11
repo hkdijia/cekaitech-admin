@@ -25,6 +25,11 @@ describe('MiniappWorkbenchPage', () => {
       appCode: 'lawsuit-material-assistant',
       totalCapabilityCount: 26,
       publicExposureCount: 18,
+      enabledCount: 12,
+      pendingReleaseCount: 8,
+      blockedStatusCount: 3,
+      pausedCount: 2,
+      retiredCount: 1,
       readyCount: 12,
       warningCount: 3,
       blockedCount: 11,
@@ -32,8 +37,8 @@ describe('MiniappWorkbenchPage', () => {
         {
           toolKey: 'litigation_fee',
           title: '诉讼费用',
-          status: 'public',
-          readiness: 'pass',
+          status: 'enabled',
+          readiness: 'live',
           capabilityEnabled: true,
           publicExposure: true,
           reviewedBlueprint: true,
@@ -43,7 +48,7 @@ describe('MiniappWorkbenchPage', () => {
         {
           toolKey: 'level_jurisdiction',
           title: '级别管辖核对',
-          status: 'beta',
+          status: 'blocked',
           readiness: 'blocked',
           capabilityEnabled: true,
           publicExposure: false,
@@ -80,6 +85,8 @@ describe('MiniappWorkbenchPage', () => {
     expect(wrapper.text()).toContain('工具完整性');
     expect(wrapper.text()).toContain('26');
     expect(wrapper.text()).toContain('12');
+    expect(wrapper.text()).toContain('8');
+    expect(wrapper.text()).toContain('2');
     expect(wrapper.text()).toContain('级别管辖核对');
     expect(wrapper.text()).toContain('缺少可公开展示的工具入口');
   });

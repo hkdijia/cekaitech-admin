@@ -333,7 +333,7 @@ export interface LegalToolReadinessItem {
   toolKey: string;
   title: string;
   status: string;
-  readiness: 'pass' | 'warning' | 'blocked' | string;
+  readiness: 'pass' | 'warning' | 'blocked' | 'live' | 'deferred' | string;
   capabilityEnabled: boolean;
   publicExposure: boolean;
   reviewedBlueprint: boolean;
@@ -345,6 +345,11 @@ export interface LegalToolReadinessInspectResult {
   appCode: string;
   totalCapabilityCount: number;
   publicExposureCount: number;
+  enabledCount: number;
+  pendingReleaseCount: number;
+  blockedStatusCount: number;
+  pausedCount: number;
+  retiredCount: number;
   readyCount: number;
   warningCount: number;
   blockedCount: number;
