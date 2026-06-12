@@ -8,6 +8,7 @@ import {
   previewPrivateLendingResultTemplate,
   savePrivateLendingResultTemplate,
   type CaseResultTemplateOption,
+  type PrivateLendingDraftBlock,
   type PrivateLendingDocPackage,
   type PrivateLendingResultTemplate
 } from '../../api/privateLendingResultTemplate';
@@ -103,7 +104,13 @@ const draftLinesText = computed({
 const canManageTemplate = computed(() => auth.hasPermission('admin:private-lending-result-template:manage'));
 const selectedOption = computed(() => caseOptions.value.find((item) => item.caseType === selectedCaseType.value) || null);
 const canEditSelectedTemplate = computed(() => selectedOption.value?.templateSupported === true);
-const previewDraftLines = computed(() => formatDraftContent(previewPackage.value?.draftContent || ''));
+const previewDraftLines = computed(() => {
+  const draftBlocks = formatDraftBlocks(previewPackage.value?.draftBlocks || []);
+  if (draftBlocks.length) {
+    return draftBlocks;
+  }
+  return formatDraftContent(previewPackage.value?.draftContent || '');
+});
 
 type DraftLineType = 'title' | 'heading' | 'paragraph' | 'salutation' | 'court' | 'signature';
 
@@ -136,6 +143,31 @@ function formatDraftContent(content: string): DraftLine[] {
     }
     return { text: line, type: 'paragraph' };
   });
+}
+
+function normalizeDraftLineType(type: string): DraftLineType {
+  if (type === 'section_heading') {
+    return 'heading';
+  }
+  if (['title', 'heading', 'paragraph', 'salutation', 'court', 'signature'].includes(type)) {
+    return type as DraftLineType;
+  }
+  return 'paragraph';
+}
+
+function formatDraftBlocks(blocks: PrivateLendingDraftBlock[]): DraftLine[] {
+  return blocks
+    .map((block) => {
+      const text = (block.text || '').trim();
+      if (!text) {
+        return null;
+      }
+      return {
+        text,
+        type: normalizeDraftLineType(block.type || '')
+      };
+    })
+    .filter((line): line is DraftLine => Boolean(line));
 }
 
 function assignTemplate(template: PrivateLendingResultTemplate) {

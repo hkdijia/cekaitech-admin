@@ -140,6 +140,25 @@ describe('PrivateLendingResultTemplatePage', () => {
         draftContent: payload.caseType === 'divorce'
           ? '民事起诉状\n原告王五与被告赵六离婚纠纷。\n此致\n有管辖权的人民法院\n具状人：王五\n日期：未填写'
           : '民事起诉状\n李四向张三出借50000元。\n诉讼请求：\n1. 请求返还借款。\n此致\n有管辖权的人民法院\n具状人：李四\n日期：未填写',
+        draftBlocks: payload.caseType === 'divorce'
+          ? [
+            { type: 'title', text: '民事起诉状', align: 'center', indent: 0 },
+            { type: 'paragraph', text: '原告王五与被告赵六离婚纠纷。', align: 'left', indent: 2 },
+            { type: 'salutation', text: '此致', align: 'left', indent: 0 },
+            { type: 'court', text: '有管辖权的人民法院', align: 'left', indent: 2 },
+            { type: 'signature', text: '具状人：王五', align: 'right', indent: 0 },
+            { type: 'signature', text: '日期：未填写', align: 'right', indent: 0 }
+          ]
+          : [
+            { type: 'title', text: '民事起诉状', align: 'center', indent: 0 },
+            { type: 'paragraph', text: '李四向张三出借50000元。', align: 'left', indent: 2 },
+            { type: 'section_heading', text: '诉讼请求：', align: 'left', indent: 0 },
+            { type: 'paragraph', text: '1. 请求返还借款。', align: 'left', indent: 2 },
+            { type: 'salutation', text: '此致', align: 'left', indent: 0 },
+            { type: 'court', text: '有管辖权的人民法院', align: 'left', indent: 2 },
+            { type: 'signature', text: '具状人：李四', align: 'right', indent: 0 },
+            { type: 'signature', text: '日期：未填写', align: 'right', indent: 0 }
+          ],
         riskNotice: '仅作为材料整理辅助。',
         evidenceChecklist: payload.caseType === 'divorce' ? ['结婚证'] : ['付款凭证'],
         filingTips: payload.caseType === 'divorce' ? ['核对被告住所地'] : ['核对管辖法院'],
@@ -255,6 +274,42 @@ describe('PrivateLendingResultTemplatePage', () => {
       '具状人：李四',
       '日期：未填写'
     ]);
+  });
+
+  it('prefers backend draft blocks when rendering generated complaint preview', async () => {
+    previewTemplateMock.mockResolvedValueOnce({
+      appCode: 'lawsuit-material-assistant',
+      caseType: 'private_lending',
+      schemaVersion: 1,
+      docPackage: {
+        status: 'generated',
+        draftTitle: '借贷纠纷起诉材料草稿',
+        draftContent: '民事起诉状\n诉讼请求：\n这行正文不应被解析为签名。',
+        draftBlocks: [
+          { type: 'title', text: '民事起诉状', align: 'center', indent: 0 },
+          { type: 'section_heading', text: '诉讼请求：', align: 'left', indent: 0 },
+          { type: 'signature', text: '具状人：李四', align: 'right', indent: 0 }
+        ],
+        riskNotice: '仅作为材料整理辅助。',
+        evidenceChecklist: ['付款凭证'],
+        filingTips: ['核对管辖法院'],
+        filingGuideUrl: '/pages/value-added-detail/value-added-detail?serviceKey=filing_guidance',
+        filingGuideLabel: '查看立案指导服务',
+        generatedBy: 'backend_deterministic'
+      }
+    });
+    const wrapper = mountPage();
+    await flushAsyncUpdates();
+
+    const vm = wrapper.vm as unknown as {
+      previewTemplate: () => Promise<void>;
+    };
+    await vm.previewTemplate();
+    await flushAsyncUpdates();
+
+    expect(wrapper.find('.document-line-heading').text()).toBe('诉讼请求：');
+    expect(wrapper.find('.document-line-signature').text()).toBe('具状人：李四');
+    expect(wrapper.text()).not.toContain('这行正文不应被解析为签名');
   });
 
   it('hides save action when operator lacks manage permission', async () => {

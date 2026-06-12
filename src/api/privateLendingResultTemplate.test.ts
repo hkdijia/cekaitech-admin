@@ -81,6 +81,10 @@ describe('private lending result template api', () => {
               status: 'generated',
               draftTitle: '借贷纠纷起诉材料草稿',
               draftContent: '民事起诉状\n李四向张三出借50000元。',
+              draftBlocks: [
+                { type: 'title', text: '民事起诉状', align: 'center', indent: 0 },
+                { type: 'paragraph', text: '李四向张三出借50000元。', align: 'left', indent: 2 }
+              ],
               riskNotice: '仅作为材料整理辅助。',
               evidenceChecklist: ['付款凭证'],
               filingTips: ['核对管辖法院'],
@@ -141,5 +145,11 @@ describe('private lending result template api', () => {
     });
     expect(options[1].statusText).toBe('可编辑');
     expect(preview.docPackage.draftContent).toContain('李四向张三出借50000元');
+    expect(preview.docPackage.draftBlocks?.[0]).toEqual({
+      type: 'title',
+      text: '民事起诉状',
+      align: 'center',
+      indent: 0
+    });
   });
 });

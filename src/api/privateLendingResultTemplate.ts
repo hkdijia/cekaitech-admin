@@ -29,10 +29,18 @@ export interface PrivateLendingResultTemplatePreviewRequest {
   sampleFormData: Record<string, string>;
 }
 
+export interface PrivateLendingDraftBlock {
+  type: string;
+  text: string;
+  align?: string;
+  indent?: number;
+}
+
 export interface PrivateLendingDocPackage {
   status: string;
   draftTitle: string;
   draftContent: string;
+  draftBlocks?: PrivateLendingDraftBlock[];
   riskNotice: string;
   evidenceChecklist: string[];
   filingTips: string[];
