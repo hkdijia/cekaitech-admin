@@ -50,6 +50,35 @@ const sampleFormData = reactive<Record<string, string>>({
   caseFacts: '多次催要未还。'
 });
 
+const sampleDataByCaseType: Record<string, Record<string, string>> = {
+  private_lending: {
+    borrowerName: '张三',
+    lenderName: '李四',
+    principalAmount: '50000',
+    loanDate: '2026-05-01',
+    repaymentDate: '2026-06-01',
+    deliveryMethod: 'bank_transfer',
+    interestClaim: '按约定利息主张，具体以法院依法认定为准',
+    hasWrittenIOU: 'yes',
+    hasPaymentProof: 'yes',
+    borrowerIdKnown: 'no',
+    caseFacts: '多次催要未还。'
+  },
+  divorce: {
+    plaintiffName: '王五',
+    defendantName: '赵六',
+    marriageDate: '2018-05-20',
+    separationStatus: 'separated',
+    divorceClaim: 'request_divorce',
+    childArrangement: '婚生子由原告直接抚养，被告依法承担抚养费。',
+    propertyAndDebt: '共同财产及债务请求依法分割和确认。',
+    caseFacts: '双方长期分居，感情确已破裂，无法继续共同生活。',
+    hasMarriageCertificate: 'yes',
+    hasChildInfo: 'yes',
+    hasPropertyClues: 'no'
+  }
+};
+
 const evidenceText = computed({
   get: () => templateForm.evidenceChecklist.join('\n'),
   set: (value: string) => {
@@ -99,6 +128,14 @@ function payloadTemplate(): PrivateLendingResultTemplate {
     filingTips: [...templateForm.filingTips],
     draftLines: [...templateForm.draftLines]
   };
+}
+
+function assignSampleData(caseType: string) {
+  const nextSampleData = sampleDataByCaseType[caseType] || sampleDataByCaseType.private_lending;
+  for (const key of Object.keys(sampleFormData)) {
+    delete sampleFormData[key];
+  }
+  Object.assign(sampleFormData, nextSampleData);
 }
 
 async function loadTemplate() {
@@ -155,6 +192,7 @@ async function selectCaseType(caseType: string) {
   selectedCaseType.value = caseType;
   previewPackage.value = null;
   loadError.value = '';
+  assignSampleData(caseType);
   if (!canEditSelectedTemplate.value) {
     return;
   }
@@ -168,6 +206,7 @@ async function loadOptions() {
     caseOptions.value = await getCaseResultTemplateOptions(APP_CODE);
     const firstSupported = caseOptions.value.find((item) => item.templateSupported);
     selectedCaseType.value = firstSupported?.caseType || caseOptions.value[0]?.caseType || CASE_TYPE;
+    assignSampleData(selectedCaseType.value);
     if (firstSupported) {
       await loadTemplate();
     }

@@ -3,9 +3,9 @@
 ## 当前状态
 
 - 当前分支：`master`
-- 当前阶段：admin 已完成“起诉文书生成多结果模板配置首片”本地改造，并已发布静态资源到 `admin.cekaitech.cn`。
-- 最近完成：结果模板配置页从固定民间借贷升级为案件类型选择式页面，读取 backend 通用 options 接口展示 `private_lending/divorce/labor` 的配置状态；仅已支持的 `private_lending` 显示编辑器、保存和预览；上线资源为 `PrivateLendingResultTemplatePage-CKOHrQyy.js`。
-- 未完成：`divorce/labor` 仍没有真实生成 schema 和模板，页面只显示“暂无生成配置”；启用前强制门禁、批量推进队列和状态变更审计尚未实现。
+- 当前阶段：admin 已完成“起诉文书生成多结果模板配置首片”线上发布；本轮“离婚纠纷结果模板配置首片”已完成本地实现和 quality 验证，待提交。
+- 最近完成：结果模板配置页支持在 backend 返回 `divorce.templateSupported=true` 时加载离婚模板编辑器，并以离婚样例数据预览。
+- 未完成：本轮尚待提交和静态资源发布；`labor` 仍没有真实生成 schema 和模板，页面只显示“暂无生成配置”；启用前强制门禁、批量推进队列和状态变更审计尚未实现。
 
 ## 关键文件
 
@@ -43,6 +43,8 @@
 
 ## 最近验证
 
+- [反馈编号：无] 离婚纠纷结果模板配置首片：RED 阶段切换 `divorce` 后预览仍提交民间借贷样例字段；GREEN 后 `npm.cmd run test -- --run src/api/privateLendingResultTemplate.test.ts src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts` 通过 2 个测试文件、6 项。
+- [反馈编号：无] 离婚纠纷结果模板配置首片收口：`npm.cmd run quality` 通过 35 个测试文件、169 项并完成生产构建；`git diff --check` 通过，仅有 Windows 换行提示。
 - [反馈编号：无] 起诉文书生成多模板配置首片：RED 阶段 API 函数、案件选择方法和菜单描述测试失败；GREEN 后 `npm.cmd run test -- --run src/api/privateLendingResultTemplate.test.ts src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts src/router/router.test.ts` 通过 3 个测试文件、26 项。
 - [反馈编号：无] 起诉文书生成多模板配置 admin 发布：`scripts/deploy-admin-static.ps1` 构建并同步到 `/data/cekaitech-admin/`，上线资源包含 `PrivateLendingResultTemplatePage-CKOHrQyy.js`；服务器静态文件确认包含 `/api/admin/case-result-template` 和“结果模板配置”文案，公网 smoke 通过。
 - [反馈编号：无] 页面菜单生命周期归口：`npm.cmd run test -- --run src/api/miniappOrchestration.test.ts src/pages/miniapp-orchestration/MiniappOrchestrationPage.test.ts src/pages/legal-tool-center/LegalToolCenterPage.test.ts src/api/legalToolCenter.test.ts` 通过 4 个测试文件、35 项；`npm.cmd run quality` 通过 35 个测试文件、168 项并完成构建；`git diff --check` 通过。
@@ -61,7 +63,7 @@
 - 反馈编号：`无`
 - 来源文档：当前会话 / admin 功能扩张讨论
 - 本地台账：无
-- 当前状态：小程序工作台法律工具生命周期队列已发布到生产测试环境；页面菜单统一承载入口上线生命周期已完成；起诉文书生成多结果模板配置首片已部署生产测试环境
+- 当前状态：小程序工作台法律工具生命周期队列已发布到生产测试环境；页面菜单统一承载入口上线生命周期已完成；起诉文书生成多结果模板配置首片已部署生产测试环境；离婚纠纷结果模板配置首片已完成本地验证，待提交/发布
 
 ## 注意事项
 
@@ -72,5 +74,5 @@
 
 ## 下一步建议
 
-1. 后续梳理 `离婚纠纷/劳动争议` 的真实生成 schema、模板占位符、表单字段和入口启用门禁。
-2. 线上人工验收 `admin.cekaitech.cn` 的“结果模板配置”：民间借贷可编辑，离婚/劳动显示“暂无生成配置”。
+1. 完成本轮 admin quality、提交和静态资源发布后，线上验收“结果模板配置”：民间借贷和离婚可编辑预览，劳动显示“暂无生成配置”。
+2. 后续梳理 `劳动争议` 的真实生成 schema、模板占位符、表单字段和入口启用门禁。

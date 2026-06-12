@@ -40,11 +40,11 @@ describe('private lending result template api', () => {
               appCode: 'lawsuit-material-assistant',
               caseType: 'divorce',
               title: '离婚纠纷',
-              configured: false,
-              generationEnabled: false,
-              templateSupported: false,
-              schemaVersion: null,
-              statusText: '暂无生成配置'
+              configured: true,
+              generationEnabled: true,
+              templateSupported: true,
+              schemaVersion: 1,
+              statusText: '可编辑'
             }
           ]
         })
@@ -139,7 +139,7 @@ describe('private lending result template api', () => {
       }),
       headers: { 'Content-Type': 'application/json' }
     });
-    expect(options[1].statusText).toBe('暂无生成配置');
+    expect(options[1].statusText).toBe('可编辑');
     expect(preview.docPackage.draftContent).toContain('李四向张三出借50000元');
   });
 });

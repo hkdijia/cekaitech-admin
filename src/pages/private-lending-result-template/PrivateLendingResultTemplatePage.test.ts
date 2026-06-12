@@ -34,6 +34,16 @@ const template = {
   draftLines: ['民事起诉状', '{{lenderName}}向{{borrowerName}}出借{{principalAmount}}元。']
 };
 
+const divorceTemplate = {
+  draftTitle: '离婚纠纷起诉材料草稿',
+  riskNotice: '仅作为材料整理辅助。',
+  filingGuideUrl: '/pages/value-added-detail/value-added-detail?serviceKey=filing_guidance',
+  filingGuideLabel: '查看立案指导服务',
+  evidenceChecklist: ['结婚证、婚姻登记记录或能够证明婚姻关系的材料'],
+  filingTips: ['核对被告住所地或经常居住地'],
+  draftLines: ['民事起诉状', '原告{{plaintiffName}}与被告{{defendantName}}离婚纠纷。']
+};
+
 function mountPage(permissions: string[] = [
   'admin:private-lending-result-template:view',
   'admin:private-lending-result-template:manage'
@@ -89,11 +99,11 @@ describe('PrivateLendingResultTemplatePage', () => {
         title: '离婚纠纷',
         catalogStatus: 'coming_soon',
         catalogEnabled: true,
-        configured: false,
-        generationEnabled: false,
-        templateSupported: false,
-        schemaVersion: null,
-        statusText: '暂无生成配置'
+        configured: true,
+        generationEnabled: true,
+        templateSupported: true,
+        schemaVersion: 1,
+        statusText: '可编辑'
       },
       {
         appCode: 'lawsuit-material-assistant',
@@ -108,34 +118,36 @@ describe('PrivateLendingResultTemplatePage', () => {
         statusText: '暂无生成配置'
       }
     ]);
-    getTemplateMock.mockResolvedValue({
+    getTemplateMock.mockImplementation(async (_appCode: string, caseType: string) => ({
       appCode: 'lawsuit-material-assistant',
-      caseType: 'private_lending',
+      caseType,
       schemaVersion: 1,
-      template
-    });
+      template: caseType === 'divorce' ? divorceTemplate : template
+    }));
     saveTemplateMock.mockResolvedValue({
       appCode: 'lawsuit-material-assistant',
       caseType: 'private_lending',
       schemaVersion: 1,
       template
     });
-    previewTemplateMock.mockResolvedValue({
+    previewTemplateMock.mockImplementation(async (payload) => ({
       appCode: 'lawsuit-material-assistant',
-      caseType: 'private_lending',
+      caseType: payload.caseType,
       schemaVersion: 1,
       docPackage: {
         status: 'generated',
-        draftTitle: '借贷纠纷起诉材料草稿',
-        draftContent: '民事起诉状\n李四向张三出借50000元。',
+        draftTitle: payload.caseType === 'divorce' ? '离婚纠纷起诉材料草稿' : '借贷纠纷起诉材料草稿',
+        draftContent: payload.caseType === 'divorce'
+          ? '民事起诉状\n原告王五与被告赵六离婚纠纷。'
+          : '民事起诉状\n李四向张三出借50000元。',
         riskNotice: '仅作为材料整理辅助。',
-        evidenceChecklist: ['付款凭证'],
-        filingTips: ['核对管辖法院'],
+        evidenceChecklist: payload.caseType === 'divorce' ? ['结婚证'] : ['付款凭证'],
+        filingTips: payload.caseType === 'divorce' ? ['核对被告住所地'] : ['核对管辖法院'],
         filingGuideUrl: '/pages/value-added-detail/value-added-detail?serviceKey=filing_guidance',
         filingGuideLabel: '查看立案指导服务',
         generatedBy: 'backend_deterministic'
       }
-    });
+    }));
   });
 
   it('loads template and renders structured editor', async () => {
@@ -148,29 +160,42 @@ describe('PrivateLendingResultTemplatePage', () => {
     expect(wrapper.text()).toContain('结果模板配置');
     expect(wrapper.text()).toContain('民间借贷纠纷');
     expect(wrapper.text()).toContain('离婚纠纷');
-    expect(wrapper.text()).toContain('暂无生成配置');
+    expect(wrapper.text()).toContain('可编辑');
     const vm = wrapper.vm as unknown as { templateForm: typeof template };
     expect(vm.templateForm.draftTitle).toBe('借贷纠纷起诉材料草稿');
     expect(vm.templateForm.evidenceChecklist).toContain('付款凭证');
     expect(vm.templateForm.draftLines).toContain('{{lenderName}}向{{borrowerName}}出借{{principalAmount}}元。');
   });
 
-  it('does not load editor when selected case type has no supported template', async () => {
+  it('loads divorce editor and previews with divorce sample data', async () => {
     const wrapper = mountPage();
     await flushAsyncUpdates();
 
     const vm = wrapper.vm as unknown as {
       selectedCaseType: string;
       selectCaseType: (caseType: string) => Promise<void>;
+      templateForm: typeof template;
+      previewTemplate: () => Promise<void>;
     };
     await vm.selectCaseType('divorce');
     await flushAsyncUpdates();
+    await vm.previewTemplate();
+    await flushAsyncUpdates();
 
     expect(vm.selectedCaseType).toBe('divorce');
-    expect(getTemplateMock).toHaveBeenCalledTimes(1);
+    expect(getTemplateMock).toHaveBeenCalledWith('lawsuit-material-assistant', 'divorce');
+    expect(vm.templateForm.draftTitle).toBe('离婚纠纷起诉材料草稿');
+    expect(previewTemplateMock).toHaveBeenLastCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      caseType: 'divorce',
+      sampleFormData: expect.objectContaining({
+        plaintiffName: '王五',
+        defendantName: '赵六',
+        marriageDate: '2018-05-20'
+      })
+    });
     expect(wrapper.text()).toContain('离婚纠纷');
-    expect(wrapper.text()).toContain('暂无生成配置');
-    expect(wrapper.text()).not.toContain('草稿正文');
+    expect(wrapper.text()).toContain('原告王五与被告赵六离婚纠纷');
   });
 
   it('saves template through backend when operator can manage', async () => {
