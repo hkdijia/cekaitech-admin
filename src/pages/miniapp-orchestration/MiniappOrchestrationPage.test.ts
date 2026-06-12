@@ -51,6 +51,13 @@ const lprEntry: MiniappOrchestrationNode = {
   capabilityKey: 'lpr'
 };
 
+const pendingLprEntry: MiniappOrchestrationNode = {
+  ...lprEntry,
+  status: 'pending_release',
+  statusText: '待发布',
+  releaseStage: 'pilot'
+};
+
 const profileAuditsEntry: MiniappOrchestrationNode = {
   nodeType: 'feature',
   sourceType: 'profile_local_feature',
@@ -321,10 +328,37 @@ describe('MiniappOrchestrationPage', () => {
     expect(wrapper.find('.detail-hero').exists()).toBe(true);
     expect(wrapper.text()).toContain('菜单层级');
     expect(wrapper.text()).toContain('功能');
-    expect(wrapper.text()).toContain('展示状态');
-    expect(wrapper.text()).toContain('已启用');
+    expect(wrapper.text()).toContain('生命周期');
+    expect(wrapper.text()).toContain('已上线');
     expect(wrapper.text()).toContain('目标页面');
     expect(wrapper.text()).toContain('/pages/litigation-fee/litigation-fee');
+  });
+
+  it('uses menu lifecycle status as the publishing control for feature nodes', async () => {
+    loadMiniappOrchestrationTreeMock.mockResolvedValueOnce({
+      ...tree,
+      children: [
+        {
+          ...tree.children[0],
+          children: [
+            {
+              ...tree.children[0].children[0],
+              children: [pendingLprEntry]
+            }
+          ]
+        },
+        tree.children[1]
+      ]
+    });
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+    await wrapper.find('[data-test="node-feature-lpr"]').trigger('click');
+    await nextTick();
+
+    expect(wrapper.text()).toContain('生命周期');
+    expect(wrapper.text()).toContain('待发布');
+    expect(wrapper.text()).not.toContain('业务状态');
   });
 
   it('collapses and expands module children to keep the menu tree readable', async () => {
@@ -367,8 +401,8 @@ describe('MiniappOrchestrationPage', () => {
       description: '估算财产案件受理费',
       targetPath: '/pages/litigation-fee/litigation-fee',
       action: 'navigate',
-      status: 'open',
-      statusText: '可用',
+      status: 'published',
+      statusText: '已上线',
       iconKey: 'scale',
       visibility: 'public',
       releaseStage: 'public',

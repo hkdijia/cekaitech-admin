@@ -22,7 +22,6 @@ import {
   saveLegalToolDataSource,
   saveLegalToolExposureGroup,
   saveLegalToolExposureItem,
-  updateLegalToolCapabilityStatus,
   saveLegalToolInteractionBlueprint,
   saveAnnualCommonData,
   saveLitigationFeeRule,
@@ -260,30 +259,6 @@ const categoryOptions = [
   { label: '文本模板', value: 'template' },
   { label: '查询核对', value: 'lookup' }
 ];
-
-const capabilityStatusOptions = [
-  { label: '已上线', value: 'enabled' },
-  { label: '待发布', value: 'pending_release' },
-  { label: '阻塞', value: 'blocked' },
-  { label: '人工暂缓', value: 'paused' },
-  { label: '已下架', value: 'retired' }
-];
-
-const capabilityStatusText: Record<string, string> = {
-  enabled: '已上线',
-  pending_release: '待发布',
-  blocked: '阻塞',
-  paused: '人工暂缓',
-  retired: '已下架'
-};
-
-const capabilityStatusOwnerNote: Record<string, string> = {
-  enabled: '人工确认通过门禁后上线',
-  pending_release: '回到待发布队列继续复核',
-  blocked: '门禁检查发现阻塞，暂不发布',
-  paused: '人工原因暂缓上线',
-  retired: '工具已下架，不进入前台和交付队列'
-};
 
 const audienceOptions = [
   { label: '通用用户', value: 'general_user' },
@@ -906,32 +881,6 @@ async function submitCapability() {
   }
 }
 
-async function updateCapabilityLifecycleStatus(row: LegalToolCapabilityItem, status: string) {
-  if (!canManageLegalToolCenter.value) {
-    return;
-  }
-  const statusText = capabilityStatusText[status] ?? status;
-  await ElMessageBox.confirm(
-    `确认将“${row.title}”状态调整为“${statusText}”？`,
-    '调整工具生命周期',
-    { type: status === 'enabled' ? 'warning' : 'info' }
-  );
-  submitting.value = true;
-  loadError.value = '';
-  try {
-    await updateLegalToolCapabilityStatus(row.id, {
-      status,
-      ownerNote: capabilityStatusOwnerNote[status] ?? ''
-    });
-    ElMessage.success(`工具状态已调整为${statusText}`);
-    await loadCapabilities();
-  } catch (error) {
-    loadError.value = error instanceof Error ? error.message : '工具状态调整失败';
-  } finally {
-    submitting.value = false;
-  }
-}
-
 function openDataSourceDialog(row?: LegalToolDataSourceItem) {
   Object.assign(dataSourceForm, {
     id: row?.id ?? 0,
@@ -1300,38 +1249,17 @@ onMounted(async () => {
             <el-table-column prop="title" label="名称" width="150" />
             <el-table-column prop="description" label="说明" min-width="220" show-overflow-tooltip />
             <el-table-column prop="category" label="分类" width="110" />
-            <el-table-column prop="status" label="能力状态" width="110" />
             <el-table-column prop="sourceLevel" label="来源等级" width="120" />
             <el-table-column prop="riskLevel" label="风险" width="90" />
             <el-table-column prop="executionMode" label="执行方式" width="130" />
             <el-table-column prop="defaultIconKey" label="默认图标" width="110" />
             <el-table-column prop="sortOrder" label="排序" width="80" />
-            <el-table-column label="状态" width="104">
-              <template #default="{ row }">
-                <el-tag :type="statusTagType(row.enabled)" effect="plain">{{ row.enabled ? '启用' : '禁用' }}</el-tag>
-              </template>
-            </el-table-column>
             <el-table-column label="更新时间" width="180">
               <template #default="{ row }">{{ formatTime(row.updatedAt) }}</template>
             </el-table-column>
-            <el-table-column v-if="canManageLegalToolCenter" label="操作" width="168" fixed="right">
+            <el-table-column v-if="canManageLegalToolCenter" label="操作" width="100" fixed="right">
               <template #default="{ row }">
                 <el-button :icon="EditPen" text type="primary" @click="openCapabilityDialog(row)">编辑</el-button>
-                <el-dropdown trigger="click">
-                  <el-button text>状态</el-button>
-                  <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item
-                        v-for="item in capabilityStatusOptions"
-                        :key="item.value"
-                        :disabled="row.status === item.value"
-                        @click="updateCapabilityLifecycleStatus(row, item.value)"
-                      >
-                        {{ item.label }}
-                      </el-dropdown-item>
-                    </el-dropdown-menu>
-                  </template>
-                </el-dropdown>
               </template>
             </el-table-column>
           </el-table>
@@ -1726,11 +1654,6 @@ onMounted(async () => {
         <el-form-item label="分类">
           <el-select v-model="capabilityForm.category" class="full-input">
             <el-option v-for="item in categoryOptions" :key="item.value" :label="item.label" :value="item.value" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="能力状态">
-          <el-select v-model="capabilityForm.status" class="full-input">
-            <el-option v-for="item in capabilityStatusOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="目标用户">

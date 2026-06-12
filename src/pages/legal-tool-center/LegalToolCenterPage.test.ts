@@ -24,7 +24,6 @@ import {
   saveLegalToolDataSource,
   saveLegalToolExposureGroup,
   saveLegalToolExposureItem,
-  updateLegalToolCapabilityStatus,
   saveLegalToolInteractionBlueprint,
   saveAnnualCommonData,
   saveLitigationFeeRule,
@@ -55,7 +54,6 @@ vi.mock('../../api/legalToolCenter', () => ({
   saveLitigationFeeRule: vi.fn(),
   previewLitigationFeeRule: vi.fn(),
   publishLitigationFeeRule: vi.fn(),
-  updateLegalToolCapabilityStatus: vi.fn(),
   manifestElementTemplateFiles: vi.fn(),
   validateElementTemplateFiles: vi.fn(),
   previewElementTemplateFileImport: vi.fn(),
@@ -82,7 +80,6 @@ const pageLitigationFeeRulesMock = vi.mocked(pageLitigationFeeRules);
 const saveLitigationFeeRuleMock = vi.mocked(saveLitigationFeeRule);
 const previewLitigationFeeRuleMock = vi.mocked(previewLitigationFeeRule);
 const publishLitigationFeeRuleMock = vi.mocked(publishLitigationFeeRule);
-const updateLegalToolCapabilityStatusMock = vi.mocked(updateLegalToolCapabilityStatus);
 const manifestElementTemplateFilesMock = vi.mocked(manifestElementTemplateFiles);
 const validateElementTemplateFilesMock = vi.mocked(validateElementTemplateFiles);
 const previewElementTemplateFileImportMock = vi.mocked(previewElementTemplateFileImport);
@@ -1519,32 +1516,15 @@ describe('LegalToolCenterPage', () => {
     });
   });
 
-  it('updates capability lifecycle status through the narrow backend endpoint', async () => {
-    updateLegalToolCapabilityStatusMock.mockResolvedValue({
-      ...capability,
-      status: 'paused',
-      ownerNote: '人工原因暂缓上线'
-    });
+  it('does not expose publishing lifecycle actions in the capability table', async () => {
     const wrapper = mountPage();
 
     await flushAsyncUpdates();
-    pageLegalToolCapabilitiesMock.mockClear();
 
-    const vm = wrapper.vm as unknown as {
-      updateCapabilityLifecycleStatus: (row: typeof capability, status: string) => Promise<void>;
-    };
-    await vm.updateCapabilityLifecycleStatus(capability, 'paused');
-    await flushAsyncUpdates();
-
-    expect(updateLegalToolCapabilityStatusMock).toHaveBeenCalledWith(1, {
-      status: 'paused',
-      ownerNote: '人工原因暂缓上线'
-    });
-    expect(pageLegalToolCapabilitiesMock).toHaveBeenCalledWith({
-      appCode: 'lawsuit-material-assistant',
-      pageNo: 1,
-      pageSize: 50
-    });
+    expect(wrapper.text()).toContain('工具能力库');
+    expect(wrapper.text()).not.toContain('能力状态');
+    expect(wrapper.text()).not.toContain('调整工具生命周期');
+    expect(wrapper.text()).not.toContain('人工暂缓');
   });
 
   it('saves data sources and blueprints through backend without audit fields', async () => {

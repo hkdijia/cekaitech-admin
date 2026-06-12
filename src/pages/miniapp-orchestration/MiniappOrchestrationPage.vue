@@ -30,8 +30,8 @@ const entryForm = reactive<MiniappOrchestrationEntryPayload>({
   description: '',
   targetPath: '',
   action: 'navigate',
-  status: 'open',
-  statusText: '可用',
+  status: 'published',
+  statusText: '已上线',
   iconKey: '',
   visibility: 'public',
   releaseStage: 'public',
@@ -49,10 +49,10 @@ const actionOptions = [
 ];
 
 const statusOptions = [
-  { label: '开放', value: 'open' },
-  { label: '暂未开放', value: 'coming_soon' },
-  { label: '预约咨询', value: 'consultation' },
-  { label: '锁定', value: 'locked' }
+  { label: '已上线', value: 'published' },
+  { label: '待发布', value: 'pending_release' },
+  { label: '人工暂缓', value: 'paused' },
+  { label: '已下架', value: 'retired' }
 ];
 
 const visibilityOptions = [
@@ -213,6 +213,30 @@ function readonlyNoteText() {
   return '当前账号只有查看权限。';
 }
 
+function statusOptionLabel(value?: string) {
+  return statusOptions.find((item) => item.value === value)?.label ?? value ?? '-';
+}
+
+function normalizeMenuLifecycleStatus(status?: string) {
+  if (status === 'open' || status === 'consultation') {
+    return 'published';
+  }
+  if (status === 'coming_soon') {
+    return 'pending_release';
+  }
+  if (status === 'locked' || status === 'disabled') {
+    return 'paused';
+  }
+  return status || 'published';
+}
+
+function normalizeMenuLifecycleStatusText(status: string, statusText?: string) {
+  if (statusText === '可用' || !statusText) {
+    return status === 'published' ? '已上线' : statusOptionLabel(status);
+  }
+  return statusText;
+}
+
 function hasChildren(node: MiniappOrchestrationNode) {
   return Boolean(node.children && node.children.length > 0);
 }
@@ -237,6 +261,7 @@ function selectNode(node: MiniappOrchestrationNode) {
   if (node.nodeType !== 'feature') {
     return;
   }
+  const normalizedStatus = normalizeMenuLifecycleStatus(node.status);
   Object.assign(entryForm, {
     sourceType: node.sourceType,
     sourceId: node.sourceId || 0,
@@ -244,8 +269,8 @@ function selectNode(node: MiniappOrchestrationNode) {
     description: node.description || '',
     targetPath: node.targetPath || '',
     action: node.action || 'navigate',
-    status: node.status || 'open',
-    statusText: node.statusText || '可用',
+    status: normalizedStatus,
+    statusText: normalizeMenuLifecycleStatusText(normalizedStatus, node.statusText),
     iconKey: node.iconKey || '',
     visibility: node.visibility || 'public',
     releaseStage: node.releaseStage || 'public',
@@ -381,8 +406,8 @@ onMounted(loadTree);
                 <strong>{{ nodeTypeLabel(selectedNode.nodeType) }}</strong>
               </div>
               <div class="summary-item">
-                <span>展示状态</span>
-                <strong>{{ selectedNode.enabled ? '已启用' : '已停用' }}</strong>
+                <span>生命周期</span>
+                <strong>{{ selectedIsFeature ? statusOptionLabel(entryForm.status) : '-' }}</strong>
               </div>
               <div class="summary-item">
                 <span>目标页面</span>
@@ -412,7 +437,7 @@ onMounted(loadTree);
                 <el-option v-for="item in actionOptions" :key="item.value" :label="item.label" :value="item.value" />
               </el-select>
             </el-form-item>
-            <el-form-item label="业务状态">
+            <el-form-item label="生命周期">
               <el-select v-model="entryForm.status" class="full-input" :disabled="!selectedCanManage">
                 <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
               </el-select>
