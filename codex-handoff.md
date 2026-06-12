@@ -3,8 +3,8 @@
 ## 当前状态
 
 - 当前分支：`master`
-- 当前阶段：admin 已完成“起诉文书生成多结果模板配置首片”“离婚纠纷结果模板配置首片”和“劳动争议结果模板配置首片”线上发布。
-- 最近完成：结果模板配置页支持在 backend 返回 `labor.templateSupported=true` 时加载劳动争议模板编辑器，并以劳动争议样例数据预览；线上资源 `PrivateLendingResultTemplatePage-CGnkRVZa.js` 已包含 labor 样例字段。
+- 当前阶段：admin 已完成“起诉文书生成多结果模板配置首片”“离婚纠纷结果模板配置首片”和“劳动争议结果模板配置首片”线上发布；页面菜单管理默认展开策略已完成本地优化。
+- 最近完成：页面菜单管理进入后默认展开到小程序、Tab 和模块分组层级，直接包含功能叶子项的分组默认收起；结果模板配置页支持在 backend 返回 `labor.templateSupported=true` 时加载劳动争议模板编辑器，并以劳动争议样例数据预览。
 - 未完成：劳动争议真机/线上体验验收；启用前强制门禁、批量推进队列和状态变更审计尚未实现。
 
 ## 关键文件
@@ -45,6 +45,7 @@
 
 - [反馈编号：无] 离婚纠纷结果模板配置首片：RED 阶段切换 `divorce` 后预览仍提交民间借贷样例字段；GREEN 后 `npm.cmd run test -- --run src/api/privateLendingResultTemplate.test.ts src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts` 通过 2 个测试文件、6 项。
 - [反馈编号：无] 劳动争议结果模板配置首片：RED 阶段切换 `labor` 后预览仍提交民间借贷样例字段；GREEN 后 `npm.cmd test -- PrivateLendingResultTemplatePage.test.ts` 通过 1 个测试文件、8 项。
+- [反馈编号：无] 页面菜单默认展开层级：RED 阶段 `MiniappOrchestrationPage.test.ts` 失败于默认仍展示 `诉讼费计算/LPR` 叶子项；GREEN 后 `npm.cmd run test -- --run src/pages/miniapp-orchestration/MiniappOrchestrationPage.test.ts` 通过 1 个测试文件、10 项。
 - [反馈编号：无] 劳动争议结果模板配置首片收口：`npm.cmd run quality` 通过 35 个测试文件、172 项并完成生产构建；`git diff --check` 通过，仅有 Windows 换行提示。
 - [反馈编号：无] 劳动争议结果模板配置发布：`scripts/deploy-admin-static.ps1` 构建并同步到 `/data/cekaitech-admin/`，上线资源包含 `PrivateLendingResultTemplatePage-CGnkRVZa.js`；服务器静态文件确认包含 `employeeName/labor/劳动争议` 样例字段，公网 smoke 通过。
 - [反馈编号：无] 离婚纠纷结果模板配置首片收口：`npm.cmd run quality` 通过 35 个测试文件、169 项并完成生产构建；`git diff --check` 通过，仅有 Windows 换行提示。

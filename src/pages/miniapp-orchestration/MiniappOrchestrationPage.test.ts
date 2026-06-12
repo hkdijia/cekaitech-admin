@@ -262,6 +262,11 @@ async function flushAsyncUpdates() {
   }
 }
 
+async function expandNode(wrapper: ReturnType<typeof mountPage>, selector: string) {
+  await wrapper.find(selector).trigger('click');
+  await nextTick();
+}
+
 describe('MiniappOrchestrationPage', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -280,16 +285,32 @@ describe('MiniappOrchestrationPage', () => {
     expect(wrapper.text()).toContain('页面菜单管理');
     expect(wrapper.text()).toContain('常用功能');
     expect(wrapper.text()).toContain('工具类');
-    expect(wrapper.text()).toContain('诉讼费计算');
     expect(wrapper.text()).toContain('我的');
-    expect(wrapper.text()).toContain('我的审核');
-    expect(wrapper.text()).toContain('LPR');
     expect(wrapper.text()).not.toContain('诉讼计算');
     expect(wrapper.text()).not.toContain('底部 Tab：工具页');
     expect(wrapper.text()).not.toContain('首页快捷入口');
     expect(wrapper.find('.menu-tree-shell').exists()).toBe(true);
     expect(wrapper.find('.tree-node-accent').exists()).toBe(true);
     expect(wrapper.text()).toContain('2 项');
+  });
+
+  it('initially expands parent groups but keeps leaf feature lists collapsed', async () => {
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('lawsuit-material-assistant');
+    expect(wrapper.text()).toContain('常用功能');
+    expect(wrapper.text()).toContain('工具类');
+    expect(wrapper.text()).toContain('我的');
+    expect(wrapper.text()).not.toContain('诉讼费计算');
+    expect(wrapper.text()).not.toContain('LPR');
+
+    await wrapper.find('[data-test="toggle-module-tools"]').trigger('click');
+    await nextTick();
+
+    expect(wrapper.text()).toContain('诉讼费计算');
+    expect(wrapper.text()).toContain('LPR');
   });
 
   it('filters the tree so operators can locate a feature by title or path', async () => {
@@ -309,6 +330,7 @@ describe('MiniappOrchestrationPage', () => {
     const wrapper = mountPage();
 
     await flushAsyncUpdates();
+    await expandNode(wrapper, '[data-test="toggle-tab-tab_me"]');
     await wrapper.find('[data-test="node-feature-audits"]').trigger('click');
     await nextTick();
 
@@ -322,6 +344,7 @@ describe('MiniappOrchestrationPage', () => {
     const wrapper = mountPage();
 
     await flushAsyncUpdates();
+    await expandNode(wrapper, '[data-test="toggle-module-tools"]');
     await wrapper.find('[data-test="node-feature-litigation_fee"]').trigger('click');
     await nextTick();
 
@@ -353,6 +376,7 @@ describe('MiniappOrchestrationPage', () => {
     const wrapper = mountPage();
 
     await flushAsyncUpdates();
+    await expandNode(wrapper, '[data-test="toggle-module-tools"]');
     await wrapper.find('[data-test="node-feature-lpr"]').trigger('click');
     await nextTick();
 
@@ -366,12 +390,6 @@ describe('MiniappOrchestrationPage', () => {
 
     await flushAsyncUpdates();
 
-    expect(wrapper.text()).toContain('诉讼费计算');
-    expect(wrapper.text()).toContain('LPR');
-
-    await wrapper.find('[data-test="toggle-module-tools"]').trigger('click');
-    await nextTick();
-
     expect(wrapper.text()).not.toContain('诉讼费计算');
     expect(wrapper.text()).not.toContain('LPR');
 
@@ -380,6 +398,12 @@ describe('MiniappOrchestrationPage', () => {
 
     expect(wrapper.text()).toContain('诉讼费计算');
     expect(wrapper.text()).toContain('LPR');
+
+    await wrapper.find('[data-test="toggle-module-tools"]').trigger('click');
+    await nextTick();
+
+    expect(wrapper.text()).not.toContain('诉讼费计算');
+    expect(wrapper.text()).not.toContain('LPR');
   });
 
   it('edits selected home entry through backend and refreshes tree', async () => {
@@ -388,6 +412,7 @@ describe('MiniappOrchestrationPage', () => {
     await flushAsyncUpdates();
     loadMiniappOrchestrationTreeMock.mockClear();
 
+    await expandNode(wrapper, '[data-test="toggle-module-tools"]');
     await wrapper.find('[data-test="node-feature-litigation_fee"]').trigger('click');
     await wrapper.find('[data-test="entry-title"]').setValue('诉讼费估算');
     await wrapper.find('[data-test="miniapp-icon-scale"]').trigger('click');
@@ -416,6 +441,7 @@ describe('MiniappOrchestrationPage', () => {
     const wrapper = mountPage(['admin:miniapp-home-config:view']);
 
     await flushAsyncUpdates();
+    await expandNode(wrapper, '[data-test="toggle-module-tools"]');
     await wrapper.find('[data-test="node-feature-litigation_fee"]').trigger('click');
     await nextTick();
 

@@ -241,6 +241,36 @@ function hasChildren(node: MiniappOrchestrationNode) {
   return Boolean(node.children && node.children.length > 0);
 }
 
+function isLeafListParent(node: MiniappOrchestrationNode) {
+  const children = node.children || [];
+  return children.length > 0 && children.every((child) => !hasChildren(child));
+}
+
+function collectDefaultCollapsedKeys(node: MiniappOrchestrationNode): string[] {
+  const children = node.children || [];
+  return [
+    ...(isLeafListParent(node) ? [treeNodeKey(node)] : []),
+    ...children.flatMap((child) => collectDefaultCollapsedKeys(child))
+  ];
+}
+
+function findNodeByIdentity(
+  node: MiniappOrchestrationNode,
+  target: MiniappOrchestrationNode
+): MiniappOrchestrationNode | null {
+  if (node.key === target.key && node.sourceType === target.sourceType) {
+    return node;
+  }
+  const children = node.children || [];
+  for (const child of children) {
+    const matched = findNodeByIdentity(child, target);
+    if (matched) {
+      return matched;
+    }
+  }
+  return null;
+}
+
 function isCollapsed(node: MiniappOrchestrationNode) {
   return collapsedKeys.value.has(treeNodeKey(node));
 }
@@ -286,10 +316,12 @@ async function loadTree() {
   loading.value = true;
   loadError.value = '';
   try {
-    tree.value = await loadMiniappOrchestrationTree(APP_CODE, includeDisabled.value);
+    const loadedTree = await loadMiniappOrchestrationTree(APP_CODE, includeDisabled.value);
+    tree.value = loadedTree;
+    collapsedKeys.value = new Set(collectDefaultCollapsedKeys(loadedTree));
     selectedNode.value = selectedNode.value
-      ? flatNodes.value.find((item) => item.node.key === selectedNode.value?.key && item.node.sourceType === selectedNode.value?.sourceType)?.node ?? tree.value
-      : tree.value;
+      ? findNodeByIdentity(loadedTree, selectedNode.value) ?? loadedTree
+      : loadedTree;
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : '小程序配置加载失败';
     tree.value = null;
