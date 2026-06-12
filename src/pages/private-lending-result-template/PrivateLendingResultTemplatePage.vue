@@ -103,9 +103,39 @@ const draftLinesText = computed({
 const canManageTemplate = computed(() => auth.hasPermission('admin:private-lending-result-template:manage'));
 const selectedOption = computed(() => caseOptions.value.find((item) => item.caseType === selectedCaseType.value) || null);
 const canEditSelectedTemplate = computed(() => selectedOption.value?.templateSupported === true);
+const previewDraftLines = computed(() => formatDraftContent(previewPackage.value?.draftContent || ''));
+
+type DraftLineType = 'title' | 'heading' | 'paragraph' | 'salutation' | 'court' | 'signature';
+
+interface DraftLine {
+  text: string;
+  type: DraftLineType;
+}
 
 function splitLines(value: string) {
   return value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
+}
+
+function formatDraftContent(content: string): DraftLine[] {
+  const lines = splitLines(content);
+  return lines.map((line, index) => {
+    if (index === 0 && /起诉状$/.test(line)) {
+      return { text: line, type: 'title' };
+    }
+    if (/^此致$/.test(line)) {
+      return { text: line, type: 'salutation' };
+    }
+    if (/人民法院$/.test(line) || /^此致$/.test(lines[index - 1] || '')) {
+      return { text: line, type: 'court' };
+    }
+    if (/^(具状人|起诉人|申请人|日期)[：:]/.test(line)) {
+      return { text: line, type: 'signature' };
+    }
+    if (/^[一二三四五六七八九十]+[、.．]|：$|:$/.test(line)) {
+      return { text: line, type: 'heading' };
+    }
+    return { text: line, type: 'paragraph' };
+  });
 }
 
 function assignTemplate(template: PrivateLendingResultTemplate) {
@@ -296,7 +326,16 @@ onMounted(loadOptions);
         <el-empty v-if="!previewPackage" description="点击预览结果生成样例" />
         <div v-else class="preview-content">
           <h2>{{ previewPackage.draftTitle }}</h2>
-          <pre>{{ previewPackage.draftContent }}</pre>
+          <div class="document-paper">
+            <div
+              v-for="(line, index) in previewDraftLines"
+              :key="`${index}-${line.text}`"
+              class="document-line"
+              :class="`document-line-${line.type}`"
+            >
+              {{ line.text }}
+            </div>
+          </div>
           <h3>证据清单</h3>
           <ul><li v-for="item in previewPackage.evidenceChecklist" :key="item">{{ item }}</li></ul>
           <h3>立案提示</h3>
@@ -397,16 +436,51 @@ onMounted(loadOptions);
   color: #344054;
 }
 
-.preview-content pre {
+.document-paper {
   max-height: 520px;
   overflow: auto;
-  white-space: pre-wrap;
-  line-height: 1.8;
   color: #1d2939;
-  background: #f8fafc;
+  background: #ffffff;
   border: 1px solid #eaecf0;
   border-radius: 6px;
-  padding: 12px;
+  padding: 28px 32px;
+}
+
+.document-line {
+  color: #1d2939;
+  font-size: 15px;
+  line-height: 2;
+  word-break: break-word;
+}
+
+.document-line-title {
+  color: #101828;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 2.1;
+  text-align: center;
+}
+
+.document-line-heading {
+  margin-top: 10px;
+  color: #101828;
+  font-weight: 700;
+}
+
+.document-line-paragraph {
+  text-indent: 2em;
+}
+
+.document-line-salutation {
+  margin-top: 12px;
+}
+
+.document-line-court {
+  text-indent: 2em;
+}
+
+.document-line-signature {
+  text-align: right;
 }
 
 .risk {

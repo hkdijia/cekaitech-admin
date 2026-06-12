@@ -138,8 +138,8 @@ describe('PrivateLendingResultTemplatePage', () => {
         status: 'generated',
         draftTitle: payload.caseType === 'divorce' ? '离婚纠纷起诉材料草稿' : '借贷纠纷起诉材料草稿',
         draftContent: payload.caseType === 'divorce'
-          ? '民事起诉状\n原告王五与被告赵六离婚纠纷。'
-          : '民事起诉状\n李四向张三出借50000元。',
+          ? '民事起诉状\n原告王五与被告赵六离婚纠纷。\n此致\n有管辖权的人民法院\n具状人：王五\n日期：未填写'
+          : '民事起诉状\n李四向张三出借50000元。\n诉讼请求：\n1. 请求返还借款。\n此致\n有管辖权的人民法院\n具状人：李四\n日期：未填写',
         riskNotice: '仅作为材料整理辅助。',
         evidenceChecklist: payload.caseType === 'divorce' ? ['结婚证'] : ['付款凭证'],
         filingTips: payload.caseType === 'divorce' ? ['核对被告住所地'] : ['核对管辖法院'],
@@ -234,6 +234,27 @@ describe('PrivateLendingResultTemplatePage', () => {
     });
     expect(wrapper.text()).toContain('李四向张三出借50000元');
     expect(wrapper.text()).toContain('核对管辖法院');
+  });
+
+  it('renders generated complaint preview with legal document layout classes', async () => {
+    const wrapper = mountPage();
+    await flushAsyncUpdates();
+
+    const vm = wrapper.vm as unknown as {
+      previewTemplate: () => Promise<void>;
+    };
+    await vm.previewTemplate();
+    await flushAsyncUpdates();
+
+    expect(wrapper.find('.document-paper').exists()).toBe(true);
+    expect(wrapper.find('pre').exists()).toBe(false);
+    expect(wrapper.find('.document-line-title').text()).toBe('民事起诉状');
+    expect(wrapper.find('.document-line-heading').text()).toBe('诉讼请求：');
+    expect(wrapper.find('.document-line-court').text()).toBe('有管辖权的人民法院');
+    expect(wrapper.findAll('.document-line-signature').map((item) => item.text())).toEqual([
+      '具状人：李四',
+      '日期：未填写'
+    ]);
   });
 
   it('hides save action when operator lacks manage permission', async () => {
