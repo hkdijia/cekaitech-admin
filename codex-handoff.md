@@ -3,9 +3,9 @@
 ## 当前状态
 
 - 当前分支：`master`
-- 当前阶段：admin 已完成“起诉文书生成多结果模板配置首片”和“离婚纠纷结果模板配置首片”线上发布；本轮“劳动争议结果模板配置首片”已完成本地验证，待本地提交和用户推送。
-- 最近完成：结果模板配置页支持在 backend 返回 `labor.templateSupported=true` 时加载劳动争议模板编辑器，并以劳动争议样例数据预览。
-- 未完成：admin 静态资源发布、劳动争议真机/线上联调；启用前强制门禁、批量推进队列和状态变更审计尚未实现。
+- 当前阶段：admin 已完成“起诉文书生成多结果模板配置首片”“离婚纠纷结果模板配置首片”和“劳动争议结果模板配置首片”线上发布。
+- 最近完成：结果模板配置页支持在 backend 返回 `labor.templateSupported=true` 时加载劳动争议模板编辑器，并以劳动争议样例数据预览；线上资源 `PrivateLendingResultTemplatePage-CGnkRVZa.js` 已包含 labor 样例字段。
+- 未完成：劳动争议真机/线上体验验收；启用前强制门禁、批量推进队列和状态变更审计尚未实现。
 
 ## 关键文件
 
@@ -46,6 +46,7 @@
 - [反馈编号：无] 离婚纠纷结果模板配置首片：RED 阶段切换 `divorce` 后预览仍提交民间借贷样例字段；GREEN 后 `npm.cmd run test -- --run src/api/privateLendingResultTemplate.test.ts src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts` 通过 2 个测试文件、6 项。
 - [反馈编号：无] 劳动争议结果模板配置首片：RED 阶段切换 `labor` 后预览仍提交民间借贷样例字段；GREEN 后 `npm.cmd test -- PrivateLendingResultTemplatePage.test.ts` 通过 1 个测试文件、8 项。
 - [反馈编号：无] 劳动争议结果模板配置首片收口：`npm.cmd run quality` 通过 35 个测试文件、172 项并完成生产构建；`git diff --check` 通过，仅有 Windows 换行提示。
+- [反馈编号：无] 劳动争议结果模板配置发布：`scripts/deploy-admin-static.ps1` 构建并同步到 `/data/cekaitech-admin/`，上线资源包含 `PrivateLendingResultTemplatePage-CGnkRVZa.js`；服务器静态文件确认包含 `employeeName/labor/劳动争议` 样例字段，公网 smoke 通过。
 - [反馈编号：无] 离婚纠纷结果模板配置首片收口：`npm.cmd run quality` 通过 35 个测试文件、169 项并完成生产构建；`git diff --check` 通过，仅有 Windows 换行提示。
 - [反馈编号：无] 离婚纠纷结果模板配置发布：`scripts/deploy-admin-static.ps1` 构建并同步到 `/data/cekaitech-admin/`，上线资源包含 `PrivateLendingResultTemplatePage-CfdkUiv5.js`；服务器静态文件确认包含 `divorce/plaintiffName` 样例字段，公网 smoke 通过。
 - [反馈编号：无] 起诉文书生成多模板配置首片：RED 阶段 API 函数、案件选择方法和菜单描述测试失败；GREEN 后 `npm.cmd run test -- --run src/api/privateLendingResultTemplate.test.ts src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts src/router/router.test.ts` 通过 3 个测试文件、26 项。
@@ -66,7 +67,7 @@
 - 反馈编号：`无`
 - 来源文档：当前会话 / admin 功能扩张讨论
 - 本地台账：无
-- 当前状态：小程序工作台法律工具生命周期队列已发布到生产测试环境；页面菜单统一承载入口上线生命周期已完成；起诉文书生成多结果模板配置首片已部署生产测试环境；劳动争议结果模板配置首片已完成本地验证，待提交/推送后发布静态资源。
+- 当前状态：小程序工作台法律工具生命周期队列已发布到生产测试环境；页面菜单统一承载入口上线生命周期已完成；起诉文书生成多结果模板配置、离婚纠纷和劳动争议结果模板配置首片均已部署生产测试环境。
 
 ## 注意事项
 
