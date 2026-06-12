@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
 import {
+  getCaseResultTemplateOptions,
   getPrivateLendingResultTemplate,
   previewPrivateLendingResultTemplate,
   savePrivateLendingResultTemplate
@@ -12,11 +13,13 @@ import { useAuthStore } from '../../stores/auth';
 import PrivateLendingResultTemplatePage from './PrivateLendingResultTemplatePage.vue';
 
 vi.mock('../../api/privateLendingResultTemplate', () => ({
+  getCaseResultTemplateOptions: vi.fn(),
   getPrivateLendingResultTemplate: vi.fn(),
   savePrivateLendingResultTemplate: vi.fn(),
   previewPrivateLendingResultTemplate: vi.fn()
 }));
 
+const getOptionsMock = vi.mocked(getCaseResultTemplateOptions);
 const getTemplateMock = vi.mocked(getPrivateLendingResultTemplate);
 const saveTemplateMock = vi.mocked(savePrivateLendingResultTemplate);
 const previewTemplateMock = vi.mocked(previewPrivateLendingResultTemplate);
@@ -63,9 +66,48 @@ async function flushAsyncUpdates() {
 describe('PrivateLendingResultTemplatePage', () => {
   beforeEach(() => {
     localStorage.clear();
+    getOptionsMock.mockReset();
     getTemplateMock.mockReset();
     saveTemplateMock.mockReset();
     previewTemplateMock.mockReset();
+    getOptionsMock.mockResolvedValue([
+      {
+        appCode: 'lawsuit-material-assistant',
+        caseType: 'private_lending',
+        title: '民间借贷纠纷',
+        catalogStatus: 'open',
+        catalogEnabled: true,
+        configured: true,
+        generationEnabled: true,
+        templateSupported: true,
+        schemaVersion: 1,
+        statusText: '可编辑'
+      },
+      {
+        appCode: 'lawsuit-material-assistant',
+        caseType: 'divorce',
+        title: '离婚纠纷',
+        catalogStatus: 'coming_soon',
+        catalogEnabled: true,
+        configured: false,
+        generationEnabled: false,
+        templateSupported: false,
+        schemaVersion: null,
+        statusText: '暂无生成配置'
+      },
+      {
+        appCode: 'lawsuit-material-assistant',
+        caseType: 'labor',
+        title: '劳动争议',
+        catalogStatus: 'coming_soon',
+        catalogEnabled: true,
+        configured: false,
+        generationEnabled: false,
+        templateSupported: false,
+        schemaVersion: null,
+        statusText: '暂无生成配置'
+      }
+    ]);
     getTemplateMock.mockResolvedValue({
       appCode: 'lawsuit-material-assistant',
       caseType: 'private_lending',
@@ -101,12 +143,34 @@ describe('PrivateLendingResultTemplatePage', () => {
 
     await flushAsyncUpdates();
 
+    expect(getOptionsMock).toHaveBeenCalledWith('lawsuit-material-assistant');
     expect(getTemplateMock).toHaveBeenCalledWith('lawsuit-material-assistant', 'private_lending');
-    expect(wrapper.text()).toContain('民间借贷结果模板');
+    expect(wrapper.text()).toContain('结果模板配置');
+    expect(wrapper.text()).toContain('民间借贷纠纷');
+    expect(wrapper.text()).toContain('离婚纠纷');
+    expect(wrapper.text()).toContain('暂无生成配置');
     const vm = wrapper.vm as unknown as { templateForm: typeof template };
     expect(vm.templateForm.draftTitle).toBe('借贷纠纷起诉材料草稿');
     expect(vm.templateForm.evidenceChecklist).toContain('付款凭证');
     expect(vm.templateForm.draftLines).toContain('{{lenderName}}向{{borrowerName}}出借{{principalAmount}}元。');
+  });
+
+  it('does not load editor when selected case type has no supported template', async () => {
+    const wrapper = mountPage();
+    await flushAsyncUpdates();
+
+    const vm = wrapper.vm as unknown as {
+      selectedCaseType: string;
+      selectCaseType: (caseType: string) => Promise<void>;
+    };
+    await vm.selectCaseType('divorce');
+    await flushAsyncUpdates();
+
+    expect(vm.selectedCaseType).toBe('divorce');
+    expect(getTemplateMock).toHaveBeenCalledTimes(1);
+    expect(wrapper.text()).toContain('离婚纠纷');
+    expect(wrapper.text()).toContain('暂无生成配置');
+    expect(wrapper.text()).not.toContain('草稿正文');
   });
 
   it('saves template through backend when operator can manage', async () => {
@@ -152,7 +216,7 @@ describe('PrivateLendingResultTemplatePage', () => {
 
     await flushAsyncUpdates();
 
-    expect(wrapper.text()).toContain('民间借贷结果模板');
+    expect(wrapper.text()).toContain('结果模板配置');
     expect(wrapper.text()).not.toContain('保存模板');
   });
 });

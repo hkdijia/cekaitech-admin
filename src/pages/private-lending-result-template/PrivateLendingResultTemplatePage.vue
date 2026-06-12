@@ -3,9 +3,11 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { Refresh, View, Check } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import {
+  getCaseResultTemplateOptions,
   getPrivateLendingResultTemplate,
   previewPrivateLendingResultTemplate,
   savePrivateLendingResultTemplate,
+  type CaseResultTemplateOption,
   type PrivateLendingDocPackage,
   type PrivateLendingResultTemplate
 } from '../../api/privateLendingResultTemplate';
@@ -21,6 +23,8 @@ const previewing = ref(false);
 const loadError = ref('');
 const schemaVersion = ref(1);
 const previewPackage = ref<PrivateLendingDocPackage | null>(null);
+const caseOptions = ref<CaseResultTemplateOption[]>([]);
+const selectedCaseType = ref(CASE_TYPE);
 
 const templateForm = reactive<PrivateLendingResultTemplate>({
   draftTitle: '',
@@ -68,6 +72,8 @@ const draftLinesText = computed({
 });
 
 const canManageTemplate = computed(() => auth.hasPermission('admin:private-lending-result-template:manage'));
+const selectedOption = computed(() => caseOptions.value.find((item) => item.caseType === selectedCaseType.value) || null);
+const canEditSelectedTemplate = computed(() => selectedOption.value?.templateSupported === true);
 
 function splitLines(value: string) {
   return value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
@@ -99,7 +105,7 @@ async function loadTemplate() {
   loading.value = true;
   loadError.value = '';
   try {
-    const result = await getPrivateLendingResultTemplate(APP_CODE, CASE_TYPE);
+    const result = await getPrivateLendingResultTemplate(APP_CODE, selectedCaseType.value);
     schemaVersion.value = result.schemaVersion;
     assignTemplate(result.template);
   } catch (error) {
@@ -115,7 +121,7 @@ async function saveTemplate() {
   try {
     const result = await savePrivateLendingResultTemplate({
       appCode: APP_CODE,
-      caseType: CASE_TYPE,
+      caseType: selectedCaseType.value,
       template: payloadTemplate()
     });
     schemaVersion.value = result.schemaVersion;
@@ -134,7 +140,7 @@ async function previewTemplate() {
   try {
     const result = await previewPrivateLendingResultTemplate({
       appCode: APP_CODE,
-      caseType: CASE_TYPE,
+      caseType: selectedCaseType.value,
       sampleFormData: { ...sampleFormData }
     });
     previewPackage.value = result.docPackage;
@@ -145,21 +151,73 @@ async function previewTemplate() {
   }
 }
 
-onMounted(loadTemplate);
+async function selectCaseType(caseType: string) {
+  selectedCaseType.value = caseType;
+  previewPackage.value = null;
+  loadError.value = '';
+  if (!canEditSelectedTemplate.value) {
+    return;
+  }
+  await loadTemplate();
+}
+
+async function loadOptions() {
+  loading.value = true;
+  loadError.value = '';
+  try {
+    caseOptions.value = await getCaseResultTemplateOptions(APP_CODE);
+    const firstSupported = caseOptions.value.find((item) => item.templateSupported);
+    selectedCaseType.value = firstSupported?.caseType || caseOptions.value[0]?.caseType || CASE_TYPE;
+    if (firstSupported) {
+      await loadTemplate();
+    }
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '结果模板加载失败';
+  } finally {
+    loading.value = false;
+  }
+}
+
+onMounted(loadOptions);
 </script>
 
 <template>
   <section>
-    <h1 class="page-title">民间借贷结果模板</h1>
-    <p class="page-subtitle">维护后端结构化结果模板，预览内容与小程序生成接口保持同一套确定性组装逻辑。</p>
+    <h1 class="page-title">结果模板配置</h1>
+    <p class="page-subtitle">按起诉文书目录选择案件类型，维护已具备生成配置的结构化结果模板。</p>
 
     <el-alert v-if="loadError" class="error-alert" type="error" :title="loadError" show-icon />
 
-    <div class="template-layout">
+    <el-card shadow="never" class="case-panel">
+      <div class="case-list">
+        <button
+          v-for="option in caseOptions"
+          :key="option.caseType"
+          type="button"
+          class="case-option"
+          :class="{ active: option.caseType === selectedCaseType, disabled: !option.templateSupported }"
+          @click="selectCaseType(option.caseType)"
+        >
+          <span class="case-title">{{ option.title }}</span>
+          <span class="case-status">{{ option.statusText }}</span>
+        </button>
+      </div>
+    </el-card>
+
+    <el-alert
+      v-if="selectedOption && !canEditSelectedTemplate"
+      class="error-alert"
+      type="warning"
+      :title="`${selectedOption.title}：${selectedOption.statusText}`"
+      description="该案件类型目前只在文书目录中占位，尚未配置生成 schema 和结果模板，暂不开放编辑和预览。"
+      show-icon
+    />
+
+    <div v-if="canEditSelectedTemplate" class="template-layout">
       <el-card v-loading="loading" shadow="never" class="template-panel">
         <div class="toolbar">
           <div>
-            <div class="toolbar-title">模板字段</div>
+            <div class="toolbar-title">{{ selectedOption?.title || '模板字段' }}</div>
             <div class="toolbar-subtitle">Schema v{{ schemaVersion }}，支持固定占位符，不支持页面代码。</div>
           </div>
           <div class="toolbar-actions">
@@ -220,6 +278,53 @@ onMounted(loadTemplate);
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr);
   gap: 16px;
+}
+
+.case-panel {
+  margin-bottom: 16px;
+}
+
+.case-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.case-option {
+  min-width: 156px;
+  padding: 10px 12px;
+  text-align: left;
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.case-option.active {
+  border-color: #1570ef;
+  box-shadow: 0 0 0 2px rgba(21, 112, 239, 0.12);
+}
+
+.case-option.disabled {
+  background: #f8fafc;
+  color: #667085;
+}
+
+.case-title,
+.case-status {
+  display: block;
+}
+
+.case-title {
+  color: #344054;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.case-status {
+  margin-top: 4px;
+  color: #667085;
+  font-size: 12px;
 }
 
 .toolbar {

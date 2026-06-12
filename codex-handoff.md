@@ -3,9 +3,9 @@
 ## 当前状态
 
 - 当前分支：`master`
-- 当前阶段：admin 已完成“小程序页面菜单统一承载上线生命周期”本地改造，尚未发布静态资源到 `admin.cekaitech.cn`。
-- 最近完成：小程序编排 / 页面菜单管理改为入口生命周期配置，功能节点状态选项统一为 `published/pending_release/paused/retired`；法律工具中心能力库去掉能力状态列、启用状态列和状态下拉，避免能力页与页面菜单管理割裂。
-- 未完成：起诉文书生成模块多结果模板配置尚未开始；启用前强制门禁、批量推进队列和状态变更审计尚未实现；如需线上可见，需要先部署 backend V135，再同步 admin 静态资源到服务器。
+- 当前阶段：admin 已完成“起诉文书生成多结果模板配置首片”本地改造，尚未发布静态资源到 `admin.cekaitech.cn`。
+- 最近完成：结果模板配置页从固定民间借贷升级为案件类型选择式页面，读取 backend 通用 options 接口展示 `private_lending/divorce/labor` 的配置状态；仅已支持的 `private_lending` 显示编辑器、保存和预览。
+- 未完成：`divorce/labor` 仍没有真实生成 schema 和模板，页面只显示“暂无生成配置”；启用前强制门禁、批量推进队列和状态变更审计尚未实现；如需线上可见，需要先部署 backend 新接口，再同步 admin 静态资源到服务器。
 
 ## 关键文件
 
@@ -22,6 +22,12 @@
 - `src/layouts/AdminLayout.test.ts`
 - `src/pages/miniapp-workbench/MiniappWorkbenchPage.vue`
 - `src/pages/miniapp-workbench/MiniappWorkbenchPage.test.ts`
+- `src/api/privateLendingResultTemplate.ts`
+- `src/api/privateLendingResultTemplate.test.ts`
+- `src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.vue`
+- `src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts`
+- `src/router/menu.ts`
+- `src/router/router.test.ts`
 - `docs/变更日志.md`
 - `tasks/current-task.md`
 - `codex-handoff.md`
@@ -31,11 +37,13 @@
 - `npm.cmd run test -- --run src/layouts/AdminLayout.test.ts src/api/legalToolCenter.test.ts src/router/router.test.ts src/pages/miniapp-workbench/MiniappWorkbenchPage.test.ts`
 - `npm.cmd run test -- --run src/api/legalToolCenter.test.ts src/pages/legal-tool-center/LegalToolCenterPage.test.ts src/pages/miniapp-workbench/MiniappWorkbenchPage.test.ts`
 - `npm.cmd run quality`
+- `npm.cmd run test -- --run src/api/privateLendingResultTemplate.test.ts src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts src/router/router.test.ts`
 - `git diff --check`
 - `git status -sb`
 
 ## 最近验证
 
+- [反馈编号：无] 起诉文书生成多模板配置首片：RED 阶段 API 函数、案件选择方法和菜单描述测试失败；GREEN 后 `npm.cmd run test -- --run src/api/privateLendingResultTemplate.test.ts src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts src/router/router.test.ts` 通过 3 个测试文件、26 项。
 - [反馈编号：无] 页面菜单生命周期归口：`npm.cmd run test -- --run src/api/miniappOrchestration.test.ts src/pages/miniapp-orchestration/MiniappOrchestrationPage.test.ts src/pages/legal-tool-center/LegalToolCenterPage.test.ts src/api/legalToolCenter.test.ts` 通过 4 个测试文件、35 项；`npm.cmd run quality` 通过 35 个测试文件、168 项并完成构建；`git diff --check` 通过。
 - [反馈编号：无] 历史状态流转首片曾在能力列表加入“状态”下拉；本轮产品口径已调整为页面菜单承载入口生命周期，能力列表状态下拉已撤销。
 - [反馈编号：无] admin 静态资源发布：`scripts/deploy-admin-static.ps1` 构建并同步到 `/data/cekaitech-admin/`，上线资源包含 `LegalToolCenterPage-BsUFdRjP.js` 和 `MiniappWorkbenchPage-VNEwOTtl.js`；公网 smoke 确认 Basic Auth 和 API 未登录鉴权正常。
@@ -52,17 +60,17 @@
 - 反馈编号：`无`
 - 来源文档：当前会话 / admin 功能扩张讨论
 - 本地台账：无
-- 当前状态：小程序工作台法律工具生命周期队列已发布到生产测试环境；页面菜单统一承载入口上线生命周期已本地完成，待提交/推送/后续部署
+- 当前状态：小程序工作台法律工具生命周期队列已发布到生产测试环境；页面菜单统一承载入口上线生命周期已完成；起诉文书生成多结果模板配置首片已本地实现，待全量验证、提交、推送和后续部署
 
 ## 注意事项
 
 - 本仓不直连数据库，不控制 crawler 进程，只通过 `miniapp-backend` 受控 API 管理结构化数据。
 - `.runtime-logs/` 是本地运行日志噪声，不纳入提交。
 - 用户当前偏好：本地提交可由 Codex 完成，GitHub 远程推送由用户通过 GitHub Desktop 手动执行。
-- 线上要看到本轮页面菜单生命周期，需要 backend 先上线包含 V135 和新入口状态过滤逻辑的镜像，再部署 admin 静态资源。
+- 线上要看到本轮结果模板配置，需要 backend 先上线包含 `/api/admin/case-result-template` 的镜像，再部署 admin 静态资源。
 
 ## 下一步建议
 
-1. 提交本轮 admin 变更，等待用户手动推送。
-2. 下一轮优先梳理起诉文书生成多模板配置，明确 `民间借贷纠纷/离婚纠纷/劳动争议` 的模板、入口和启停关系。
+1. 跑 `npm.cmd run quality` 和 `git diff --check`，提交本轮 admin 变更。
+2. 后续梳理 `离婚纠纷/劳动争议` 的真实生成 schema、模板占位符、表单字段和入口启用门禁。
 3. 如用户需要线上可见，先部署 backend 新镜像，再执行 admin 静态资源部署脚本并 smoke。

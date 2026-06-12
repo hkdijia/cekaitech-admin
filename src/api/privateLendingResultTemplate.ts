@@ -48,12 +48,32 @@ export interface PrivateLendingResultTemplatePreviewResponse {
   docPackage: PrivateLendingDocPackage;
 }
 
+export interface CaseResultTemplateOption {
+  appCode: string;
+  caseType: string;
+  title: string;
+  catalogStatus: string;
+  catalogEnabled: boolean;
+  configured: boolean;
+  generationEnabled: boolean;
+  templateSupported: boolean;
+  schemaVersion: number | null;
+  statusText: string;
+}
+
+export function getCaseResultTemplateOptions(appCode: string): Promise<CaseResultTemplateOption[]> {
+  const query = new URLSearchParams({ appCode }).toString();
+  return request<CaseResultTemplateOption[]>(`/api/admin/case-result-template/options?${query}`, {
+    method: 'GET'
+  });
+}
+
 export function getPrivateLendingResultTemplate(
   appCode: string,
   caseType: string
 ): Promise<PrivateLendingResultTemplateResponse> {
   const query = new URLSearchParams({ appCode, caseType }).toString();
-  return request<PrivateLendingResultTemplateResponse>(`/api/admin/private-lending-result-template?${query}`, {
+  return request<PrivateLendingResultTemplateResponse>(`/api/admin/case-result-template?${query}`, {
     method: 'GET'
   });
 }
@@ -61,7 +81,7 @@ export function getPrivateLendingResultTemplate(
 export function savePrivateLendingResultTemplate(
   payload: PrivateLendingResultTemplateSaveRequest
 ): Promise<PrivateLendingResultTemplateResponse> {
-  return request<PrivateLendingResultTemplateResponse>('/api/admin/private-lending-result-template/save', {
+  return request<PrivateLendingResultTemplateResponse>('/api/admin/case-result-template/save', {
     method: 'POST',
     body: JSON.stringify(payload)
   });
@@ -70,7 +90,7 @@ export function savePrivateLendingResultTemplate(
 export function previewPrivateLendingResultTemplate(
   payload: PrivateLendingResultTemplatePreviewRequest
 ): Promise<PrivateLendingResultTemplatePreviewResponse> {
-  return request<PrivateLendingResultTemplatePreviewResponse>('/api/admin/private-lending-result-template/preview', {
+  return request<PrivateLendingResultTemplatePreviewResponse>('/api/admin/case-result-template/preview', {
     method: 'POST',
     body: JSON.stringify(payload)
   });

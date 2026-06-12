@@ -114,7 +114,7 @@ export const adminMenuItems: AdminMenuItem[] = [
   {
     path: '/private-lending-result-template',
     title: '结果模板配置',
-    description: '民间借贷结果模板和预览',
+    description: '起诉文书生成结果模板和预览',
     permissionCode: 'admin:private-lending-result-template:view',
     scope: 'miniapp',
     workspaceCodes: legalWorkspaceCodes

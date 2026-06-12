@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  getCaseResultTemplateOptions,
   getPrivateLendingResultTemplate,
   previewPrivateLendingResultTemplate,
   savePrivateLendingResultTemplate
@@ -16,8 +17,38 @@ const template = {
 };
 
 describe('private lending result template api', () => {
-  it('calls get, save and preview backend endpoints', async () => {
+  it('calls case result template option, get, save and preview backend endpoints', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          code: '0',
+          msg: '',
+          data: [
+            {
+              appCode: 'lawsuit-material-assistant',
+              caseType: 'private_lending',
+              title: '民间借贷纠纷',
+              configured: true,
+              generationEnabled: true,
+              templateSupported: true,
+              schemaVersion: 1,
+              statusText: '可编辑'
+            },
+            {
+              appCode: 'lawsuit-material-assistant',
+              caseType: 'divorce',
+              title: '离婚纠纷',
+              configured: false,
+              generationEnabled: false,
+              templateSupported: false,
+              schemaVersion: null,
+              statusText: '暂无生成配置'
+            }
+          ]
+        })
+      } as Response)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -61,6 +92,7 @@ describe('private lending result template api', () => {
         })
       } as Response);
 
+    const options = await getCaseResultTemplateOptions('lawsuit-material-assistant');
     await getPrivateLendingResultTemplate('lawsuit-material-assistant', 'private_lending');
     await savePrivateLendingResultTemplate({
       appCode: 'lawsuit-material-assistant',
@@ -75,13 +107,21 @@ describe('private lending result template api', () => {
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
-      '/api/admin/private-lending-result-template?appCode=lawsuit-material-assistant&caseType=private_lending',
+      '/api/admin/case-result-template/options?appCode=lawsuit-material-assistant',
       {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       }
     );
-    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/admin/private-lending-result-template/save', {
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/admin/case-result-template?appCode=lawsuit-material-assistant&caseType=private_lending',
+      {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(3, '/api/admin/case-result-template/save', {
       method: 'POST',
       body: JSON.stringify({
         appCode: 'lawsuit-material-assistant',
@@ -90,7 +130,7 @@ describe('private lending result template api', () => {
       }),
       headers: { 'Content-Type': 'application/json' }
     });
-    expect(fetchMock).toHaveBeenNthCalledWith(3, '/api/admin/private-lending-result-template/preview', {
+    expect(fetchMock).toHaveBeenNthCalledWith(4, '/api/admin/case-result-template/preview', {
       method: 'POST',
       body: JSON.stringify({
         appCode: 'lawsuit-material-assistant',
@@ -99,6 +139,7 @@ describe('private lending result template api', () => {
       }),
       headers: { 'Content-Type': 'application/json' }
     });
+    expect(options[1].statusText).toBe('暂无生成配置');
     expect(preview.docPackage.draftContent).toContain('李四向张三出借50000元');
   });
 });

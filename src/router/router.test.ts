@@ -151,6 +151,7 @@ describe('admin routes', () => {
     const route = routes.find((item) => item.path === '/private-lending-result-template');
 
     expect(menuItem?.title).toBe('结果模板配置');
+    expect(menuItem?.description).toBe('起诉文书生成结果模板和预览');
     expect(menuItem?.permissionCode).toBe('admin:private-lending-result-template:view');
     expect(route?.meta?.permissionCode).toBe('admin:private-lending-result-template:view');
   });

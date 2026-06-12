@@ -2,42 +2,44 @@
 
 ## 当前任务
 
-- 名称：小程序页面菜单统一承载上线生命周期
+- 名称：起诉文书生成多结果模板配置首片
 - OpenSpec 变更：无。
 
 ## 追溯信息
 
 - 反馈编号：`无`
-- 来源文档：当前会话 / admin 菜单与工具能力状态割裂讨论
+- 来源文档：当前会话 / 起诉文书生成模块多模板配置讨论
 - 本地台账：无
-- 当前状态：已完成本地实现与验证，待本地提交后由用户推送。
+- 当前状态：已完成本地实现与定向验证，待全量验证和本地提交后由用户推送。
 
 ## 当前状态
 
-- 页面菜单管理是小程序入口上线生命周期的唯一配置入口。
-- 功能节点生命周期选项为 `published/pending_release/paused/retired`，并兼容旧响应值。
-- 法律工具中心能力库不再展示能力状态列、启用状态列和生命周期下拉；能力页只维护能力元数据。
-- 入口是否在小程序前台可见由 backend 按菜单入口 `published` 过滤。
+- 结果模板配置页从固定民间借贷页面改为按案件类型选择。
+- 页面从 backend 通用 options 接口读取 `private_lending/divorce/labor` 的生成配置状态。
+- 当前仅 `private_lending` 显示编辑器、保存和预览；`divorce/labor` 显示“暂无生成配置”，不展示模板编辑器。
+- 管理端 API 封装已切换到 `/api/admin/case-result-template` 通用接口。
 
 ## 已完成
 
-- [反馈编号：无] 页面菜单管理表单从“业务状态”改为“生命周期”。
-- [反馈编号：无] 页面菜单保存默认状态改为 `published/已上线`，并将旧 `open/coming_soon/consultation/locked/disabled` 映射到新生命周期。
-- [反馈编号：无] 法律工具中心能力库移除发布生命周期操作，避免与页面菜单管理割裂。
-- [反馈编号：无] 补充页面菜单生命周期和能力页不暴露发布操作的测试。
+- [反馈编号：无] `privateLendingResultTemplate` API 新增 options 查询，并将 get/save/preview 切到通用 endpoint。
+- [反馈编号：无] `PrivateLendingResultTemplatePage` 增加案件类型列表、不可编辑提示和按选中 `caseType` 加载模板。
+- [反馈编号：无] 后台菜单描述改为“起诉文书生成结果模板和预览”。
+- [反馈编号：无] 补充 API、页面和路由测试。
 
 ## 未完成
 
-- 起诉文书生成模块的多结果模板配置尚未开始：当前 admin 尚未支撑同一模块下多模板启停和配置管理。
+- 页面目录项仍沿用旧路由 `/private-lending-result-template` 和旧权限码，作为兼容过渡；后续可单独改为更通用的路由和权限。
+- 尚未为 `divorce/labor` 提供真实模板编辑能力，因为 backend 尚无 schema 和生成服务。
 - 本轮未发布 admin 静态资源到服务器。
 
 ## 最近验证
 
-- 通过：`npm.cmd run test -- --run src/api/miniappOrchestration.test.ts src/pages/miniapp-orchestration/MiniappOrchestrationPage.test.ts src/pages/legal-tool-center/LegalToolCenterPage.test.ts src/api/legalToolCenter.test.ts`，4 个测试文件、35 项通过。
-- 通过：`npm.cmd run quality`，35 个测试文件、168 项测试通过，`vue-tsc --noEmit` 和 `vite build` 通过；构建保留既有 Rollup 注释 warning 和 chunk size warning。
-- 通过：`git diff --check`。
+- RED：`npm.cmd run test -- --run src/api/privateLendingResultTemplate.test.ts src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts` 失败于 `getCaseResultTemplateOptions is not a function`、案件选择方法缺失和标题仍为民间借贷。
+- RED：`npm.cmd run test -- --run src/router/router.test.ts` 失败于菜单描述仍为“民间借贷结果模板和预览”。
+- GREEN：`npm.cmd run test -- --run src/api/privateLendingResultTemplate.test.ts src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts src/router/router.test.ts` 通过 3 个测试文件、26 项。
 
 ## 下一步
 
-1. 提交并由用户推送本轮 admin 变更。
-2. 下一轮进入“起诉文书生成多模板配置”工作流，先梳理 `民间借贷纠纷/离婚纠纷/劳动争议` 的模板、目录、启用状态和 admin 配置界面。
+1. 跑 admin `npm.cmd run quality` 和空白检查。
+2. 本地提交 admin 变更，由用户推送远程。
+3. 后续配合 backend 继续推进 `divorce/labor` 真实生成配置。
