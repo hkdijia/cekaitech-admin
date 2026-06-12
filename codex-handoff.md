@@ -3,9 +3,9 @@
 ## 当前状态
 
 - 当前分支：`master`
-- 当前阶段：admin 已完成“起诉文书生成多结果模板配置首片”线上发布；本轮“离婚纠纷结果模板配置首片”已完成本地实现和 quality 验证，待提交。
-- 最近完成：结果模板配置页支持在 backend 返回 `divorce.templateSupported=true` 时加载离婚模板编辑器，并以离婚样例数据预览。
-- 未完成：本轮尚待提交和静态资源发布；`labor` 仍没有真实生成 schema 和模板，页面只显示“暂无生成配置”；启用前强制门禁、批量推进队列和状态变更审计尚未实现。
+- 当前阶段：admin 已完成“起诉文书生成多结果模板配置首片”线上发布；本轮“离婚纠纷结果模板配置首片”已发布到 `admin.cekaitech.cn` 并完成 smoke。
+- 最近完成：结果模板配置页支持在 backend 返回 `divorce.templateSupported=true` 时加载离婚模板编辑器，并以离婚样例数据预览；上线资源为 `PrivateLendingResultTemplatePage-CfdkUiv5.js`。
+- 未完成：`labor` 仍没有真实生成 schema 和模板，页面只显示“暂无生成配置”；离婚纠纷前台入口尚未发布；启用前强制门禁、批量推进队列和状态变更审计尚未实现。
 
 ## 关键文件
 
@@ -45,6 +45,7 @@
 
 - [反馈编号：无] 离婚纠纷结果模板配置首片：RED 阶段切换 `divorce` 后预览仍提交民间借贷样例字段；GREEN 后 `npm.cmd run test -- --run src/api/privateLendingResultTemplate.test.ts src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts` 通过 2 个测试文件、6 项。
 - [反馈编号：无] 离婚纠纷结果模板配置首片收口：`npm.cmd run quality` 通过 35 个测试文件、169 项并完成生产构建；`git diff --check` 通过，仅有 Windows 换行提示。
+- [反馈编号：无] 离婚纠纷结果模板配置发布：`scripts/deploy-admin-static.ps1` 构建并同步到 `/data/cekaitech-admin/`，上线资源包含 `PrivateLendingResultTemplatePage-CfdkUiv5.js`；服务器静态文件确认包含 `divorce/plaintiffName` 样例字段，公网 smoke 通过。
 - [反馈编号：无] 起诉文书生成多模板配置首片：RED 阶段 API 函数、案件选择方法和菜单描述测试失败；GREEN 后 `npm.cmd run test -- --run src/api/privateLendingResultTemplate.test.ts src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts src/router/router.test.ts` 通过 3 个测试文件、26 项。
 - [反馈编号：无] 起诉文书生成多模板配置 admin 发布：`scripts/deploy-admin-static.ps1` 构建并同步到 `/data/cekaitech-admin/`，上线资源包含 `PrivateLendingResultTemplatePage-CKOHrQyy.js`；服务器静态文件确认包含 `/api/admin/case-result-template` 和“结果模板配置”文案，公网 smoke 通过。
 - [反馈编号：无] 页面菜单生命周期归口：`npm.cmd run test -- --run src/api/miniappOrchestration.test.ts src/pages/miniapp-orchestration/MiniappOrchestrationPage.test.ts src/pages/legal-tool-center/LegalToolCenterPage.test.ts src/api/legalToolCenter.test.ts` 通过 4 个测试文件、35 项；`npm.cmd run quality` 通过 35 个测试文件、168 项并完成构建；`git diff --check` 通过。
