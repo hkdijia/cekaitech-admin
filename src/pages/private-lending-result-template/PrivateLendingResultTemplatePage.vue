@@ -77,6 +77,19 @@ const sampleDataByCaseType: Record<string, Record<string, string>> = {
     hasMarriageCertificate: 'yes',
     hasChildInfo: 'yes',
     hasPropertyClues: 'no'
+  },
+  labor: {
+    employeeName: '孙七',
+    employerName: '杭州某科技有限公司',
+    employmentStartDate: '2023-03-01',
+    employmentEndDate: '2026-05-31',
+    employmentStatus: 'terminated',
+    laborClaim: 'wage_and_compensation',
+    claimAmount: '38000',
+    caseFacts: '员工主张单位拖欠工资并违法解除劳动关系。',
+    hasLaborContract: 'yes',
+    hasWageProof: 'yes',
+    hasTerminationNotice: 'no'
   }
 };
 

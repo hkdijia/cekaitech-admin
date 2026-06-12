@@ -44,6 +44,16 @@ const divorceTemplate = {
   draftLines: ['民事起诉状', '原告{{plaintiffName}}与被告{{defendantName}}离婚纠纷。']
 };
 
+const laborTemplate = {
+  draftTitle: '劳动争议起诉材料草稿',
+  riskNotice: '仅作为材料整理辅助。',
+  filingGuideUrl: '/pages/value-added-detail/value-added-detail?serviceKey=filing_guidance',
+  filingGuideLabel: '查看立案指导服务',
+  evidenceChecklist: ['{{contractEvidence}}', '{{wageEvidence}}'],
+  filingTips: ['核对劳动仲裁程序'],
+  draftLines: ['民事起诉状', '原告{{employeeName}}与被告{{employerName}}劳动争议。']
+};
+
 function mountPage(permissions: string[] = [
   'admin:private-lending-result-template:view',
   'admin:private-lending-result-template:manage'
@@ -109,20 +119,20 @@ describe('PrivateLendingResultTemplatePage', () => {
         appCode: 'lawsuit-material-assistant',
         caseType: 'labor',
         title: '劳动争议',
-        catalogStatus: 'coming_soon',
+        catalogStatus: 'open',
         catalogEnabled: true,
-        configured: false,
-        generationEnabled: false,
-        templateSupported: false,
-        schemaVersion: null,
-        statusText: '暂无生成配置'
+        configured: true,
+        generationEnabled: true,
+        templateSupported: true,
+        schemaVersion: 1,
+        statusText: '可编辑'
       }
     ]);
     getTemplateMock.mockImplementation(async (_appCode: string, caseType: string) => ({
       appCode: 'lawsuit-material-assistant',
       caseType,
       schemaVersion: 1,
-      template: caseType === 'divorce' ? divorceTemplate : template
+      template: caseType === 'divorce' ? divorceTemplate : caseType === 'labor' ? laborTemplate : template
     }));
     saveTemplateMock.mockResolvedValue({
       appCode: 'lawsuit-material-assistant',
@@ -136,10 +146,16 @@ describe('PrivateLendingResultTemplatePage', () => {
       schemaVersion: 1,
       docPackage: {
         status: 'generated',
-        draftTitle: payload.caseType === 'divorce' ? '离婚纠纷起诉材料草稿' : '借贷纠纷起诉材料草稿',
+        draftTitle: payload.caseType === 'divorce'
+          ? '离婚纠纷起诉材料草稿'
+          : payload.caseType === 'labor'
+            ? '劳动争议起诉材料草稿'
+            : '借贷纠纷起诉材料草稿',
         draftContent: payload.caseType === 'divorce'
           ? '民事起诉状\n原告王五与被告赵六离婚纠纷。\n此致\n有管辖权的人民法院\n具状人：王五\n日期：未填写'
-          : '民事起诉状\n李四向张三出借50000元。\n诉讼请求：\n1. 请求返还借款。\n此致\n有管辖权的人民法院\n具状人：李四\n日期：未填写',
+          : payload.caseType === 'labor'
+            ? '民事起诉状\n原告孙七与被告杭州某科技有限公司劳动争议。\n此致\n有管辖权的人民法院\n具状人：孙七\n日期：未填写'
+            : '民事起诉状\n李四向张三出借50000元。\n诉讼请求：\n1. 请求返还借款。\n此致\n有管辖权的人民法院\n具状人：李四\n日期：未填写',
         draftBlocks: payload.caseType === 'divorce'
           ? [
             { type: 'title', text: '民事起诉状', align: 'center', indent: 0 },
@@ -149,6 +165,15 @@ describe('PrivateLendingResultTemplatePage', () => {
             { type: 'signature', text: '具状人：王五', align: 'right', indent: 0 },
             { type: 'signature', text: '日期：未填写', align: 'right', indent: 0 }
           ]
+          : payload.caseType === 'labor'
+            ? [
+              { type: 'title', text: '民事起诉状', align: 'center', indent: 0 },
+              { type: 'paragraph', text: '原告孙七与被告杭州某科技有限公司劳动争议。', align: 'left', indent: 2 },
+              { type: 'salutation', text: '此致', align: 'left', indent: 0 },
+              { type: 'court', text: '有管辖权的人民法院', align: 'left', indent: 2 },
+              { type: 'signature', text: '具状人：孙七', align: 'right', indent: 0 },
+              { type: 'signature', text: '日期：未填写', align: 'right', indent: 0 }
+            ]
           : [
             { type: 'title', text: '民事起诉状', align: 'center', indent: 0 },
             { type: 'paragraph', text: '李四向张三出借50000元。', align: 'left', indent: 2 },
@@ -160,8 +185,8 @@ describe('PrivateLendingResultTemplatePage', () => {
             { type: 'signature', text: '日期：未填写', align: 'right', indent: 0 }
           ],
         riskNotice: '仅作为材料整理辅助。',
-        evidenceChecklist: payload.caseType === 'divorce' ? ['结婚证'] : ['付款凭证'],
-        filingTips: payload.caseType === 'divorce' ? ['核对被告住所地'] : ['核对管辖法院'],
+        evidenceChecklist: payload.caseType === 'divorce' ? ['结婚证'] : payload.caseType === 'labor' ? ['劳动合同'] : ['付款凭证'],
+        filingTips: payload.caseType === 'divorce' ? ['核对被告住所地'] : payload.caseType === 'labor' ? ['核对劳动仲裁程序'] : ['核对管辖法院'],
         filingGuideUrl: '/pages/value-added-detail/value-added-detail?serviceKey=filing_guidance',
         filingGuideLabel: '查看立案指导服务',
         generatedBy: 'backend_deterministic'
@@ -215,6 +240,37 @@ describe('PrivateLendingResultTemplatePage', () => {
     });
     expect(wrapper.text()).toContain('离婚纠纷');
     expect(wrapper.text()).toContain('原告王五与被告赵六离婚纠纷');
+  });
+
+  it('loads labor editor and previews with labor sample data', async () => {
+    const wrapper = mountPage();
+    await flushAsyncUpdates();
+
+    const vm = wrapper.vm as unknown as {
+      selectedCaseType: string;
+      selectCaseType: (caseType: string) => Promise<void>;
+      templateForm: typeof template;
+      previewTemplate: () => Promise<void>;
+    };
+    await vm.selectCaseType('labor');
+    await flushAsyncUpdates();
+    await vm.previewTemplate();
+    await flushAsyncUpdates();
+
+    expect(vm.selectedCaseType).toBe('labor');
+    expect(getTemplateMock).toHaveBeenCalledWith('lawsuit-material-assistant', 'labor');
+    expect(vm.templateForm.draftTitle).toBe('劳动争议起诉材料草稿');
+    expect(previewTemplateMock).toHaveBeenLastCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      caseType: 'labor',
+      sampleFormData: expect.objectContaining({
+        employeeName: '孙七',
+        employerName: '杭州某科技有限公司',
+        laborClaim: 'wage_and_compensation'
+      })
+    });
+    expect(wrapper.text()).toContain('劳动争议');
+    expect(wrapper.text()).toContain('原告孙七与被告杭州某科技有限公司劳动争议');
   });
 
   it('saves template through backend when operator can manage', async () => {
