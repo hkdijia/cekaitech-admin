@@ -8,14 +8,12 @@ import {
 
 const projectFiles = new Map([
   ['vite.config.ts', "proxy: { '/api': 'http://127.0.0.1:8080' }"],
-  ['src/router/menu.ts', '/legal-service-requests\n/user-operation-logs\n/generation-records\n/miniapp-document-catalog\n/users'],
-  ['src/router/index.ts', '/login\n/legal-service-requests\n/user-operation-logs\n/generation-records\n/miniapp-document-catalog\n/users'],
+  ['src/router/menu.ts', '/legal-service-requests\n/user-operation-logs\n/generation-records\n/users'],
+  ['src/router/index.ts', '/login\n/legal-service-requests\n/user-operation-logs\n/generation-records\n/users'],
   ['src/api/legalServiceRequests.ts', 'export function pageLegalServiceRequests() {}'],
   ['src/api/adminUserOperationLogs.ts', 'export function pageAdminUserOperationLogs() {}'],
-  ['src/api/miniappDocumentCatalog.ts', 'export function pageMiniappDocumentCatalogItems() {}'],
   ['src/pages/legal-service-requests/LegalServiceRequestsPage.vue', '<template />'],
-  ['src/pages/user-operation-logs/UserOperationLogsPage.vue', '<template />'],
-  ['src/pages/miniapp-document-catalog/MiniappDocumentCatalogPage.vue', '<template />']
+  ['src/pages/user-operation-logs/UserOperationLogsPage.vue', '<template />']
 ]);
 
 describe('admin integration readiness report', () => {
@@ -35,7 +33,8 @@ describe('admin integration readiness report', () => {
     expect(report.viteProxy.status).toBe('pass');
     expect(report.routes.every((item) => item.status === 'pass')).toBe(true);
     expect(report.modules.every((item) => item.status === 'pass')).toBe(true);
-    expect(report.nextSteps).toContain('访问 /miniapp-document-catalog，验证文书目录分页、保存、软禁用和权限按钮显隐。');
+    expect(report.routes.some((item) => item.name.includes('/miniapp-document-catalog'))).toBe(false);
+    expect(report.modules.some((item) => item.name.includes('miniappDocumentCatalog'))).toBe(false);
     expect(report.nextSteps).toContain('启动后台前端后访问 /legal-service-requests，验证分页、详情脱敏、联系方式审计查看和状态更新。');
   });
 
@@ -72,7 +71,7 @@ describe('admin integration readiness report', () => {
 
     expect(output).toContain('cekaitech-admin 联调准备检查');
     expect(output).toContain('[PASS] 后端健康检查');
-    expect(output).toContain('/miniapp-document-catalog');
+    expect(output).not.toContain('/miniapp-document-catalog');
     expect(output).toContain('/legal-service-requests');
     expect(output).toContain('下一步');
   });

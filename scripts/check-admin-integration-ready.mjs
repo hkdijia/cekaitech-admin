@@ -9,17 +9,14 @@ const expectedRoutes = [
   '/legal-service-requests',
   '/user-operation-logs',
   '/generation-records',
-  '/miniapp-document-catalog',
   '/users'
 ];
 
 const requiredModules = [
   'src/api/legalServiceRequests.ts',
   'src/api/adminUserOperationLogs.ts',
-  'src/api/miniappDocumentCatalog.ts',
   'src/pages/legal-service-requests/LegalServiceRequestsPage.vue',
-  'src/pages/user-operation-logs/UserOperationLogsPage.vue',
-  'src/pages/miniapp-document-catalog/MiniappDocumentCatalogPage.vue'
+  'src/pages/user-operation-logs/UserOperationLogsPage.vue'
 ];
 
 export function createTextProbe(files) {
@@ -131,7 +128,6 @@ export async function buildAdminIntegrationReadinessReport(options = {}) {
     modules,
     summary: countSummary(allChecks),
     nextSteps: [
-      '访问 /miniapp-document-catalog，验证文书目录分页、保存、软禁用和权限按钮显隐。',
       '启动后台前端后访问 /legal-service-requests，验证分页、详情脱敏、联系方式审计查看和状态更新。',
       '访问 /user-operation-logs，按 legal_service_request_contact_view 查询联系方式查看审计日志。',
       '用低权限账号复核服务请求和操作审计菜单、按钮、后端 403 边界。'

@@ -88,14 +88,6 @@ export const adminMenuItems: AdminMenuItem[] = [
     workspaceCodes: legalWorkspaceCodes
   },
   {
-    path: '/miniapp-document-catalog',
-    title: '文书目录配置',
-    description: '起诉文书生成目录和页面指向',
-    permissionCode: 'admin:miniapp-document-catalog:view',
-    scope: 'miniapp',
-    workspaceCodes: legalWorkspaceCodes
-  },
-  {
     path: '/legal-tool-center',
     title: '法律工具中心',
     description: '竞品工具能力库、展示分组和曝光入口',

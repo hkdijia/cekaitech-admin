@@ -306,7 +306,7 @@ onMounted(loadOptions);
 <template>
   <section>
     <h1 class="page-title">结果模板配置</h1>
-    <p class="page-subtitle">按起诉文书目录选择案件类型，维护已具备生成配置的结构化结果模板。</p>
+    <p class="page-subtitle">按页面菜单中的文书入口选择案件类型，维护已具备生成配置的结构化结果模板。</p>
 
     <el-alert v-if="loadError" class="error-alert" type="error" :title="loadError" show-icon />
 
@@ -331,7 +331,7 @@ onMounted(loadOptions);
       class="error-alert"
       type="warning"
       :title="`${selectedOption.title}：${selectedOption.statusText}`"
-      description="该案件类型目前只在文书目录中占位，尚未配置生成 schema 和结果模板，暂不开放编辑和预览。"
+      description="该案件类型目前只在页面菜单入口中占位，尚未配置生成 schema 和结果模板，暂不开放编辑和预览。"
       show-icon
     />
 
