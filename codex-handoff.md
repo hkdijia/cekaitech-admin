@@ -4,7 +4,7 @@
 
 - 当前分支：`master`
 - 当前阶段：admin 已完成“起诉文书生成多结果模板配置首片”“离婚纠纷结果模板配置首片”“劳动争议结果模板配置首片”和“劳动争议结果模板配置二期”线上发布；本轮进入文书入口配置事实源统一治理。
-- 最近完成：旧“文书目录配置”页面、路由、菜单和 API 封装已移除，起诉文书入口统一回到“小程序编排 / 页面菜单管理”维护。
+- 最近完成：旧“文书目录配置”页面、路由、菜单和 API 封装已移除并发布到 `admin.cekaitech.cn`，起诉文书入口统一回到“小程序编排 / 页面菜单管理”维护。
 - 未完成：劳动争议真机/线上体验验收；启用前强制门禁、批量推进队列和状态变更审计尚未实现。
 
 ## 关键文件
@@ -46,6 +46,7 @@
 ## 最近验证
 
 - [反馈编号：无] 文书入口事实源治理：RED 阶段 `src/router/router.test.ts` 和 `scripts/check-admin-integration-ready.test.mjs` 失败于旧 `/miniapp-document-catalog` 仍在；GREEN 后 `npm.cmd run test -- --run src/router/router.test.ts scripts/check-admin-integration-ready.test.mjs` 通过 23 项。
+- [反馈编号：无] 文书入口事实源治理发布：`scripts\deploy-admin-static.ps1` 构建并同步到 `/data/cekaitech-admin/`，上线资源包含 `index-BLKNh4tO.js`；active dist 无 `miniapp-document-catalog`、`miniappDocumentCatalog` 或“文书目录配置”旧入口字符串，公网 smoke 通过。
 - [反馈编号：无] 离婚纠纷结果模板配置首片：RED 阶段切换 `divorce` 后预览仍提交民间借贷样例字段；GREEN 后 `npm.cmd run test -- --run src/api/privateLendingResultTemplate.test.ts src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts` 通过 2 个测试文件、6 项。
 - [反馈编号：无] 劳动争议结果模板配置首片：RED 阶段切换 `labor` 后预览仍提交民间借贷样例字段；GREEN 后 `npm.cmd test -- PrivateLendingResultTemplatePage.test.ts` 通过 1 个测试文件、8 项。
 - [反馈编号：无] 页面菜单默认展开层级：RED 阶段 `MiniappOrchestrationPage.test.ts` 失败于默认仍展示 `诉讼费计算/LPR` 叶子项；GREEN 后 `npm.cmd run test -- --run src/pages/miniapp-orchestration/MiniappOrchestrationPage.test.ts` 通过 1 个测试文件、10 项。
@@ -73,16 +74,16 @@
 - 反馈编号：`无`
 - 来源文档：当前会话 / admin 功能扩张讨论
 - 本地台账：无
-- 当前状态：小程序工作台法律工具生命周期队列已发布到生产测试环境；页面菜单统一承载入口上线生命周期已完成；起诉文书生成多结果模板配置、离婚纠纷、劳动争议首片和劳动争议二期结果模板配置均已部署生产测试环境；文书入口事实源治理已本地实现，待全量质量检查、提交和后续按需部署。
+- 当前状态：小程序工作台法律工具生命周期队列已发布到生产测试环境；页面菜单统一承载入口上线生命周期已完成；起诉文书生成多结果模板配置、离婚纠纷、劳动争议首片和劳动争议二期结果模板配置均已部署生产测试环境；文书入口事实源治理已发布生产测试环境并通过 smoke。
 
 ## 注意事项
 
 - 本仓不直连数据库，不控制 crawler 进程，只通过 `miniapp-backend` 受控 API 管理结构化数据。
 - `.runtime-logs/` 是本地运行日志噪声，不纳入提交。
 - 用户当前偏好：本地提交可由 Codex 完成，GitHub 远程推送由用户通过 GitHub Desktop 手动执行。
-- 线上已部署本轮结果模板配置；如页面未刷新，优先清缓存或无痕窗口访问 `admin.cekaitech.cn`。
+- 线上已部署本轮结果模板配置和文书入口事实源治理；如页面未刷新，优先清缓存或无痕窗口访问 `admin.cekaitech.cn`。
 
 ## 下一步建议
 
-1. 跑本轮 admin 全量质量检查和空白检查后本地提交。
-2. 后续按需发布 admin 静态资源，确认旧“文书目录配置”菜单不可见，“页面菜单管理”和“结果模板配置”正常。
+1. 用户推送本次部署记录提交。
+2. 线上验收：确认旧“文书目录配置”菜单不可见，“页面菜单管理”和“结果模板配置”正常。

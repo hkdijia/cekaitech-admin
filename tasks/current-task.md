@@ -10,13 +10,14 @@
 - 反馈编号：`无`
 - 来源文档：当前会话 / 起诉文书生成入口配置治理讨论
 - 本地台账：无
-- 当前状态：实施中，已完成 admin 旧文书目录入口移除，待全量验证与本地提交
+- 当前状态：已发布生产测试环境并通过 smoke，待用户验收和推送部署记录提交
 
 ## 当前状态
 
 - 起诉文书入口的配置事实源统一为“小程序编排 / 页面菜单管理”。
 - 旧“文书目录配置”页面和 `/miniapp-document-catalog` 路由已移除，避免和页面菜单管理形成两套配置入口。
 - “结果模板配置”继续按 backend 通用 options 接口读取案件类型；backend 本轮会从页面菜单派生 options。
+- 本轮静态资源已发布到 `admin.cekaitech.cn`，旧“文书目录配置”入口字符串已从 active dist 移除。
 
 ## 已完成
 
@@ -24,6 +25,7 @@
 - [反馈编号：无] 删除 `src/pages/miniapp-document-catalog/MiniappDocumentCatalogPage.vue` 和页面测试。
 - [反馈编号：无] 移除 `/miniapp-document-catalog` 路由、侧边栏菜单和联调准备脚本检查项。
 - [反馈编号：无] “结果模板配置”页文案从“文书目录”改为“页面菜单中的文书入口”。
+- [反馈编号：无] 通过 `scripts\deploy-admin-static.ps1` 发布到生产测试环境，保留上一版 `.previous` 供回滚。
 
 ## 历史已完成
 
@@ -34,13 +36,14 @@
 
 ## 未完成
 
-- 尚未执行 admin 全量质量检查和空白检查。
-- 尚未发布本轮 admin 静态资源到生产测试环境。
+- 尚未完成用户线上验收。
 
 ## 最近验证
 
 - RED：`npm.cmd run test -- --run src/router/router.test.ts scripts/check-admin-integration-ready.test.mjs` 失败 4 项，旧 `/miniapp-document-catalog` 仍在路由、菜单和联调检查项中。
 - GREEN：同命令通过 2 个测试文件、23 项。
+- 收口：`npm.cmd run quality` 通过 33 个测试文件、167 项并完成生产构建；`git diff --check` 无空白错误，仅 Windows 换行提示。
+- 线上发布：`scripts\deploy-admin-static.ps1` 完成生产构建并同步 `/data/cekaitech-admin/`；服务器 active dist 无旧文书目录入口字符串，公网 Basic Auth 401 正常，阳律通 smoke 通过。
 
 ## 历史最近验证
 
@@ -54,6 +57,6 @@
 
 ## 下一步
 
-1. 跑 `npm.cmd run quality` 和空白检查。
-2. 本地提交后由用户推送远程。
-3. 后续如需要上线 admin 静态资源，再执行部署脚本并 smoke。
+1. 用户推送本次部署记录提交。
+2. 线上验收：进入 admin 后确认小程序编排 / 页面菜单管理仍可维护文书入口，侧边栏不再出现旧“文书目录配置”。
+3. 配合小程序体验版验收三类文书生成入口。
