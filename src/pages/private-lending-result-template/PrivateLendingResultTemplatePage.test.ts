@@ -51,7 +51,13 @@ const laborTemplate = {
   filingGuideLabel: '查看立案指导服务',
   evidenceChecklist: ['{{contractEvidence}}', '{{wageEvidence}}'],
   filingTips: ['核对劳动仲裁程序'],
-  draftLines: ['民事起诉状', '原告{{employeeName}}与被告{{employerName}}劳动争议。']
+  draftLines: [
+    '民事起诉状',
+    '主路径：{{laborClaimLabel}}',
+    '月工资标准：{{monthlyWage}}',
+    '仲裁状态：{{arbitrationStatusLabel}}',
+    '原告{{employeeName}}与被告{{employerName}}劳动争议。'
+  ]
 };
 
 function mountPage(permissions: string[] = [
@@ -154,7 +160,7 @@ describe('PrivateLendingResultTemplatePage', () => {
         draftContent: payload.caseType === 'divorce'
           ? '民事起诉状\n原告王五与被告赵六离婚纠纷。\n此致\n有管辖权的人民法院\n具状人：王五\n日期：未填写'
           : payload.caseType === 'labor'
-            ? '民事起诉状\n原告孙七与被告杭州某科技有限公司劳动争议。\n此致\n有管辖权的人民法院\n具状人：孙七\n日期：未填写'
+            ? '民事起诉状\n主路径：劳动报酬及解除补偿\n月工资标准：12000元\n仲裁状态：已取得仲裁裁决或不予受理材料\n原告孙七与被告杭州某科技有限公司劳动争议。\n此致\n有管辖权的人民法院\n具状人：孙七\n日期：未填写'
             : '民事起诉状\n李四向张三出借50000元。\n诉讼请求：\n1. 请求返还借款。\n此致\n有管辖权的人民法院\n具状人：李四\n日期：未填写',
         draftBlocks: payload.caseType === 'divorce'
           ? [
@@ -168,6 +174,9 @@ describe('PrivateLendingResultTemplatePage', () => {
           : payload.caseType === 'labor'
             ? [
               { type: 'title', text: '民事起诉状', align: 'center', indent: 0 },
+              { type: 'paragraph', text: '主路径：劳动报酬及解除补偿', align: 'left', indent: 2 },
+              { type: 'paragraph', text: '月工资标准：12000元', align: 'left', indent: 2 },
+              { type: 'paragraph', text: '仲裁状态：已取得仲裁裁决或不予受理材料', align: 'left', indent: 2 },
               { type: 'paragraph', text: '原告孙七与被告杭州某科技有限公司劳动争议。', align: 'left', indent: 2 },
               { type: 'salutation', text: '此致', align: 'left', indent: 0 },
               { type: 'court', text: '有管辖权的人民法院', align: 'left', indent: 2 },
@@ -266,10 +275,21 @@ describe('PrivateLendingResultTemplatePage', () => {
       sampleFormData: expect.objectContaining({
         employeeName: '孙七',
         employerName: '杭州某科技有限公司',
-        laborClaim: 'wage_and_compensation'
+        laborClaim: 'wage_and_compensation',
+        monthlyWage: '12000',
+        unpaidWagePeriod: '2026年3月至2026年5月',
+        unpaidWageAmount: '18000',
+        terminationReason: '公司单方解除且未说明合法依据',
+        compensationAmount: '20000',
+        doubleWagePeriod: '未主张',
+        doubleWageAmount: '0',
+        arbitrationStatus: 'award_or_rejection'
       })
     });
     expect(wrapper.text()).toContain('劳动争议');
+    expect(wrapper.text()).toContain('主路径：劳动报酬及解除补偿');
+    expect(wrapper.text()).toContain('月工资标准：12000元');
+    expect(wrapper.text()).toContain('仲裁状态：已取得仲裁裁决或不予受理材料');
     expect(wrapper.text()).toContain('原告孙七与被告杭州某科技有限公司劳动争议');
   });
 
