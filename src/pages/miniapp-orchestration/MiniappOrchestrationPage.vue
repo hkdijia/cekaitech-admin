@@ -78,6 +78,9 @@ const selectedCanManage = computed(() => {
   if (selectedNode.value.sourceType === 'home_menu_item') {
     return auth.hasPermission('admin:miniapp-home-config:manage');
   }
+  if (selectedNode.value.sourceType === 'miniapp_feature') {
+    return auth.hasPermission('admin:miniapp-home-config:manage');
+  }
   return false;
 });
 
@@ -171,8 +174,14 @@ function sourceTypeLabel(sourceType: string) {
   if (sourceType === 'profile_local_feature') {
     return '账号页本地功能';
   }
+  if (sourceType === 'miniapp_feature') {
+    return '通用功能入口';
+  }
   if (sourceType === 'home_module') {
     return '首页配置模块';
+  }
+  if (sourceType === 'miniapp_module') {
+    return '通用页面模块';
   }
   if (sourceType === 'legal_tool_group' || sourceType === 'legal_tool_exposure_group') {
     return '法律工具分组';

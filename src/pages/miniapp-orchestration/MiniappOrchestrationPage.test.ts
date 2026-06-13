@@ -109,6 +109,46 @@ const profileAgreementEntry: MiniappOrchestrationNode = {
   sortOrder: 40
 };
 
+const serviceRequestsEntry: MiniappOrchestrationNode = {
+  nodeType: 'feature',
+  sourceType: 'miniapp_feature',
+  sourceId: 301,
+  key: 'service_requests',
+  title: '服务请求',
+  description: '查看已提交的增值服务请求',
+  targetPath: '/pages/service-requests/service-requests',
+  action: 'navigate',
+  status: 'published',
+  statusText: '查看',
+  visibility: 'public',
+  releaseStage: 'public',
+  iconKey: 'list-checks',
+  sortOrder: 30,
+  enabled: true,
+  capabilityKey: 'legal_service_request_list',
+  children: []
+};
+
+const profileModule: MiniappOrchestrationNode = {
+  nodeType: 'module',
+  sourceType: 'miniapp_module',
+  sourceId: 201,
+  key: 'account_services',
+  title: '账号与记录',
+  description: '账号相关审核、文书和服务记录',
+  targetPath: '',
+  action: 'module',
+  status: 'published',
+  statusText: '查看',
+  visibility: 'public',
+  releaseStage: 'public',
+  iconKey: 'neutral',
+  sortOrder: 10,
+  enabled: true,
+  capabilityKey: '',
+  children: [serviceRequestsEntry]
+};
+
 const tree: MiniappOrchestrationNode = {
   nodeType: 'app',
   sourceType: 'app',
@@ -338,6 +378,45 @@ describe('MiniappOrchestrationPage', () => {
     expect(wrapper.text()).toContain('账号页本地功能');
     expect(wrapper.text()).toContain('当前功能来自小程序本地页面');
     expect(wrapper.find('[data-test="save-entry"]').exists()).toBe(false);
+  });
+
+  it('edits generic miniapp feature entries from page menu management', async () => {
+    loadMiniappOrchestrationTreeMock.mockResolvedValueOnce({
+      ...treeWithToolFeatures,
+      children: [
+        treeWithToolFeatures.children[0],
+        {
+          ...treeWithToolFeatures.children[1],
+          key: 'me',
+          children: [profileModule]
+        }
+      ]
+    });
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+    await expandNode(wrapper, '[data-test="toggle-module-account_services"]');
+    await wrapper.find('[data-test="node-feature-service_requests"]').trigger('click');
+    expect(wrapper.text()).toContain('通用功能入口');
+    await wrapper.find('[data-test="entry-title"]').setValue('我的服务请求');
+    await wrapper.find('[data-test="save-entry"]').trigger('click');
+    await flushAsyncUpdates();
+
+    expect(saveMiniappOrchestrationEntryMock).toHaveBeenCalledWith({
+      sourceType: 'miniapp_feature',
+      sourceId: 301,
+      title: '我的服务请求',
+      description: '查看已提交的增值服务请求',
+      targetPath: '/pages/service-requests/service-requests',
+      action: 'navigate',
+      status: 'published',
+      statusText: '查看',
+      iconKey: 'list-checks',
+      visibility: 'public',
+      releaseStage: 'public',
+      sortOrder: 30,
+      enabled: true
+    });
   });
 
   it('shows selected node summary before configuration details', async () => {

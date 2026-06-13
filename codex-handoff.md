@@ -3,87 +3,46 @@
 ## 当前状态
 
 - 当前分支：`master`
-- 当前阶段：admin 已完成“起诉文书生成多结果模板配置首片”“离婚纠纷结果模板配置首片”“劳动争议结果模板配置首片”和“劳动争议结果模板配置二期”线上发布；本轮进入文书入口配置事实源统一治理。
-- 最近完成：旧“文书目录配置”页面、路由、菜单和 API 封装已移除并发布到 `admin.cekaitech.cn`，起诉文书入口统一回到“小程序编排 / 页面菜单管理”维护。
-- 未完成：劳动争议真机/线上体验验收；启用前强制门禁、批量推进队列和状态变更审计尚未实现。
+- 当前阶段：页面菜单管理支持通用功能入口本地实现完成，进入空白检查和提交。
+- 最近完成：admin 可展示和编辑 backend 返回的 `miniapp_module` / `miniapp_feature` 节点，支持保存“服务请求”等通用入口。
+- 未完成：空白检查、本地提交、admin 静态资源发布和线上验收。
 
 ## 关键文件
 
-- `src/api/legalToolCenter.ts`
-- `src/api/legalToolCenter.test.ts`
-- `src/pages/legal-tool-center/LegalToolCenterPage.vue`
-- `src/pages/legal-tool-center/LegalToolCenterPage.test.ts`
 - `src/pages/miniapp-orchestration/MiniappOrchestrationPage.vue`
 - `src/pages/miniapp-orchestration/MiniappOrchestrationPage.test.ts`
-- `src/router/menu.ts`
-- `src/router/index.ts`
-- `src/router/router.test.ts`
-- `src/layouts/AdminLayout.vue`
-- `src/layouts/AdminLayout.test.ts`
-- `src/pages/miniapp-workbench/MiniappWorkbenchPage.vue`
-- `src/pages/miniapp-workbench/MiniappWorkbenchPage.test.ts`
-- `src/api/privateLendingResultTemplate.ts`
-- `src/api/privateLendingResultTemplate.test.ts`
-- `src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.vue`
-- `src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts`
-- `src/router/menu.ts`
-- `src/router/router.test.ts`
-- `scripts/check-admin-integration-ready.mjs`
-- `scripts/check-admin-integration-ready.test.mjs`
 - `docs/变更日志.md`
 - `tasks/current-task.md`
 - `codex-handoff.md`
 
 ## 关键命令
 
-- `npm.cmd run test -- --run src/layouts/AdminLayout.test.ts src/api/legalToolCenter.test.ts src/router/router.test.ts src/pages/miniapp-workbench/MiniappWorkbenchPage.test.ts`
-- `npm.cmd run test -- --run src/api/legalToolCenter.test.ts src/pages/legal-tool-center/LegalToolCenterPage.test.ts src/pages/miniapp-workbench/MiniappWorkbenchPage.test.ts`
-- `npm.cmd run quality`
-- `npm.cmd run test -- --run src/api/privateLendingResultTemplate.test.ts src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts src/router/router.test.ts`
-- `git diff --check`
-- `git status -sb`
+- 定向测试：`npm.cmd test -- MiniappOrchestrationPage.test.ts miniappOrchestration.test.ts`
+- 构建：`npm.cmd run build`
+- 质量检查：`npm.cmd run quality`
+- 空白检查：`git diff --check`
+- 生产静态发布：`powershell -ExecutionPolicy Bypass -File scripts\deploy-admin-static.ps1`
 
 ## 最近验证
 
-- [反馈编号：无] 文书入口事实源治理：RED 阶段 `src/router/router.test.ts` 和 `scripts/check-admin-integration-ready.test.mjs` 失败于旧 `/miniapp-document-catalog` 仍在；GREEN 后 `npm.cmd run test -- --run src/router/router.test.ts scripts/check-admin-integration-ready.test.mjs` 通过 23 项。
-- [反馈编号：无] 文书入口事实源治理发布：`scripts\deploy-admin-static.ps1` 构建并同步到 `/data/cekaitech-admin/`，上线资源包含 `index-BLKNh4tO.js`；active dist 无 `miniapp-document-catalog`、`miniappDocumentCatalog` 或“文书目录配置”旧入口字符串，公网 smoke 通过。
-- [反馈编号：无] 离婚纠纷结果模板配置首片：RED 阶段切换 `divorce` 后预览仍提交民间借贷样例字段；GREEN 后 `npm.cmd run test -- --run src/api/privateLendingResultTemplate.test.ts src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts` 通过 2 个测试文件、6 项。
-- [反馈编号：无] 劳动争议结果模板配置首片：RED 阶段切换 `labor` 后预览仍提交民间借贷样例字段；GREEN 后 `npm.cmd test -- PrivateLendingResultTemplatePage.test.ts` 通过 1 个测试文件、8 项。
-- [反馈编号：无] 页面菜单默认展开层级：RED 阶段 `MiniappOrchestrationPage.test.ts` 失败于默认仍展示 `诉讼费计算/LPR` 叶子项；GREEN 后 `npm.cmd run test -- --run src/pages/miniapp-orchestration/MiniappOrchestrationPage.test.ts` 通过 1 个测试文件、10 项。
-- [反馈编号：无] 劳动争议结果模板配置首片收口：`npm.cmd run quality` 通过 35 个测试文件、172 项并完成生产构建；`git diff --check` 通过，仅有 Windows 换行提示。
-- [反馈编号：无] 劳动争议结果模板配置发布：`scripts/deploy-admin-static.ps1` 构建并同步到 `/data/cekaitech-admin/`，上线资源包含 `PrivateLendingResultTemplatePage-CGnkRVZa.js`；服务器静态文件确认包含 `employeeName/labor/劳动争议` 样例字段，公网 smoke 通过。
-- [反馈编号：无] 劳动争议结果模板配置二期：RED 阶段 `npm.cmd run test -- --run src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts` 失败于缺少二期样例字段；GREEN 后同命令通过 8 项。
-- [反馈编号：无] 劳动争议结果模板配置二期发布：`scripts\deploy-admin-static.ps1` 构建并同步到 `/data/cekaitech-admin/`，上线资源包含 `PrivateLendingResultTemplatePage-CoMBmt9Y.js`；服务器静态文件确认包含 `monthlyWage/arbitrationStatus` 样例字段，公网 smoke 通过。
-- [反馈编号：无] 离婚纠纷结果模板配置首片收口：`npm.cmd run quality` 通过 35 个测试文件、169 项并完成生产构建；`git diff --check` 通过，仅有 Windows 换行提示。
-- [反馈编号：无] 离婚纠纷结果模板配置发布：`scripts/deploy-admin-static.ps1` 构建并同步到 `/data/cekaitech-admin/`，上线资源包含 `PrivateLendingResultTemplatePage-CfdkUiv5.js`；服务器静态文件确认包含 `divorce/plaintiffName` 样例字段，公网 smoke 通过。
-- [反馈编号：无] 起诉文书生成多模板配置首片：RED 阶段 API 函数、案件选择方法和菜单描述测试失败；GREEN 后 `npm.cmd run test -- --run src/api/privateLendingResultTemplate.test.ts src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts src/router/router.test.ts` 通过 3 个测试文件、26 项。
-- [反馈编号：无] 起诉文书生成多模板配置 admin 发布：`scripts/deploy-admin-static.ps1` 构建并同步到 `/data/cekaitech-admin/`，上线资源包含 `PrivateLendingResultTemplatePage-CKOHrQyy.js`；服务器静态文件确认包含 `/api/admin/case-result-template` 和“结果模板配置”文案，公网 smoke 通过。
-- [反馈编号：无] 页面菜单生命周期归口：`npm.cmd run test -- --run src/api/miniappOrchestration.test.ts src/pages/miniapp-orchestration/MiniappOrchestrationPage.test.ts src/pages/legal-tool-center/LegalToolCenterPage.test.ts src/api/legalToolCenter.test.ts` 通过 4 个测试文件、35 项；`npm.cmd run quality` 通过 35 个测试文件、168 项并完成构建；`git diff --check` 通过。
-- [反馈编号：无] 历史状态流转首片曾在能力列表加入“状态”下拉；本轮产品口径已调整为页面菜单承载入口生命周期，能力列表状态下拉已撤销。
-- [反馈编号：无] admin 静态资源发布：`scripts/deploy-admin-static.ps1` 构建并同步到 `/data/cekaitech-admin/`，上线资源包含 `LegalToolCenterPage-BsUFdRjP.js` 和 `MiniappWorkbenchPage-VNEwOTtl.js`；公网 smoke 确认 Basic Auth 和 API 未登录鉴权正常。
-- [反馈编号：无] 法律工具生命周期展示：工作台摘要改为“已上线/待发布队列/阻塞/人工暂缓”，能力状态选项改为 `enabled/pending_release/blocked/paused/retired`，新增能力默认 `pending_release`；定向测试通过 3 个文件 26 项，`npm.cmd run quality` 通过 35 个文件 167 项并完成构建。
-- [反馈编号：无] API RED：`legalToolCenter.test.ts` 失败于 `inspectLegalToolReadiness is not a function`。
-- [反馈编号：无] 路由 RED：`router.test.ts` 失败于缺少 `/miniapp-workbench` 菜单和路由。
-- [反馈编号：无] 页面 RED：`MiniappWorkbenchPage.test.ts` 失败于页面文件不存在。
-- [反馈编号：无] 布局 RED：`AdminLayout.test.ts` 失败于切换业务工作区后未跳转小程序工作台。
-- [反馈编号：无] 定向 GREEN：`npm.cmd run test -- --run src/layouts/AdminLayout.test.ts src/api/legalToolCenter.test.ts src/router/router.test.ts src/pages/miniapp-workbench/MiniappWorkbenchPage.test.ts` 通过，4 个测试文件、32 项 Vitest。
-- [反馈编号：无] 质量检查：`npm.cmd run quality` 通过，35 个测试文件、165 项 Vitest，`vue-tsc --noEmit` 和 `vite build` 通过；构建保留既有 Rollup 注释 warning 和大 chunk warning。
+- [反馈编号：无] 通用功能入口编辑：`npm.cmd test -- MiniappOrchestrationPage.test.ts miniappOrchestration.test.ts` 通过 13 项。
+- [反馈编号：无] 构建：`npm.cmd run build` 通过，保留既有 Rollup PURE 注释 warning 和 chunk size warning。
 
 ## 追溯信息
 
 - 反馈编号：`无`
-- 来源文档：当前会话 / admin 功能扩张讨论
+- 来源文档：当前会话 / 多小程序 `app-tab-module-feature` 数据模型讨论
 - 本地台账：无
-- 当前状态：小程序工作台法律工具生命周期队列已发布到生产测试环境；页面菜单统一承载入口上线生命周期已完成；起诉文书生成多结果模板配置、离婚纠纷、劳动争议首片和劳动争议二期结果模板配置均已部署生产测试环境；文书入口事实源治理已发布生产测试环境并通过 smoke。
+- 当前状态：已验证，待提交
 
 ## 注意事项
 
-- 本仓不直连数据库，不控制 crawler 进程，只通过 `miniapp-backend` 受控 API 管理结构化数据。
-- `.runtime-logs/` 是本地运行日志噪声，不纳入提交。
-- 用户当前偏好：本地提交可由 Codex 完成，GitHub 远程推送由用户通过 GitHub Desktop 手动执行。
-- 线上已部署本轮结果模板配置和文书入口事实源治理；如页面未刷新，优先清缓存或无痕窗口访问 `admin.cekaitech.cn`。
+- 本仓不直连数据库，只通过 `miniapp-backend` 编排接口读写。
+- 后端 V142 部署前，线上 admin 无法读到生产库的通用编排节点。
+- 用户偏好：Codex 可本地提交，远程 GitHub 推送由用户执行。
 
 ## 下一步建议
 
-1. 用户推送本次部署记录提交。
-2. 线上验收：确认旧“文书目录配置”菜单不可见，“页面菜单管理”和“结果模板配置”正常。
+1. 跑空白检查并本地提交。
+2. 用户推送远程。
+3. 后端 V142 部署后，发布 admin 静态资源并验收“小程序编排 / 页面菜单管理”可维护“我的”页入口。

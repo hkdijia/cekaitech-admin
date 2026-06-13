@@ -2,61 +2,41 @@
 
 ## 当前任务
 
-- 名称：文书入口配置事实源统一治理
+- 名称：页面菜单管理支持通用功能入口
 - OpenSpec 变更：无。
 
 ## 追溯信息
 
 - 反馈编号：`无`
-- 来源文档：当前会话 / 起诉文书生成入口配置治理讨论
+- 来源文档：当前会话 / 多小程序 `app-tab-module-feature` 数据模型讨论
 - 本地台账：无
-- 当前状态：已发布生产测试环境并通过 smoke，待用户验收和推送部署记录提交
+- 当前状态：已完成本地实现、定向测试和构建，待最终空白检查、本地提交和后续发布
 
 ## 当前状态
 
-- 起诉文书入口的配置事实源统一为“小程序编排 / 页面菜单管理”。
-- 旧“文书目录配置”页面和 `/miniapp-document-catalog` 路由已移除，避免和页面菜单管理形成两套配置入口。
-- “结果模板配置”继续按 backend 通用 options 接口读取案件类型；backend 本轮会从页面菜单派生 options。
-- 本轮静态资源已发布到 `admin.cekaitech.cn`，旧“文书目录配置”入口字符串已从 active dist 移除。
+- “小程序编排 / 页面菜单管理”可识别 backend 返回的 `miniapp_module` 和 `miniapp_feature`。
+- `miniapp_feature` 节点可编辑和保存，用于“我的”页服务请求等通用功能入口。
+- admin 仍通过 backend 编排接口读写，不直连数据库。
 
 ## 已完成
 
-- [反馈编号：无] 删除 `src/api/miniappDocumentCatalog.ts` 和对应 API 测试。
-- [反馈编号：无] 删除 `src/pages/miniapp-document-catalog/MiniappDocumentCatalogPage.vue` 和页面测试。
-- [反馈编号：无] 移除 `/miniapp-document-catalog` 路由、侧边栏菜单和联调准备脚本检查项。
-- [反馈编号：无] “结果模板配置”页文案从“文书目录”改为“页面菜单中的文书入口”。
-- [反馈编号：无] 通过 `scripts\deploy-admin-static.ps1` 发布到生产测试环境，保留上一版 `.previous` 供回滚。
-
-## 历史已完成
-
-- [反馈编号：无] `PrivateLendingResultTemplatePage` 增加劳动争议样例数据。
-- [反馈编号：无] 页面测试覆盖切换 `labor` 后加载劳动模板，并以 `employeeName/employerName/laborClaim` 预览。
-- [反馈编号：无] 测试 mock 中劳动争议 options 改为可编辑，匹配 backend V137 后状态。
-- [反馈编号：无] 劳动争议样例数据补齐 `monthlyWage/unpaidWagePeriod/unpaidWageAmount/terminationReason/compensationAmount/doubleWagePeriod/doubleWageAmount/arbitrationStatus`，匹配 backend V138。
-
-## 未完成
-
-- 尚未完成用户线上验收。
+- [反馈编号：无] `MiniappOrchestrationPage.vue` 增加 `miniapp_module`、`miniapp_feature` 节点展示和编辑支持。
+- [反馈编号：无] `miniapp_feature` 保存复用既有页面菜单管理权限。
+- [反馈编号：无] 页面测试覆盖编辑“服务请求”通用功能入口并保存 `sourceType=miniapp_feature`。
 
 ## 最近验证
 
-- RED：`npm.cmd run test -- --run src/router/router.test.ts scripts/check-admin-integration-ready.test.mjs` 失败 4 项，旧 `/miniapp-document-catalog` 仍在路由、菜单和联调检查项中。
-- GREEN：同命令通过 2 个测试文件、23 项。
-- 收口：`npm.cmd run quality` 通过 33 个测试文件、167 项并完成生产构建；`git diff --check` 无空白错误，仅 Windows 换行提示。
-- 线上发布：`scripts\deploy-admin-static.ps1` 完成生产构建并同步 `/data/cekaitech-admin/`；服务器 active dist 无旧文书目录入口字符串，公网 Basic Auth 401 正常，阳律通 smoke 通过。
+- `npm.cmd test -- MiniappOrchestrationPage.test.ts miniappOrchestration.test.ts` 通过 13 项。
+- `npm.cmd run build` 通过；仅保留既有 Rollup PURE 注释 warning 和 chunk size warning。
 
-## 历史最近验证
+## 未完成
 
-- RED：`npm.cmd test -- PrivateLendingResultTemplatePage.test.ts` 失败于切换 `labor` 后仍提交民间借贷样例字段。
-- GREEN：同命令通过 8 项。
-- 收口：`npm.cmd run quality` 通过 35 个测试文件、172 项并完成生产构建；`git diff --check` 无空白错误，仅 Windows 换行提示。
-- 二期 RED：`npm.cmd run test -- --run src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts` 失败于缺少劳动争议二期样例字段。
-- 二期 GREEN：同命令通过 8 项。
-- 线上发布：`scripts\deploy-admin-static.ps1` 完成生产构建并同步 `/data/cekaitech-admin/`，上线资源包含 `PrivateLendingResultTemplatePage-CoMBmt9Y.js`。
-- 发布校验：服务器静态资源包含 `monthlyWage/arbitrationStatus` 二期样例字段，公网 smoke 通过，admin Basic Auth 未登录返回 401。
+- 尚未执行 `git diff --check`。
+- 尚未本地提交。
+- 尚未发布到 `admin.cekaitech.cn`。
 
 ## 下一步
 
-1. 用户推送本次部署记录提交。
-2. 线上验收：进入 admin 后确认小程序编排 / 页面菜单管理仍可维护文书入口，侧边栏不再出现旧“文书目录配置”。
-3. 配合小程序体验版验收三类文书生成入口。
+1. 跑空白检查。
+2. 本地提交，由用户推送远程。
+3. 后端 V142 部署后，发布 admin 静态资源并验收页面菜单管理可编辑“我的”页入口。
