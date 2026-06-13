@@ -3,8 +3,8 @@
 ## 当前状态
 
 - 当前分支：`master`
-- 当前阶段：admin 已完成“起诉文书生成多结果模板配置首片”“离婚纠纷结果模板配置首片”和“劳动争议结果模板配置首片”线上发布；本轮“劳动争议结果模板配置二期”已完成本地实现和定向验证，尚未发布线上静态资源。
-- 最近完成：结果模板配置页的 `labor` 预览样例已补齐工资报酬、解除补偿、二倍工资和仲裁状态字段，可与 backend V138 的劳动争议二期模板对齐。
+- 当前阶段：admin 已完成“起诉文书生成多结果模板配置首片”“离婚纠纷结果模板配置首片”“劳动争议结果模板配置首片”和“劳动争议结果模板配置二期”线上发布。
+- 最近完成：结果模板配置页的 `labor` 预览样例已补齐工资报酬、解除补偿、二倍工资和仲裁状态字段，并已发布到生产测试环境与 backend V138 对齐。
 - 未完成：劳动争议真机/线上体验验收；启用前强制门禁、批量推进队列和状态变更审计尚未实现。
 
 ## 关键文件
@@ -49,6 +49,7 @@
 - [反馈编号：无] 劳动争议结果模板配置首片收口：`npm.cmd run quality` 通过 35 个测试文件、172 项并完成生产构建；`git diff --check` 通过，仅有 Windows 换行提示。
 - [反馈编号：无] 劳动争议结果模板配置发布：`scripts/deploy-admin-static.ps1` 构建并同步到 `/data/cekaitech-admin/`，上线资源包含 `PrivateLendingResultTemplatePage-CGnkRVZa.js`；服务器静态文件确认包含 `employeeName/labor/劳动争议` 样例字段，公网 smoke 通过。
 - [反馈编号：无] 劳动争议结果模板配置二期：RED 阶段 `npm.cmd run test -- --run src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts` 失败于缺少二期样例字段；GREEN 后同命令通过 8 项。
+- [反馈编号：无] 劳动争议结果模板配置二期发布：`scripts\deploy-admin-static.ps1` 构建并同步到 `/data/cekaitech-admin/`，上线资源包含 `PrivateLendingResultTemplatePage-CoMBmt9Y.js`；服务器静态文件确认包含 `monthlyWage/arbitrationStatus` 样例字段，公网 smoke 通过。
 - [反馈编号：无] 离婚纠纷结果模板配置首片收口：`npm.cmd run quality` 通过 35 个测试文件、169 项并完成生产构建；`git diff --check` 通过，仅有 Windows 换行提示。
 - [反馈编号：无] 离婚纠纷结果模板配置发布：`scripts/deploy-admin-static.ps1` 构建并同步到 `/data/cekaitech-admin/`，上线资源包含 `PrivateLendingResultTemplatePage-CfdkUiv5.js`；服务器静态文件确认包含 `divorce/plaintiffName` 样例字段，公网 smoke 通过。
 - [反馈编号：无] 起诉文书生成多模板配置首片：RED 阶段 API 函数、案件选择方法和菜单描述测试失败；GREEN 后 `npm.cmd run test -- --run src/api/privateLendingResultTemplate.test.ts src/pages/private-lending-result-template/PrivateLendingResultTemplatePage.test.ts src/router/router.test.ts` 通过 3 个测试文件、26 项。
@@ -69,7 +70,7 @@
 - 反馈编号：`无`
 - 来源文档：当前会话 / admin 功能扩张讨论
 - 本地台账：无
-- 当前状态：小程序工作台法律工具生命周期队列已发布到生产测试环境；页面菜单统一承载入口上线生命周期已完成；起诉文书生成多结果模板配置、离婚纠纷和劳动争议结果模板配置首片均已部署生产测试环境；劳动争议结果模板配置二期已本地完成，待用户推送后发布。
+- 当前状态：小程序工作台法律工具生命周期队列已发布到生产测试环境；页面菜单统一承载入口上线生命周期已完成；起诉文书生成多结果模板配置、离婚纠纷、劳动争议首片和劳动争议二期结果模板配置均已部署生产测试环境。
 
 ## 注意事项
 
@@ -80,5 +81,5 @@
 
 ## 下一步建议
 
-1. 完成本轮 admin quality、提交和静态资源发布后，线上验收“结果模板配置”：劳动争议预览应展示主路径、月工资、仲裁状态等二期内容。
-2. 等 backend V138 部署后，联调劳动争议模板 options、预览和小程序生成入口。
+1. 线上验收“结果模板配置”：劳动争议预览应展示主路径、月工资、仲裁状态等二期内容。
+2. 配合小程序真机验收劳动争议生成结果，确认 admin 预览和小程序结果口径一致。
