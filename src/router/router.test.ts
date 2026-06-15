@@ -100,6 +100,17 @@ describe('admin routes', () => {
     expect(route?.meta?.permissionCode).toBe('admin:legal-service-request:view');
   });
 
+  it('declares order operations menu and route permission', () => {
+    const menuItem = adminMenuItems.find((item) => item.path === '/order-operations');
+    const route = routes.find((item) => item.path === '/order-operations');
+    const globalItems = filterAdminMenuItems(() => true, 'global');
+
+    expect(menuItem?.title).toBe('订单与退款');
+    expect(menuItem?.permissionCode).toBe('admin:order:view');
+    expect(route?.meta?.permissionCode).toBe('admin:order:view');
+    expect(globalItems.map((item) => item.path)).toContain('/order-operations');
+  });
+
   it('declares miniapp home config menu and route permission', () => {
     const menuItem = adminMenuItems.find((item) => item.path === '/miniapp-home-config');
     const route = routes.find((item) => item.path === '/miniapp-home-config');

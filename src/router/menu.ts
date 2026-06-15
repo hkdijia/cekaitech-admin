@@ -32,6 +32,13 @@ export const adminMenuItems: AdminMenuItem[] = [
     scope: 'global'
   },
   {
+    path: '/order-operations',
+    title: '订单与退款',
+    description: '跨小程序订单、退款和通知排障',
+    permissionCode: 'admin:order:view',
+    scope: 'global'
+  },
+  {
     path: '/miniapp-workbench',
     title: '小程序工作台',
     description: '当前小程序的运行概览、启用准备和待处理事项',
