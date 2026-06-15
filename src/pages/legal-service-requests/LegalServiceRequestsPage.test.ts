@@ -141,7 +141,7 @@ function setPageQuery(wrapper: ReturnType<typeof mountPage>, values: Partial<Rec
 }
 
 async function flushAsyncUpdates() {
-  for (let index = 0; index < 4; index += 1) {
+  for (let index = 0; index < 8; index += 1) {
     await Promise.resolve();
     await nextTick();
   }
@@ -519,8 +519,60 @@ describe('LegalServiceRequestsPage', () => {
     expect(wrapper.findAll('button').map((button) => button.text())).not.toContain('创建退款申请');
   });
 
+  it('refreshes service request detail and refund records from drawer header', async () => {
+    getLegalServiceRequestDetailMock
+      .mockResolvedValueOnce({
+        ...serviceRequest,
+        status: 'waiting_pay',
+        paymentStatus: 'pending_pay',
+        orderId: 3002,
+        orderNo: 'MPO202606150002',
+        amountTotal: 990,
+        orderStatus: 'pending_pay'
+      })
+      .mockResolvedValueOnce({
+        ...serviceRequest,
+        status: 'submitted',
+        paymentStatus: 'paid',
+        orderId: 3002,
+        orderNo: 'MPO202606150002',
+        amountTotal: 990,
+        orderStatus: 'paid',
+        updatedAt: '2026-06-15T17:08:28'
+      });
+    pageAdminOrderRefundsMock
+      .mockResolvedValueOnce({
+        dataList: [],
+        totalCount: 0
+      })
+      .mockResolvedValueOnce({
+        dataList: [refundRecord({ status: 'pending_review' })],
+        totalCount: 1
+      });
+    const wrapper = mountPage(['admin:legal-service-request:view', 'admin:legal-service-request:manage']);
+
+    await flushAsyncUpdates();
+    const detailButton = wrapper.findAll('button').find((button) => button.text().includes('查看详情'));
+    await detailButton?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('待支付');
+    pageLegalServiceRequestsMock.mockClear();
+
+    const refreshButton = wrapper.findAll('button').find((button) => button.text().includes('刷新'));
+    expect(refreshButton?.exists()).toBe(true);
+    await refreshButton?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(getLegalServiceRequestDetailMock).toHaveBeenCalledTimes(2);
+    expect(pageAdminOrderRefundsMock).toHaveBeenCalledTimes(2);
+    expect(pageLegalServiceRequestsMock).toHaveBeenCalledTimes(1);
+    expect(wrapper.text()).toContain('已支付待服务');
+    expect(wrapper.text()).toContain('MPR202606150001');
+  });
+
   it('creates and processes full refund from paid service request detail', async () => {
-    getLegalServiceRequestDetailMock.mockResolvedValueOnce({
+    const paidDetail = {
       ...serviceRequest,
       status: 'submitted',
       paymentStatus: 'paid',
@@ -528,12 +580,31 @@ describe('LegalServiceRequestsPage', () => {
       orderNo: 'MPO202606150002',
       amountTotal: 990,
       orderStatus: 'paid'
-    });
+    };
+    getLegalServiceRequestDetailMock
+      .mockResolvedValueOnce(paidDetail)
+      .mockResolvedValueOnce(paidDetail)
+      .mockResolvedValueOnce(paidDetail)
+      .mockResolvedValueOnce(paidDetail)
+      .mockResolvedValueOnce({
+        ...paidDetail,
+        orderStatus: 'refunded',
+        updatedAt: '2026-06-15T17:10:46'
+      });
     pageAdminOrderRefundsMock.mockResolvedValueOnce({
       dataList: [],
       totalCount: 0
     }).mockResolvedValueOnce({
       dataList: [refundRecord()],
+      totalCount: 1
+    }).mockResolvedValueOnce({
+      dataList: [refundRecord({ status: 'approved', reason: '同意退款' })],
+      totalCount: 1
+    }).mockResolvedValueOnce({
+      dataList: [refundRecord({ status: 'processing', reason: '发起微信退款' })],
+      totalCount: 1
+    }).mockResolvedValueOnce({
+      dataList: [refundRecord({ status: 'success', reason: '发起微信退款' })],
       totalCount: 1
     });
     updateAdminOrderRefundStatusMock
@@ -582,6 +653,8 @@ describe('LegalServiceRequestsPage', () => {
       reason: '发起微信退款'
     });
     expect(syncAdminOrderRefundMock).toHaveBeenCalledWith(1);
+    expect(getLegalServiceRequestDetailMock).toHaveBeenCalledTimes(5);
+    expect(wrapper.text()).toContain('已完成退款');
   });
 
   it('hides status update entry when manage permission is missing', async () => {

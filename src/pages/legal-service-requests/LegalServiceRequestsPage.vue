@@ -388,6 +388,31 @@ async function openDetail(row: LegalServiceRequestItem) {
   }
 }
 
+async function refreshDetail() {
+  if (!currentRequestId.value) {
+    return;
+  }
+  detailLoading.value = true;
+  loadError.value = '';
+  try {
+    const result = await getLegalServiceRequestDetail(currentRequestId.value);
+    detail.value = {
+      ...result,
+      contactPhone: contactRevealed.value ? detail.value?.contactPhone : undefined
+    };
+    statusForm.status = result.status;
+    statusForm.adminRemark = result.adminRemark || '';
+    resetPaymentOrderForm(result);
+    resetRefundForm(result);
+    await loadRefundsForDetail(result);
+    await loadRequests();
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '服务请求详情刷新失败';
+  } finally {
+    detailLoading.value = false;
+  }
+}
+
 function yuanToCents(value: string) {
   const normalized = value.trim();
   if (!/^\d+(\.\d{1,2})?$/.test(normalized)) {
@@ -456,7 +481,7 @@ async function submitRefundCreate() {
       refundAmount,
       reason: refundForm.reason.trim()
     });
-    await loadRefundsForDetail(detail.value);
+    await refreshDetail();
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : '退款申请创建失败';
   } finally {
@@ -468,8 +493,8 @@ async function updateRefund(refund: AdminOrderRefund, status: string, reason: st
   refundActionLoading.value = true;
   loadError.value = '';
   try {
-    const updated = await updateAdminOrderRefundStatus(refund.refundId, { status, reason });
-    refunds.value = refunds.value.map((item) => (item.refundId === updated.refundId ? updated : item));
+    await updateAdminOrderRefundStatus(refund.refundId, { status, reason });
+    await refreshDetail();
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : '退款状态更新失败';
   } finally {
@@ -481,8 +506,8 @@ async function syncRefund(refund: AdminOrderRefund) {
   refundActionLoading.value = true;
   loadError.value = '';
   try {
-    const updated = await syncAdminOrderRefund(refund.refundId);
-    refunds.value = refunds.value.map((item) => (item.refundId === updated.refundId ? updated : item));
+    await syncAdminOrderRefund(refund.refundId);
+    await refreshDetail();
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : '退款同步失败';
   } finally {
@@ -660,7 +685,13 @@ onMounted(() => {
       </div>
     </el-card>
 
-    <el-drawer v-model="detailDrawerVisible" title="服务请求详情" size="640px">
+    <el-drawer v-model="detailDrawerVisible" size="640px">
+      <template #header>
+        <div class="drawer-header">
+          <span>服务请求详情</span>
+          <el-button :icon="Refresh" :loading="detailLoading || refundLoading" text type="primary" @click="refreshDetail">刷新</el-button>
+        </div>
+      </template>
       <div v-loading="detailLoading">
         <el-empty v-if="!detail && !detailLoading" description="暂无详情" />
         <template v-if="detail">
@@ -874,6 +905,14 @@ onMounted(() => {
   color: #344054;
   font-size: 15px;
   font-weight: 600;
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
 }
 
 .inline-action {

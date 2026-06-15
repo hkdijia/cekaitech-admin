@@ -10,7 +10,7 @@
 - 反馈编号：`无`
 - 来源文档：当前会话 / 阳律通支付验收后的 admin 订单与退款处理问题
 - 本地台账：无
-- 当前状态：服务请求报价下单、退款入口、业务状态语义修正和已退款详情退款处理文案均已发布到生产测试 admin 静态站并完成线上复核。
+- 当前状态：服务请求报价下单、退款入口、业务状态语义修正、已退款详情退款处理文案和详情刷新交互均已发布到生产测试 admin 静态站并完成线上复核。
 
 ## 当前状态
 
@@ -20,6 +20,7 @@
 - 服务请求详情已具备已支付订单的退款首片操作：创建退款申请、审核通过、发起退款、单笔同步。
 - 服务请求列表已改为展示融合支付/退款事实的业务状态，避免已支付或已退款订单仍被显示成服务处理状态“待处理”。
 - 服务请求详情的退款处理说明已按订单状态动态展示，已退款订单不再提示可创建退款申请。
+- 服务请求详情抽屉右上角已新增刷新按钮，支付或退款状态变化后可直接刷新详情；退款创建、审核、发起和同步成功后也会自动刷新完整详情。
 - 生产测试 admin 静态资源已同步到 `/data/cekaitech-admin/`，未登录访问仍由 Basic Auth 拦截。
 
 ## 已完成
@@ -30,12 +31,17 @@
 - [反馈编号：无] 退款首片支持从服务请求详情内完成全额退款申请、审核、发起微信退款和主动同步。
 - [反馈编号：无] 服务请求列表状态列调整为“业务状态”，按 `orderStatus/paymentStatus` 优先显示 `待支付/已支付待服务/部分退款/已退款`；详情中新增“业务状态”，保留“处理状态”。
 - [反馈编号：无] 服务请求详情退款处理文案按订单状态动态展示，已退款订单显示已完成退款和无剩余可退金额。
+- [反馈编号：无] 服务请求详情新增“刷新”按钮，刷新时同步拉取详情、订单退款记录和外层列表；退款操作成功后自动刷新详情，减少支付/退款回调后的状态滞后感。
+- [反馈编号：无] 服务请求详情刷新交互已发布到 `admin.cekaitech.cn`，上线资源包含 `LegalServiceRequestsPage-oV1z-yx9.js` 和 `LegalServiceRequestsPage-CWBmEXM9.css`。
 - [反馈编号：无] 业务状态语义修正已发布到 `admin.cekaitech.cn`，上线资源包含 `LegalServiceRequestsPage-DAL64dLG.js` 和 `LegalServiceRequestsPage-DSHAgg2m.css`。
 - [反馈编号：无] 已发布到 `admin.cekaitech.cn`，上线资源包含 `LegalServiceRequestsPage-Dasyl5-0.js` 和 `LegalServiceRequestsPage-BAGzzeWv.css`。
 - [反馈编号：无] 退款处理文案修复已发布到 `admin.cekaitech.cn`，上线资源包含 `LegalServiceRequestsPage-CWmvjZwR.js`。
 
 ## 最近验证
 
+- RED/GREEN：`npm.cmd test -- LegalServiceRequestsPage.test.ts` 先失败于详情页缺少“刷新”操作、退款同步后详情状态未更新；实现后 21 项通过。
+- `npm.cmd run quality` 通过：Vitest 34 个测试文件、178 项测试通过；`vue-tsc --noEmit` 和 `vite build` 通过，仅保留既有 Rollup PURE 注释 warning 和 chunk size warning。
+- 发布验证：`scripts\deploy-admin-static.ps1` 生产构建和上传成功；服务器 active dist 包含“刷新”；`admin.cekaitech.cn` 未认证返回 401；浏览器打开请求 `8` 详情后点击“刷新”，详情接口和列表接口均返回 200。
 - RED/GREEN：`npm.cmd test -- LegalServiceRequestsPage.test.ts` 先失败于已退款详情仍展示可创建退款申请文案，实现动态退款处理文案后 20 项通过。
 - `npm.cmd run quality` 通过：Vitest 34 个测试文件、177 项测试通过；`vue-tsc --noEmit` 和 `vite build` 通过，仅保留既有 Rollup PURE 注释 warning 和 chunk size warning。
 - 发布验证：`scripts\deploy-admin-static.ps1` 生产构建和上传成功；服务器 active dist 包含“已完成退款，当前订单无剩余可退金额”；浏览器复核请求 `6` 详情已显示新文案且无“创建退款申请”按钮。
