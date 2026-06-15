@@ -2,42 +2,43 @@
 
 ## 当前任务
 
-- 名称：页面菜单管理支持通用功能入口
+- 名称：服务请求支付报价与退款运营入口
 - OpenSpec 变更：无。
 
 ## 追溯信息
 
 - 反馈编号：`无`
-- 来源文档：当前会话 / 多小程序 `app-tab-module-feature` 数据模型讨论
+- 来源文档：当前会话 / 阳律通支付验收后的 admin 订单与退款处理问题
 - 本地台账：无
-- 当前状态：已发布生产测试环境并通过 smoke，待用户推送部署记录提交
+- 当前状态：已发布到生产测试 admin 静态站，待线上人工验收服务请求报价下单和退款入口。
 
 ## 当前状态
 
-- “小程序编排 / 页面菜单管理”可识别 backend 返回的 `miniapp_module` 和 `miniapp_feature`。
-- `miniapp_feature` 节点可编辑和保存，用于“我的”页服务请求等通用功能入口。
-- admin 仍通过 backend 编排接口读写，不直连数据库。
-- 本轮静态资源已发布到 `admin.cekaitech.cn`。
+- `cekaitech-admin` 仍只通过 `miniapp-backend` 受控 API 管理订单和退款，不直连数据库。
+- 服务请求页已优先展示后端 `userCode`，用于显示 `lma-xxxxxxxx` 用户编号；`userId/identityId` 继续作为排障字段。
+- 服务请求详情已具备创建待支付订单入口，符合“用户提交需求 -> 企业微信沟通报价 -> admin 创建待支付订单 -> 用户回小程序支付”的业务流程。
+- 服务请求详情已具备已支付订单的退款首片操作：创建退款申请、审核通过、发起退款、单笔同步。
+- 生产测试 admin 静态资源已同步到 `/data/cekaitech-admin/`，未登录访问仍由 Basic Auth 拦截。
 
 ## 已完成
 
-- [反馈编号：无] `MiniappOrchestrationPage.vue` 增加 `miniapp_module`、`miniapp_feature` 节点展示和编辑支持。
-- [反馈编号：无] `miniapp_feature` 保存复用既有页面菜单管理权限。
-- [反馈编号：无] 页面测试覆盖编辑“服务请求”通用功能入口并保存 `sourceType=miniapp_feature`。
-- [反馈编号：无] 已通过 `scripts\deploy-admin-static.ps1` 发布到生产测试环境，保留上一版 `.previous` 供回滚。
+- [反馈编号：无] `src/api/legalServiceRequests.ts` 增加 `userCode/orderId/orderNo/amountTotal/orderStatus/paymentStatus` 类型字段，并封装 `createLegalServicePaymentOrder`。
+- [反馈编号：无] 新增 `src/api/adminOrders.ts`，封装退款分页、创建、状态更新和单笔同步接口。
+- [反馈编号：无] `LegalServiceRequestsPage.vue` 表格和详情改为优先显示用户编号，详情中新增订单与退款区域。
+- [反馈编号：无] 退款首片支持从服务请求详情内完成全额退款申请、审核、发起微信退款和主动同步。
+- [反馈编号：无] 已发布到 `admin.cekaitech.cn`，上线资源包含 `LegalServiceRequestsPage-Dasyl5-0.js` 和 `LegalServiceRequestsPage-BAGzzeWv.css`。
 
 ## 最近验证
 
-- `npm.cmd test -- MiniappOrchestrationPage.test.ts miniappOrchestration.test.ts` 通过 13 项。
-- `npm.cmd run build` 通过；仅保留既有 Rollup PURE 注释 warning 和 chunk size warning。
-- `scripts\deploy-admin-static.ps1` 发布通过，上线资源包含 `MiniappOrchestrationPage-D-fbfYLo.js`。
-- 公网校验：Basic Auth 返回 401，未登录后台编排接口返回 401，远端静态资源包含 `miniapp_feature` / “通用功能入口”。
+- `npm.cmd test -- LegalServiceRequestsPage.test.ts legalServiceRequests.test.ts adminOrders.test.ts` 通过 25 项。
+- `npm.cmd run quality` 通过：Vitest 34 个测试文件、175 项测试通过；`vue-tsc --noEmit` 和 `vite build` 通过，仅保留既有 Rollup PURE 注释 warning 和 chunk size warning。
+- 发布验证：`scripts\deploy-admin-static.ps1` 生产构建和上传成功；`https://admin.cekaitech.cn` 未认证返回 401；服务器 active dist 包含 `创建待支付订单`、`创建退款申请` 和 `用户编号`。
 
 ## 未完成
 
-- 尚未推送本次部署记录提交。
+- 当前仍是服务请求详情内的最小退款操作入口，尚未建设独立的跨小程序订单/退款总览页面。
 
 ## 下一步
 
-1. 用户推送本次部署记录提交。
-2. 线上验收：进入“小程序编排 / 页面菜单管理”，确认“我的”页服务请求等通用功能入口可见且可编辑。
+1. 线上验收：服务请求页显示 `lma-xxxxxxxx`，详情可创建待支付订单，已支付订单可创建和推进退款。
+2. 后续建设独立的跨小程序订单/退款总览页面。

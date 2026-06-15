@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  createLegalServicePaymentOrder,
   getLegalServiceRequestDetail,
   pageLegalServiceRequests,
   updateLegalServiceRequestStatus,
@@ -206,5 +207,60 @@ describe('legal service requests api', () => {
     expect(result.status).toBe('handled');
     expect(result.adminRemark).toBe('已电话回访');
     expect(result.contactPhone).toBeUndefined();
+  });
+
+  it('posts payment order creation to backend endpoint', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        code: '0',
+        msg: '',
+        data: {
+          requestId: 1001,
+          appCode: 'lawsuit-material-assistant',
+          userId: 11,
+          identityId: 21,
+          userCode: 'lma-4a378460',
+          serviceType: 'contract_review',
+          sourceRecordId: 31,
+          clientRecordId: 'client-001',
+          contactName: '张三',
+          contactPhoneMasked: '138****0001',
+          memo: '请帮忙看合同',
+          status: 'waiting_pay',
+          paymentStatus: 'pending_pay',
+          orderId: 3001,
+          orderNo: 'MPO202606150001',
+          amountTotal: 990,
+          orderStatus: 'pending_pay',
+          handler: '',
+          handlerId: null,
+          adminRemark: '9.9 元测试订单',
+          createdAt: '2026-05-24T09:20:00',
+          updatedAt: '2026-05-24T09:30:00',
+          handledAt: ''
+        }
+      })
+    } as Response);
+
+    const result = await createLegalServicePaymentOrder(1001, {
+      amountTotal: 990,
+      subject: '合同模板咨询',
+      adminRemark: '9.9 元测试订单'
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/admin/legal/service-requests/1001/payment-order', {
+      method: 'POST',
+      body: JSON.stringify({
+        amountTotal: 990,
+        subject: '合同模板咨询',
+        adminRemark: '9.9 元测试订单'
+      }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    expect(result.orderNo).toBe('MPO202606150001');
   });
 });

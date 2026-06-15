@@ -3,6 +3,14 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { EditPen, Refresh, Search, View } from '@element-plus/icons-vue';
 import { useRouter } from 'vue-router';
 import {
+  createAdminOrderRefund,
+  pageAdminOrderRefunds,
+  syncAdminOrderRefund,
+  updateAdminOrderRefundStatus,
+  type AdminOrderRefund
+} from '../../api/adminOrders';
+import {
+  createLegalServicePaymentOrder,
   getLegalServiceRequestDetail,
   pageLegalServiceRequests,
   updateLegalServiceRequestStatus,
@@ -25,6 +33,10 @@ const contactViewLoading = ref(false);
 const contactViewError = ref('');
 const contactRevealed = ref(false);
 const statusUpdating = ref(false);
+const paymentOrderCreating = ref(false);
+const refundLoading = ref(false);
+const refundActionLoading = ref(false);
+const refunds = ref<AdminOrderRefund[]>([]);
 
 const query = reactive({
   pageNo: 1,
@@ -44,6 +56,17 @@ const statusForm = reactive({
   adminRemark: ''
 });
 
+const paymentOrderForm = reactive({
+  amountYuan: '',
+  subject: '',
+  adminRemark: ''
+});
+
+const refundForm = reactive({
+  refundAmountYuan: '',
+  reason: ''
+});
+
 const appOptions = [
   { label: '全部小程序', value: '' },
   { label: '阳光法律助手', value: 'lawsuit-material-assistant' }
@@ -61,6 +84,7 @@ const serviceTypeOptions = [
 const statusOptions = [
   { label: '全部状态', value: '' },
   { label: '待处理', value: 'submitted' },
+  { label: '待支付', value: 'waiting_pay' },
   { label: '联系中', value: 'contacting' },
   { label: '待用户补充', value: 'waiting_user' },
   { label: '已处理', value: 'handled' },
@@ -70,6 +94,16 @@ const statusOptions = [
 
 const canManageRequests = () => auth.hasPermission('admin:legal-service-request:manage');
 const currentRequestId = computed(() => detail.value?.requestId);
+const hasPaymentOrder = computed(() => Boolean(detail.value?.orderId));
+const canCreatePaymentOrder = computed(() => {
+  if (!canManageRequests() || !detail.value) {
+    return false;
+  }
+  if (detail.value.orderId || detail.value.paymentStatus === 'paid' || detail.value.paymentStatus === 'pending_pay') {
+    return false;
+  }
+  return !['closed', 'cancelled'].includes(detail.value.status);
+});
 
 function normalizedText(value: string) {
   const trimmedValue = value.trim();
@@ -125,6 +159,91 @@ function statusTagType(value: string) {
     return 'warning';
   }
   return 'primary';
+}
+
+function userDisplay(record: Pick<LegalServiceRequestItem, 'userId' | 'userCode'>) {
+  return record.userCode || String(record.userId || '-');
+}
+
+function formatAmount(value: number | null | undefined) {
+  if (value === null || value === undefined) {
+    return '-';
+  }
+  return `${(value / 100).toFixed(2)} 元`;
+}
+
+function orderStatusText(value: string | null | undefined) {
+  const normalized = value || '';
+  const labels: Record<string, string> = {
+    pending_pay: '待支付',
+    paid: '已支付',
+    partial_refunded: '部分退款',
+    refunded: '已退款',
+    closed: '已关闭'
+  };
+  return labels[normalized] || normalized || '-';
+}
+
+function paymentStatusText(value: string | null | undefined) {
+  const normalized = value || '';
+  const labels: Record<string, string> = {
+    pending_pay: '待支付',
+    paid: '已支付'
+  };
+  return labels[normalized] || normalized || '-';
+}
+
+function resetPaymentOrderForm(record: LegalServiceRequestDetail | null) {
+  paymentOrderForm.amountYuan = '';
+  paymentOrderForm.subject = record ? `${serviceTypeText(record.serviceType)}服务` : '';
+  paymentOrderForm.adminRemark = '';
+}
+
+function resetRefundForm(record: LegalServiceRequestDetail | null) {
+  refundForm.refundAmountYuan = record?.amountTotal ? (record.amountTotal / 100).toFixed(2) : '';
+  refundForm.reason = '';
+}
+
+function refundStatusText(value: string | null | undefined) {
+  const normalized = value || '';
+  const labels: Record<string, string> = {
+    pending_review: '待审核',
+    approved: '已审核',
+    processing: '退款中',
+    success: '退款成功',
+    failed: '退款失败',
+    rejected: '已拒绝'
+  };
+  return labels[normalized] || normalized || '-';
+}
+
+function canCreateRefund() {
+  if (!canManageRequests() || !detail.value?.orderId) {
+    return false;
+  }
+  return ['paid', 'partial_refunded'].includes(detail.value.orderStatus || '');
+}
+
+async function loadRefundsForDetail(record: LegalServiceRequestDetail | null) {
+  refunds.value = [];
+  if (!record?.orderNo) {
+    return;
+  }
+  refundLoading.value = true;
+  try {
+    const result = await pageAdminOrderRefunds({
+      pageNo: 1,
+      pageSize: 10,
+      orderBy: 'createdAt',
+      order: 'desc',
+      keywords: record.orderNo
+    });
+    refunds.value = result.dataList;
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '退款记录加载失败';
+  } finally {
+    refundLoading.value = false;
+  }
 }
 
 async function loadRequests() {
@@ -193,10 +312,115 @@ async function openDetail(row: LegalServiceRequestItem) {
     detail.value = result;
     statusForm.status = result.status;
     statusForm.adminRemark = result.adminRemark || '';
+    resetPaymentOrderForm(result);
+    resetRefundForm(result);
+    await loadRefundsForDetail(result);
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : '服务请求详情加载失败';
   } finally {
     detailLoading.value = false;
+  }
+}
+
+function yuanToCents(value: string) {
+  const normalized = value.trim();
+  if (!/^\d+(\.\d{1,2})?$/.test(normalized)) {
+    return null;
+  }
+  const [yuan, cent = ''] = normalized.split('.');
+  return Number(yuan) * 100 + Number(cent.padEnd(2, '0'));
+}
+
+async function submitPaymentOrderCreate() {
+  if (!currentRequestId.value || !canCreatePaymentOrder.value) {
+    return;
+  }
+  const amountTotal = yuanToCents(paymentOrderForm.amountYuan);
+  if (!amountTotal || amountTotal < 1) {
+    loadError.value = '请输入有效订单金额';
+    return;
+  }
+  if (!paymentOrderForm.subject.trim()) {
+    loadError.value = '请输入订单标题';
+    return;
+  }
+  paymentOrderCreating.value = true;
+  loadError.value = '';
+  try {
+    const updated = await createLegalServicePaymentOrder(currentRequestId.value, {
+      amountTotal,
+      subject: paymentOrderForm.subject.trim(),
+      adminRemark: paymentOrderForm.adminRemark.trim()
+    });
+    detail.value = {
+      ...updated,
+      contactPhone: contactRevealed.value ? detail.value?.contactPhone : undefined
+    };
+    statusForm.status = updated.status;
+    statusForm.adminRemark = updated.adminRemark || '';
+    resetPaymentOrderForm(updated);
+    resetRefundForm(updated);
+    await loadRefundsForDetail(updated);
+    await loadRequests();
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '待支付订单创建失败';
+  } finally {
+    paymentOrderCreating.value = false;
+  }
+}
+
+async function submitRefundCreate() {
+  if (!detail.value?.orderId || !canCreateRefund()) {
+    return;
+  }
+  const refundAmount = yuanToCents(refundForm.refundAmountYuan);
+  if (!refundAmount || refundAmount < 1) {
+    loadError.value = '请输入有效退款金额';
+    return;
+  }
+  if (!refundForm.reason.trim()) {
+    loadError.value = '请输入退款原因';
+    return;
+  }
+  refundActionLoading.value = true;
+  loadError.value = '';
+  try {
+    await createAdminOrderRefund({
+      orderId: detail.value.orderId,
+      refundAmount,
+      reason: refundForm.reason.trim()
+    });
+    await loadRefundsForDetail(detail.value);
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '退款申请创建失败';
+  } finally {
+    refundActionLoading.value = false;
+  }
+}
+
+async function updateRefund(refund: AdminOrderRefund, status: string, reason: string) {
+  refundActionLoading.value = true;
+  loadError.value = '';
+  try {
+    const updated = await updateAdminOrderRefundStatus(refund.refundId, { status, reason });
+    refunds.value = refunds.value.map((item) => (item.refundId === updated.refundId ? updated : item));
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '退款状态更新失败';
+  } finally {
+    refundActionLoading.value = false;
+  }
+}
+
+async function syncRefund(refund: AdminOrderRefund) {
+  refundActionLoading.value = true;
+  loadError.value = '';
+  try {
+    const updated = await syncAdminOrderRefund(refund.refundId);
+    refunds.value = refunds.value.map((item) => (item.refundId === updated.refundId ? updated : item));
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '退款同步失败';
+  } finally {
+    refundActionLoading.value = false;
   }
 }
 
@@ -326,7 +550,9 @@ onMounted(() => {
     <el-card shadow="never" class="table-panel">
       <el-table v-loading="loading" :data="requests" row-key="requestId">
         <el-table-column prop="requestId" label="请求ID" width="104" />
-        <el-table-column prop="userId" label="用户ID" width="96" />
+        <el-table-column label="用户编号" width="132">
+          <template #default="{ row }">{{ userDisplay(row) }}</template>
+        </el-table-column>
         <el-table-column prop="appCode" label="小程序" min-width="190" show-overflow-tooltip />
         <el-table-column label="服务类型" width="136">
           <template #default="{ row }">{{ serviceTypeText(row.serviceType) }}</template>
@@ -402,13 +628,14 @@ onMounted(() => {
 
           <h2 class="drawer-section-title">用户与来源</h2>
           <el-descriptions :column="1" border>
-            <el-descriptions-item label="用户ID">
-              <span>{{ detail.userId }}</span>
+            <el-descriptions-item label="用户编号">
+              <span>{{ userDisplay(detail) }}</span>
               <el-button class="inline-action" :icon="View" text type="primary" @click="openUserInvestigation(detail.userId)">
                 查看用户
               </el-button>
               <el-button class="inline-action" text type="primary" @click="openGenerationRecords(detail.userId)">查看生成记录</el-button>
             </el-descriptions-item>
+            <el-descriptions-item label="用户ID">{{ detail.userId }}</el-descriptions-item>
             <el-descriptions-item label="身份ID">{{ detail.identityId }}</el-descriptions-item>
             <el-descriptions-item label="来源记录ID">{{ detail.sourceRecordId || '-' }}</el-descriptions-item>
             <el-descriptions-item label="客户端记录ID">{{ detail.clientRecordId || '-' }}</el-descriptions-item>
@@ -419,6 +646,88 @@ onMounted(() => {
             <el-descriptions-item label="用户备注">{{ detail.memo || '-' }}</el-descriptions-item>
             <el-descriptions-item label="内部备注">{{ detail.adminRemark || '-' }}</el-descriptions-item>
           </el-descriptions>
+
+          <h2 class="drawer-section-title">订单与退款</h2>
+          <el-descriptions v-if="hasPaymentOrder" :column="1" border>
+            <el-descriptions-item label="订单号">{{ detail.orderNo || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="订单金额">{{ formatAmount(detail.amountTotal) }}</el-descriptions-item>
+            <el-descriptions-item label="支付状态">{{ paymentStatusText(detail.paymentStatus) }}</el-descriptions-item>
+            <el-descriptions-item label="订单状态">{{ orderStatusText(detail.orderStatus) }}</el-descriptions-item>
+            <el-descriptions-item label="退款处理">
+              <span>当前订单可在此创建退款申请并推进审核、发起、同步。</span>
+            </el-descriptions-item>
+          </el-descriptions>
+          <div v-if="hasPaymentOrder" v-loading="refundLoading" class="refund-panel">
+            <el-form v-if="canCreateRefund()" label-width="88px">
+              <el-form-item label="退款金额">
+                <el-input v-model="refundForm.refundAmountYuan" class="dialog-input" placeholder="例如 9.90" />
+              </el-form-item>
+              <el-form-item label="退款原因">
+                <el-input v-model="refundForm.reason" class="dialog-input" maxlength="128" />
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" :loading="refundActionLoading" @click="submitRefundCreate">创建退款申请</el-button>
+              </el-form-item>
+            </el-form>
+            <el-table v-if="refunds.length" :data="refunds" row-key="refundId" size="small">
+              <el-table-column prop="refundNo" label="退款单号" min-width="180" show-overflow-tooltip />
+              <el-table-column label="金额" width="100">
+                <template #default="{ row }">{{ formatAmount(row.refundAmount) }}</template>
+              </el-table-column>
+              <el-table-column label="状态" width="96">
+                <template #default="{ row }">{{ refundStatusText(row.status) }}</template>
+              </el-table-column>
+              <el-table-column label="操作" width="230">
+                <template #default="{ row }">
+                  <el-button
+                    v-if="row.status === 'pending_review'"
+                    text
+                    type="primary"
+                    :loading="refundActionLoading"
+                    @click="updateRefund(row, 'approved', '同意退款')"
+                  >
+                    审核通过
+                  </el-button>
+                  <el-button
+                    v-if="row.status === 'approved'"
+                    text
+                    type="primary"
+                    :loading="refundActionLoading"
+                    @click="updateRefund(row, 'processing', '发起微信退款')"
+                  >
+                    发起退款
+                  </el-button>
+                  <el-button
+                    v-if="row.status === 'processing'"
+                    text
+                    type="primary"
+                    :loading="refundActionLoading"
+                    @click="syncRefund(row)"
+                  >
+                    同步退款
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <el-empty v-else description="暂无退款申请" />
+          </div>
+          <div v-else-if="canCreatePaymentOrder" class="status-update-panel">
+            <el-form label-width="88px">
+              <el-form-item label="订单金额">
+                <el-input v-model="paymentOrderForm.amountYuan" class="dialog-input" placeholder="例如 9.90" />
+              </el-form-item>
+              <el-form-item label="订单标题">
+                <el-input v-model="paymentOrderForm.subject" class="dialog-input" maxlength="128" />
+              </el-form-item>
+              <el-form-item label="内部备注">
+                <el-input v-model="paymentOrderForm.adminRemark" type="textarea" :rows="3" maxlength="200" show-word-limit />
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" :loading="paymentOrderCreating" @click="submitPaymentOrderCreate">创建待支付订单</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+          <el-empty v-else description="暂无订单" />
 
           <div v-if="canManageRequests()" class="status-update-panel">
             <h2 class="drawer-section-title">处理状态</h2>

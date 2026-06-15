@@ -18,6 +18,7 @@ export interface LegalServiceRequestItem {
   appCode: string;
   userId: number;
   identityId: number;
+  userCode?: string;
   serviceType: string;
   sourceRecordId: number | string | null;
   clientRecordId: string;
@@ -25,6 +26,11 @@ export interface LegalServiceRequestItem {
   contactPhoneMasked: string;
   memo: string;
   status: string;
+  paymentStatus?: string | null;
+  orderId?: number | null;
+  orderNo?: string | null;
+  amountTotal?: number | null;
+  orderStatus?: string | null;
   handler: string;
   handlerId: string | number | null;
   adminRemark: string;
@@ -39,6 +45,12 @@ export interface LegalServiceRequestDetail extends LegalServiceRequestItem {
 
 export interface UpdateLegalServiceRequestStatusPayload {
   status: string;
+  adminRemark: string;
+}
+
+export interface CreateLegalServicePaymentOrderPayload {
+  amountTotal: number;
+  subject: string;
   adminRemark: string;
 }
 
@@ -73,6 +85,16 @@ export function updateLegalServiceRequestStatus(
   payload: UpdateLegalServiceRequestStatusPayload
 ): Promise<LegalServiceRequestDetail> {
   return request<LegalServiceRequestDetail>(`/api/admin/legal/service-requests/${requestId}/status`, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function createLegalServicePaymentOrder(
+  requestId: number,
+  payload: CreateLegalServicePaymentOrderPayload
+): Promise<LegalServiceRequestDetail> {
+  return request<LegalServiceRequestDetail>(`/api/admin/legal/service-requests/${requestId}/payment-order`, {
     method: 'POST',
     body: JSON.stringify(payload)
   });
