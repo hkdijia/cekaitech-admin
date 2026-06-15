@@ -161,6 +161,55 @@ function statusTagType(value: string) {
   return 'primary';
 }
 
+function businessStatusText(record: Pick<LegalServiceRequestItem, 'status' | 'paymentStatus' | 'orderId' | 'orderStatus'>) {
+  const orderStatus = record.orderStatus || '';
+  if (orderStatus === 'refunded') {
+    return '已退款';
+  }
+  if (orderStatus === 'partial_refunded') {
+    return '部分退款';
+  }
+  if (orderStatus === 'paid' || record.paymentStatus === 'paid') {
+    return '已支付待服务';
+  }
+  if (orderStatus === 'pending_pay' || record.paymentStatus === 'pending_pay') {
+    return '待支付';
+  }
+  if (record.status === 'closed') {
+    return '已关闭';
+  }
+  if (record.status === 'cancelled') {
+    return '已取消';
+  }
+  if (record.status === 'contacting') {
+    return '联系中';
+  }
+  if (record.status === 'waiting_user') {
+    return '待用户补充';
+  }
+  if (record.status === 'handled') {
+    return '已处理';
+  }
+  return statusText(record.status);
+}
+
+function businessStatusTagType(record: Pick<LegalServiceRequestItem, 'status' | 'paymentStatus' | 'orderId' | 'orderStatus'>) {
+  const orderStatus = record.orderStatus || '';
+  if (orderStatus === 'refunded') {
+    return 'info';
+  }
+  if (orderStatus === 'partial_refunded') {
+    return 'warning';
+  }
+  if (orderStatus === 'paid' || record.paymentStatus === 'paid') {
+    return 'success';
+  }
+  if (orderStatus === 'pending_pay' || record.paymentStatus === 'pending_pay') {
+    return 'warning';
+  }
+  return statusTagType(record.status);
+}
+
 function userDisplay(record: Pick<LegalServiceRequestItem, 'userId' | 'userCode'>) {
   return record.userCode || String(record.userId || '-');
 }
@@ -559,9 +608,9 @@ onMounted(() => {
         </el-table-column>
         <el-table-column prop="contactName" label="联系人" width="110" show-overflow-tooltip />
         <el-table-column prop="contactPhoneMasked" label="手机号脱敏" width="136" />
-        <el-table-column label="状态" width="116">
+        <el-table-column label="业务状态" width="132">
           <template #default="{ row }">
-            <el-tag :type="statusTagType(row.status)" effect="plain">{{ statusText(row.status) }}</el-tag>
+            <el-tag :type="businessStatusTagType(row)" effect="plain">{{ businessStatusText(row) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="处理人" width="120">
@@ -619,6 +668,9 @@ onMounted(() => {
             </el-descriptions-item>
             <el-descriptions-item label="处理状态">
               <el-tag :type="statusTagType(detail.status)" effect="plain">{{ statusText(detail.status) }}</el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item label="业务状态">
+              <el-tag :type="businessStatusTagType(detail)" effect="plain">{{ businessStatusText(detail) }}</el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="处理人">{{ detail.handler || '-' }}</el-descriptions-item>
             <el-descriptions-item label="创建时间">{{ formatTime(detail.createdAt) }}</el-descriptions-item>

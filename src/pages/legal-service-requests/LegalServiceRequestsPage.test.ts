@@ -323,6 +323,52 @@ describe('LegalServiceRequestsPage', () => {
     expect(wrapper.text()).toContain('用户编号');
   });
 
+  it('shows payment and refund aware business status in the request table', async () => {
+    pageLegalServiceRequestsMock.mockResolvedValueOnce({
+      dataList: [
+        {
+          ...serviceRequest,
+          requestId: 1002,
+          status: 'submitted',
+          paymentStatus: 'paid',
+          orderId: 3002,
+          orderNo: 'MPO202606150002',
+          amountTotal: 990,
+          orderStatus: 'paid'
+        },
+        {
+          ...serviceRequest,
+          requestId: 1003,
+          status: 'submitted',
+          paymentStatus: 'paid',
+          orderId: 3003,
+          orderNo: 'MPO202606150003',
+          amountTotal: 990,
+          orderStatus: 'refunded'
+        },
+        {
+          ...serviceRequest,
+          requestId: 1004,
+          status: 'waiting_pay',
+          paymentStatus: 'pending_pay',
+          orderId: 3004,
+          orderNo: 'MPO202606150004',
+          amountTotal: 990,
+          orderStatus: 'pending_pay'
+        }
+      ],
+      totalCount: 3
+    });
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('已支付待服务');
+    expect(wrapper.text()).toContain('已退款');
+    expect(wrapper.text()).toContain('待支付');
+    expect(wrapper.findAll('.el-tag').map((tag) => tag.text())).not.toContain('待处理');
+  });
+
   it('shows masked phone first and reveals full phone after explicit contact view request', async () => {
     const wrapper = mountPage(['admin:legal-service-request:view']);
 
