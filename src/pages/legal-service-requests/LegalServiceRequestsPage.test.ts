@@ -493,6 +493,32 @@ describe('LegalServiceRequestsPage', () => {
     }));
   });
 
+  it('shows terminal refund handling copy for fully refunded service request detail', async () => {
+    getLegalServiceRequestDetailMock.mockResolvedValueOnce({
+      ...serviceRequest,
+      status: 'closed',
+      paymentStatus: 'paid',
+      orderId: 3002,
+      orderNo: 'MPO202606150002',
+      amountTotal: 990,
+      orderStatus: 'refunded'
+    });
+    pageAdminOrderRefundsMock.mockResolvedValueOnce({
+      dataList: [refundRecord({ status: 'success' })],
+      totalCount: 1
+    });
+    const wrapper = mountPage(['admin:legal-service-request:view', 'admin:legal-service-request:manage']);
+
+    await flushAsyncUpdates();
+    const detailButton = wrapper.findAll('button').find((button) => button.text().includes('查看详情'));
+    await detailButton?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('已完成退款');
+    expect(wrapper.text()).not.toContain('当前订单可在此创建退款申请并推进审核、发起、同步。');
+    expect(wrapper.findAll('button').map((button) => button.text())).not.toContain('创建退款申请');
+  });
+
   it('creates and processes full refund from paid service request detail', async () => {
     getLegalServiceRequestDetailMock.mockResolvedValueOnce({
       ...serviceRequest,

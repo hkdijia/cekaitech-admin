@@ -273,6 +273,23 @@ function canCreateRefund() {
   return ['paid', 'partial_refunded'].includes(detail.value.orderStatus || '');
 }
 
+function refundHandlingText(record: LegalServiceRequestDetail) {
+  const orderStatus = record.orderStatus || '';
+  if (orderStatus === 'refunded') {
+    return '已完成退款，当前订单无剩余可退金额。';
+  }
+  if (orderStatus === 'partial_refunded') {
+    return '当前订单已部分退款，可继续创建退款申请并推进审核、发起、同步。';
+  }
+  if (orderStatus === 'paid') {
+    return '当前订单可在此创建退款申请并推进审核、发起、同步。';
+  }
+  if (orderStatus === 'pending_pay') {
+    return '用户尚未完成支付，当前不可发起退款。';
+  }
+  return '当前订单状态不支持创建退款申请。';
+}
+
 async function loadRefundsForDetail(record: LegalServiceRequestDetail | null) {
   refunds.value = [];
   if (!record?.orderNo) {
@@ -706,7 +723,7 @@ onMounted(() => {
             <el-descriptions-item label="支付状态">{{ paymentStatusText(detail.paymentStatus) }}</el-descriptions-item>
             <el-descriptions-item label="订单状态">{{ orderStatusText(detail.orderStatus) }}</el-descriptions-item>
             <el-descriptions-item label="退款处理">
-              <span>当前订单可在此创建退款申请并推进审核、发起、同步。</span>
+              <span>{{ refundHandlingText(detail) }}</span>
             </el-descriptions-item>
           </el-descriptions>
           <div v-if="hasPaymentOrder" v-loading="refundLoading" class="refund-panel">
