@@ -8,6 +8,7 @@ import {
   pageAnnualCommonDataSyncBatches,
   pageLprRateRevisions,
   pageLprSyncBatches,
+  getAnnualCommonDataCoverageMatrix,
   getProductionStatus,
   previewLprRates,
   syncAnnualCommonData,
@@ -23,6 +24,7 @@ vi.mock('../../api/dataGovernance', () => ({
   syncLprRates: vi.fn(),
   pageAnnualCommonDataSyncBatches: vi.fn(),
   pageAnnualCommonDataRevisions: vi.fn(),
+  getAnnualCommonDataCoverageMatrix: vi.fn(),
   getProductionStatus: vi.fn(),
   syncAnnualCommonData: vi.fn()
 }));
@@ -33,6 +35,7 @@ const previewLprRatesMock = vi.mocked(previewLprRates);
 const syncLprRatesMock = vi.mocked(syncLprRates);
 const pageAnnualCommonDataSyncBatchesMock = vi.mocked(pageAnnualCommonDataSyncBatches);
 const pageAnnualCommonDataRevisionsMock = vi.mocked(pageAnnualCommonDataRevisions);
+const getAnnualCommonDataCoverageMatrixMock = vi.mocked(getAnnualCommonDataCoverageMatrix);
 const getProductionStatusMock = vi.mocked(getProductionStatus);
 const syncAnnualCommonDataMock = vi.mocked(syncAnnualCommonData);
 
@@ -136,6 +139,65 @@ const productionStatus = {
   }
 };
 
+const annualCoverageMatrix = {
+  appCode: 'lawsuit-material-assistant',
+  expectedRegionCount: 31,
+  expectedMetricCount: 3,
+  expectedMetricKeys: [
+    'annual_employees_average_wage',
+    'per_capita_disposable_income',
+    'per_capita_consumption_expenditure'
+  ],
+  years: [
+    {
+      year: 2025,
+      itemCount: 62,
+      regionCount: 31,
+      metricCount: 2,
+      status: 'partial',
+      missingMetricKeys: ['annual_employees_average_wage'],
+      missingRegionCount: 0,
+      missingRegionSamples: [],
+      latestBatch: {
+        id: 3,
+        requestId: 'annual-nbs-2025-gap',
+        sourceKey: 'annual_nbs_province_2025',
+        sourceVersion: 'nbs-province-annual-2025',
+        itemCount: 62,
+        createdCount: 62,
+        updatedCount: 0,
+        skippedCount: 0,
+        conflictCount: 0,
+        status: 'completed',
+        lastCheckedDate: '2026-06-16'
+      }
+    },
+    {
+      year: 2024,
+      itemCount: 93,
+      regionCount: 31,
+      metricCount: 3,
+      status: 'complete',
+      missingMetricKeys: [],
+      missingRegionCount: 0,
+      missingRegionSamples: [],
+      latestBatch: {
+        id: 2,
+        requestId: 'annual-nbs-2024-0e5f97b4d58b',
+        sourceKey: 'annual_nbs_province_2024',
+        sourceVersion: 'nbs-province-annual-2024',
+        itemCount: 93,
+        createdCount: 88,
+        updatedCount: 5,
+        skippedCount: 0,
+        conflictCount: 0,
+        status: 'completed',
+        lastCheckedDate: '2026-06-16'
+      }
+    }
+  ]
+};
+
 function mountPage() {
   const pinia = createPinia();
   setActivePinia(pinia);
@@ -171,6 +233,7 @@ describe('DataGovernancePage', () => {
     syncLprRatesMock.mockReset();
     pageAnnualCommonDataSyncBatchesMock.mockReset();
     pageAnnualCommonDataRevisionsMock.mockReset();
+    getAnnualCommonDataCoverageMatrixMock.mockReset();
     getProductionStatusMock.mockReset();
     syncAnnualCommonDataMock.mockReset();
 
@@ -197,6 +260,7 @@ describe('DataGovernancePage', () => {
     });
     pageAnnualCommonDataSyncBatchesMock.mockResolvedValue({ dataList: [annualBatch], totalCount: 1 });
     pageAnnualCommonDataRevisionsMock.mockResolvedValue({ dataList: [annualRevision], totalCount: 1 });
+    getAnnualCommonDataCoverageMatrixMock.mockResolvedValue(annualCoverageMatrix);
     getProductionStatusMock.mockResolvedValue(productionStatus);
     syncAnnualCommonDataMock.mockResolvedValue({
       requestId: 'crawler-annual-2024',
@@ -232,6 +296,9 @@ describe('DataGovernancePage', () => {
       pageNo: 1,
       pageSize: 50
     });
+    expect(getAnnualCommonDataCoverageMatrixMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant'
+    });
     expect(getProductionStatusMock).toHaveBeenCalledWith({
       appCode: 'lawsuit-material-assistant'
     });
@@ -249,6 +316,7 @@ describe('DataGovernancePage', () => {
     expect(wrapper.text()).toContain('修订记录');
     expect(wrapper.text()).toContain('LPR JSON 发布');
     expect(wrapper.text()).toContain('年度数据同步批次');
+    expect(wrapper.text()).toContain('年度覆盖矩阵');
     expect(wrapper.text()).toContain('年度数据修订记录');
     expect(wrapper.text()).toContain('年度数据 JSON 导入');
     expect(wrapper.find('input').element.value).toBe('lawsuit-material-assistant');
@@ -256,6 +324,11 @@ describe('DataGovernancePage', () => {
     expect(wrapper.text()).toContain('2025-05-20');
     expect(wrapper.text()).toContain('crawler-annual-2024');
     expect(wrapper.text()).toContain('average_salary');
+    expect(wrapper.text()).toContain('2025');
+    expect(wrapper.text()).toContain('缺少 annual_employees_average_wage');
+    expect(wrapper.text()).toContain('annual-nbs-2025-gap');
+    expect(wrapper.text()).toContain('2024');
+    expect(wrapper.text()).toContain('完整');
   });
 
   it('publishes valid LPR JSON and refreshes batch list', async () => {

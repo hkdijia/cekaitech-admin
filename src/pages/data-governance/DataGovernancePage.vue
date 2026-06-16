@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import { Refresh, Upload } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import {
+  getAnnualCommonDataCoverageMatrix,
   getProductionStatus,
   pageAnnualCommonDataRevisions,
   pageAnnualCommonDataSyncBatches,
@@ -11,6 +12,8 @@ import {
   previewLprRates,
   syncAnnualCommonData,
   type AnnualCommonDataRevisionItem,
+  type AnnualCommonDataCoverageMatrix,
+  type AnnualCommonDataYearCoverage,
   type AnnualCommonDataSyncBatchItem,
   type AnnualCommonDataSyncItem,
   type AnnualCommonDataSyncPayload,
@@ -39,6 +42,7 @@ const revisions = ref<LprRateRevisionItem[]>([]);
 const productionStatus = ref<ProductionStatus | null>(null);
 const annualBatches = ref<AnnualCommonDataSyncBatchItem[]>([]);
 const annualRevisions = ref<AnnualCommonDataRevisionItem[]>([]);
+const annualCoverageMatrix = ref<AnnualCommonDataCoverageMatrix | null>(null);
 const lprPreviewResult = ref<LprRateSyncResult | null>(null);
 const lprSyncJson = ref(JSON.stringify({
   requestId: 'lpr-preview-2026-01-01-2026-06-11',
@@ -114,6 +118,27 @@ function readinessTagType(ready: boolean) {
     return 'success';
   }
   return 'danger';
+}
+
+function coverageTagType(status: string) {
+  if (status === 'complete') {
+    return 'success';
+  }
+  return 'warning';
+}
+
+function coverageStatusLabel(status: string) {
+  if (status === 'complete') {
+    return '完整';
+  }
+  return '待补齐';
+}
+
+function missingMetricLabel(row: AnnualCommonDataYearCoverage) {
+  if (!row.missingMetricKeys.length) {
+    return '无';
+  }
+  return `缺少 ${row.missingMetricKeys.join('、')}`;
 }
 
 function expectedElementTemplateCount(status: ProductionStatus) {
@@ -273,8 +298,30 @@ async function loadProductionStatus() {
   }
 }
 
+async function loadAnnualCoverageMatrix() {
+  loadingStatus.value = true;
+  loadError.value = '';
+  try {
+    annualCoverageMatrix.value = await getAnnualCommonDataCoverageMatrix({
+      appCode: currentAppCode()
+    });
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '年度覆盖矩阵加载失败';
+    annualCoverageMatrix.value = null;
+  } finally {
+    loadingStatus.value = false;
+  }
+}
+
 async function refreshAll() {
-  await Promise.all([loadProductionStatus(), loadBatches(), loadRevisions(), loadAnnualBatches(), loadAnnualRevisions()]);
+  await Promise.all([
+    loadProductionStatus(),
+    loadAnnualCoverageMatrix(),
+    loadBatches(),
+    loadRevisions(),
+    loadAnnualBatches(),
+    loadAnnualRevisions()
+  ]);
 }
 
 async function publishLprSync() {
@@ -471,6 +518,52 @@ onMounted(refreshAll);
               <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
             </el-table-column>
           </el-table>
+        </el-tab-pane>
+
+        <el-tab-pane label="年度覆盖矩阵" name="annual-coverage">
+          <div class="section-heading">
+            <div class="toolbar-title">年度覆盖矩阵</div>
+            <div class="toolbar-subtitle">按年份核对省级地区、指标覆盖和最近同步批次，辅助判断是否可进入下一批导入。</div>
+          </div>
+          <el-table
+            v-if="annualCoverageMatrix"
+            v-loading="loadingStatus"
+            :data="annualCoverageMatrix.years"
+            row-key="year"
+            data-test="annual-coverage-matrix"
+          >
+            <el-table-column prop="year" label="年度" width="90" />
+            <el-table-column label="状态" width="110">
+              <template #default="{ row }">
+                <el-tag :type="coverageTagType(row.status)" effect="plain">{{ coverageStatusLabel(row.status) }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="数据条数" width="110">
+              <template #default="{ row }">{{ row.itemCount }}</template>
+            </el-table-column>
+            <el-table-column label="地区覆盖" width="140">
+              <template #default="{ row }">{{ row.regionCount }} / {{ annualCoverageMatrix.expectedRegionCount }}</template>
+            </el-table-column>
+            <el-table-column label="指标覆盖" width="140">
+              <template #default="{ row }">{{ row.metricCount }} / {{ annualCoverageMatrix.expectedMetricCount }}</template>
+            </el-table-column>
+            <el-table-column label="缺失指标" min-width="220" show-overflow-tooltip>
+              <template #default="{ row }">{{ missingMetricLabel(row) }}</template>
+            </el-table-column>
+            <el-table-column prop="missingRegionCount" label="缺失地区" width="110" />
+            <el-table-column label="最近同步批次" min-width="220" show-overflow-tooltip>
+              <template #default="{ row }">{{ row.latestBatch?.requestId || '-' }}</template>
+            </el-table-column>
+            <el-table-column label="批次状态" width="120">
+              <template #default="{ row }">
+                <el-tag v-if="row.latestBatch" :type="statusTagType(row.latestBatch.status)" effect="plain">
+                  {{ row.latestBatch.status }}
+                </el-tag>
+                <span v-else>-</span>
+              </template>
+            </el-table-column>
+          </el-table>
+          <el-empty v-else description="暂无年度覆盖矩阵" />
         </el-tab-pane>
 
         <el-tab-pane label="年度数据修订记录" name="annual-revisions">

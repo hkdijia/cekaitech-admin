@@ -3,46 +3,47 @@
 ## 当前状态
 
 - 当前分支：`master`
-- 当前阶段：页面菜单管理支持通用功能入口已发布生产测试环境。
-- 最近完成：admin 可展示和编辑 backend 返回的 `miniapp_module` / `miniapp_feature` 节点，支持保存“服务请求”等通用入口；静态资源已发布到 `admin.cekaitech.cn`。
-- 未完成：用户推送部署记录提交和线上页面验收。
+- 当前阶段：年度数据治理覆盖矩阵 admin 接入完成，待发布联调。
+- 最近完成：数据同步/发布页新增“年度覆盖矩阵”页签，调用 backend 年度数据覆盖矩阵只读接口并展示年份、地区/指标覆盖、缺失指标和最近同步批次。
+- 未完成：backend 新接口发布后部署 admin 静态资源，并在线上验证覆盖矩阵页签。
 
 ## 关键文件
 
-- `src/pages/miniapp-orchestration/MiniappOrchestrationPage.vue`
-- `src/pages/miniapp-orchestration/MiniappOrchestrationPage.test.ts`
+- `src/api/dataGovernance.ts`
+- `src/api/dataGovernance.test.ts`
+- `src/pages/data-governance/DataGovernancePage.vue`
+- `src/pages/data-governance/DataGovernancePage.test.ts`
 - `docs/变更日志.md`
 - `tasks/current-task.md`
 - `codex-handoff.md`
 
 ## 关键命令
 
-- 定向测试：`npm.cmd test -- MiniappOrchestrationPage.test.ts miniappOrchestration.test.ts`
-- 构建：`npm.cmd run build`
+- 定向测试：`npm.cmd run test -- --run src/api/dataGovernance.test.ts src/pages/data-governance/DataGovernancePage.test.ts`
 - 质量检查：`npm.cmd run quality`
 - 空白检查：`git diff --check`
 - 生产静态发布：`powershell -ExecutionPolicy Bypass -File scripts\deploy-admin-static.ps1`
 
 ## 最近验证
 
-- [反馈编号：无] 通用功能入口编辑：`npm.cmd test -- MiniappOrchestrationPage.test.ts miniappOrchestration.test.ts` 通过 13 项。
-- [反馈编号：无] 构建：`npm.cmd run build` 通过，保留既有 Rollup PURE 注释 warning 和 chunk size warning。
-- [反馈编号：无] 发布：`scripts\deploy-admin-static.ps1` 通过，上线资源包含 `MiniappOrchestrationPage-D-fbfYLo.js`；Basic Auth 和未登录后台接口均返回 401；active dist 包含 `miniapp_feature` 和“通用功能入口”。
+- [反馈编号：无] RED/GREEN：`npm.cmd run test -- --run src/api/dataGovernance.test.ts src/pages/data-governance/DataGovernancePage.test.ts` 先失败于缺少覆盖矩阵 API 封装和页面加载，GREEN 后通过 2 个测试文件、15 项。
+- [反馈编号：无] 质量检查：`npm.cmd run quality` 通过，Vitest 35 个测试文件、184 项测试通过，`vue-tsc --noEmit` 和 `vite build` 通过；保留既有 `@vueuse/core` PURE 注释 warning 和 chunk size warning。
 
 ## 追溯信息
 
 - 反馈编号：`无`
-- 来源文档：当前会话 / 多小程序 `app-tab-module-feature` 数据模型讨论
+- 来源文档：当前会话 / 年度数据治理主线
 - 本地台账：无
-- 当前状态：已部署，待推送部署记录
+- 当前状态：已完成本地实现和验证，待提交、推送和后续发布
 
 ## 注意事项
 
 - 本仓不直连数据库，只通过 `miniapp-backend` 编排接口读写。
-- 后端 V142 部署前，线上 admin 无法读到生产库的通用编排节点。
+- 本轮 admin 依赖 backend 新接口 `POST /api/admin/data-governance/annual-common-data/coverage-matrix`；backend 未发布前线上 admin 无法验证该页签数据。
 - 用户偏好：Codex 可本地提交，远程 GitHub 推送由用户执行。
 
 ## 下一步建议
 
-1. 用户推送本次部署记录提交。
-2. 线上验收“小程序编排 / 页面菜单管理”可维护“我的”页入口。
+1. 本地提交 admin 覆盖矩阵改动。
+2. 用户推送 admin 提交；backend 发布新接口后部署 admin 静态资源。
+3. 继续年度数据治理：按覆盖矩阵确认最新有效数据范围并推进缺口补齐。

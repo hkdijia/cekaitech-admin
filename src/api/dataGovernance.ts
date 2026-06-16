@@ -204,6 +204,38 @@ export interface AnnualCommonDataSyncResult {
   conflictCount?: number;
 }
 
+export interface AnnualCommonDataCoverageMatrix {
+  appCode: string;
+  expectedRegionCount: number;
+  expectedMetricCount: number;
+  expectedMetricKeys: string[];
+  years: AnnualCommonDataYearCoverage[];
+}
+
+export interface AnnualCommonDataYearCoverage {
+  year: number;
+  itemCount: number;
+  regionCount: number;
+  metricCount: number;
+  status: string;
+  missingMetricKeys: string[];
+  missingRegionCount: number;
+  missingRegionSamples: string[];
+  latestBatch?: {
+    id?: number;
+    requestId: string;
+    sourceKey: string;
+    sourceVersion: string;
+    itemCount: number;
+    createdCount: number;
+    updatedCount: number;
+    skippedCount: number;
+    conflictCount: number;
+    status: string;
+    lastCheckedDate: string;
+  } | null;
+}
+
 export function pageLprSyncBatches(
   query: DataGovernancePageQuery
 ): Promise<PageResult<LprSyncBatchItem>> {
@@ -238,6 +270,15 @@ export function previewLprRates(payload: LprRateSyncPayload): Promise<LprRateSyn
 
 export function getProductionStatus(query: DataGovernanceAppQuery): Promise<ProductionStatus> {
   return request<ProductionStatus>('/api/admin/data-governance/production-status', {
+    method: 'POST',
+    body: JSON.stringify(query)
+  });
+}
+
+export function getAnnualCommonDataCoverageMatrix(
+  query: DataGovernanceAppQuery
+): Promise<AnnualCommonDataCoverageMatrix> {
+  return request<AnnualCommonDataCoverageMatrix>('/api/admin/data-governance/annual-common-data/coverage-matrix', {
     method: 'POST',
     body: JSON.stringify(query)
   });

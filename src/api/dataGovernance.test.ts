@@ -4,6 +4,7 @@ import {
   pageAnnualCommonDataSyncBatches,
   pageLprRateRevisions,
   pageLprSyncBatches,
+  getAnnualCommonDataCoverageMatrix,
   getProductionStatus,
   previewLprRates,
   syncAnnualCommonData,
@@ -211,6 +212,58 @@ describe('data governance api', () => {
     expect(result.elementTemplate.sourceKey).toBe('element_template_docimax_practical_2025');
     expect(result.elementTemplate.filePathCount).toBe(226);
     expect(result.civilCause.count).toBe(1043);
+  });
+
+  it('posts annual common data coverage matrix request to backend endpoint', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        code: '0',
+        msg: '',
+        data: {
+          appCode: 'lawsuit-material-assistant',
+          expectedRegionCount: 31,
+          expectedMetricCount: 3,
+          expectedMetricKeys: [
+            'annual_employees_average_wage',
+            'per_capita_disposable_income',
+            'per_capita_consumption_expenditure'
+          ],
+          years: [
+            {
+              year: 2025,
+              itemCount: 62,
+              regionCount: 31,
+              metricCount: 2,
+              status: 'partial',
+              missingMetricKeys: ['annual_employees_average_wage'],
+              missingRegionCount: 0,
+              missingRegionSamples: [],
+              latestBatch: {
+                requestId: 'annual-nbs-2025-gap',
+                status: 'completed',
+                itemCount: 62
+              }
+            }
+          ]
+        }
+      })
+    } as Response);
+
+    const result = await getAnnualCommonDataCoverageMatrix({ appCode: 'lawsuit-material-assistant' });
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/admin/data-governance/annual-common-data/coverage-matrix', {
+      method: 'POST',
+      body: JSON.stringify({
+        appCode: 'lawsuit-material-assistant'
+      }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    expect(result.expectedRegionCount).toBe(31);
+    expect(result.years[0].missingMetricKeys).toEqual(['annual_employees_average_wage']);
   });
 
   it('posts annual common data sync batch page request to backend endpoint', async () => {
