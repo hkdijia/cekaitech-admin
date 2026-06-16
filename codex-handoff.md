@@ -5,7 +5,7 @@
 - 当前分支：`master`
 - 当前阶段：年度数据治理覆盖矩阵 admin 接入已完成，正在收口矩阵治理提示增强。
 - 最近完成：数据同步/发布页“年度覆盖矩阵”把缺失指标改为中文业务名，并新增缺口原因、治理建议、来源版本和最近核验列。
-- 未完成：完成质量检查、本地提交后，仍建议登录 `admin.cekaitech.cn` 人工复核“数据同步/发布 -> 年度覆盖矩阵”页面级展示。
+- 未完成：页面级登录后视觉复核仍建议由人工登录 `admin.cekaitech.cn` 完成；本地未保存 Basic Auth 凭据，无法自动进入后台页面。
 
 ## 关键文件
 
@@ -30,6 +30,7 @@
 - [反馈编号：无] UX 定向验证：`npm.cmd run test -- --run src/pages/data-governance/DataGovernancePage.test.ts src/api/dataGovernance.test.ts` 通过 2 个测试文件、15 项，覆盖中文缺失指标、缺口原因、治理建议、来源版本和最近核验日期。
 - [反馈编号：无] 质量检查：`npm.cmd run quality` 通过，Vitest 35 个测试文件、184 项测试通过，`vue-tsc --noEmit` 和 `vite build` 通过；保留既有 `@vueuse/core` PURE 注释 warning 和 chunk size warning。
 - [反馈编号：无] 生产静态部署：`powershell -ExecutionPolicy Bypass -File scripts\deploy-admin-static.ps1` 通过，构建生成 `DataGovernancePage-qqL96yll.js` 并上传到 `/data/cekaitech-admin/assets/`；公网 `https://admin.cekaitech.cn` 未登录返回 `401`，服务器静态资源包含 `annual-common-data/coverage-matrix`。
+- [反馈编号：无] 生产复核：服务器 active 静态资源 `DataGovernancePage-qqL96yll.js` 包含覆盖矩阵接口和页签；`admin.cekaitech.cn` 未携带 Basic Auth 返回 `401` 且 realm 为 `Cekai Admin`。因本地无 Basic Auth 凭据，未自动完成登录后视觉检查。
 
 ## 追溯信息
 
@@ -47,5 +48,5 @@
 ## 下一步建议
 
 1. 完成本轮质量检查和本地提交。
-2. 登录 `admin.cekaitech.cn` 人工复核“数据同步/发布 -> 年度覆盖矩阵”。
+2. 人工登录 `admin.cekaitech.cn` 复核“数据同步/发布 -> 年度覆盖矩阵”，重点看 2023/2024 完整、2025 部分覆盖和平均工资缺口展示。
 3. 继续年度数据治理：按覆盖矩阵确认最新有效数据范围并推进缺口补齐。
