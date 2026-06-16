@@ -28,6 +28,11 @@ import {
 
 const APP_CODE = 'lawsuit-material-assistant';
 const PAGE_SIZE = 50;
+const ANNUAL_METRIC_LABELS: Record<string, string> = {
+  annual_employees_average_wage: '就业人员年平均工资',
+  per_capita_disposable_income: '居民人均可支配收入',
+  per_capita_consumption_expenditure: '居民人均消费支出'
+};
 
 const activeTab = ref('batches');
 const appCode = ref(APP_CODE);
@@ -138,7 +143,31 @@ function missingMetricLabel(row: AnnualCommonDataYearCoverage) {
   if (!row.missingMetricKeys.length) {
     return '无';
   }
-  return `缺少 ${row.missingMetricKeys.join('、')}`;
+  return `缺少${row.missingMetricKeys.map(metricLabel).join('、')}`;
+}
+
+function metricLabel(metricKey: string) {
+  return ANNUAL_METRIC_LABELS[metricKey] ?? metricKey;
+}
+
+function annualCoverageReason(row: AnnualCommonDataYearCoverage) {
+  if (row.status === 'complete') {
+    return '覆盖完整';
+  }
+  if (row.missingMetricKeys.includes('annual_employees_average_wage')) {
+    return `${row.year} 年平均工资暂未形成完整批次`;
+  }
+  if (row.missingRegionCount > 0) {
+    return `缺少 ${row.missingRegionCount} 个省级地区`;
+  }
+  return '指标或地区覆盖未达完整口径';
+}
+
+function annualCoverageDecision(row: AnnualCommonDataYearCoverage) {
+  if (row.status === 'complete') {
+    return '可作为当前有效数据';
+  }
+  return '暂缓导入';
 }
 
 function expectedElementTemplateCount(status: ProductionStatus) {
@@ -550,9 +579,21 @@ onMounted(refreshAll);
             <el-table-column label="缺失指标" min-width="220" show-overflow-tooltip>
               <template #default="{ row }">{{ missingMetricLabel(row) }}</template>
             </el-table-column>
+            <el-table-column label="缺口原因" min-width="220" show-overflow-tooltip>
+              <template #default="{ row }">{{ annualCoverageReason(row) }}</template>
+            </el-table-column>
+            <el-table-column label="治理建议" width="130">
+              <template #default="{ row }">{{ annualCoverageDecision(row) }}</template>
+            </el-table-column>
             <el-table-column prop="missingRegionCount" label="缺失地区" width="110" />
             <el-table-column label="最近同步批次" min-width="220" show-overflow-tooltip>
               <template #default="{ row }">{{ row.latestBatch?.requestId || '-' }}</template>
+            </el-table-column>
+            <el-table-column label="来源版本" min-width="190" show-overflow-tooltip>
+              <template #default="{ row }">{{ row.latestBatch?.sourceVersion || '-' }}</template>
+            </el-table-column>
+            <el-table-column label="最近核验" width="130">
+              <template #default="{ row }">{{ row.latestBatch?.lastCheckedDate || '-' }}</template>
             </el-table-column>
             <el-table-column label="批次状态" width="120">
               <template #default="{ row }">

@@ -325,10 +325,15 @@ describe('DataGovernancePage', () => {
     expect(wrapper.text()).toContain('crawler-annual-2024');
     expect(wrapper.text()).toContain('average_salary');
     expect(wrapper.text()).toContain('2025');
-    expect(wrapper.text()).toContain('缺少 annual_employees_average_wage');
+    expect(wrapper.text()).toContain('缺少就业人员年平均工资');
+    expect(wrapper.text()).toContain('2025 年平均工资暂未形成完整批次');
+    expect(wrapper.text()).toContain('暂缓导入');
     expect(wrapper.text()).toContain('annual-nbs-2025-gap');
+    expect(wrapper.text()).toContain('nbs-province-annual-2025');
+    expect(wrapper.text()).toContain('2026-06-16');
     expect(wrapper.text()).toContain('2024');
     expect(wrapper.text()).toContain('完整');
+    expect(wrapper.text()).toContain('可作为当前有效数据');
   });
 
   it('publishes valid LPR JSON and refreshes batch list', async () => {
