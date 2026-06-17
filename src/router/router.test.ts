@@ -100,6 +100,12 @@ describe('admin routes', () => {
     expect(route?.meta?.permissionCode).toBe('admin:legal-service-request:view');
   });
 
+  it('declares legal credit query tasks route permission', () => {
+    const route = routes.find((item) => item.path === '/legal-credit-query-tasks');
+
+    expect(route?.meta?.permissionCode).toBe('admin:legal-credit-query:view');
+  });
+
   it('declares order operations menu and route permission', () => {
     const menuItem = adminMenuItems.find((item) => item.path === '/order-operations');
     const route = routes.find((item) => item.path === '/order-operations');
