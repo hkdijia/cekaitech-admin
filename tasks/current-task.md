@@ -10,7 +10,7 @@
 - 反馈编号：`无`
 - 来源文档：本地计划文档
 - 本地台账：无
-- 当前状态：已完成 admin API client、状态映射和路由首片；待继续实现列表/详情/发布/取消/重排队页面。
+- 当前状态：已完成 admin API client、状态映射、路由和复核页面；待进入小程序专业能力入口与用户查询链路。
 
 ## 当前状态
 
@@ -30,7 +30,8 @@
   - `viewLegalCreditQuerySensitive`
 - [反馈编号：无] 新增 `src/pages/legal-credit-queries/legalCreditQueryStatus.ts`，映射 `queued/claimed/running/result_ready/published/failed/cancelled`。
 - [反馈编号：无] 新增 `/legal-credit-query-tasks` 路由，权限码 `admin:legal-credit-query:view`。
-- [反馈编号：无] 新增 `LegalCreditQueriesPage.vue` 占位页面，供路由动态导入；完整页面在下一任务实现。
+- [反馈编号：无] 新增 `LegalCreditQueriesPage.vue` 复核工作台，支持任务列表、筛选、详情抽屉、结果预览、操作日志、发布、取消、重排队和敏感信息显式查看。
+- [反馈编号：无] 管理操作按 `admin:legal-credit-query:manage` 控制；view 权限只能查看列表和详情。
 
 ## 最近验证
 
@@ -40,16 +41,20 @@
   - 结果：通过，3 个测试文件、28 项。
 - 收口：`npm.cmd run quality`
   - 结果：通过，Vitest 37 个测试文件、191 项；`vue-tsc --noEmit` 和 `vite build` 通过。
+- 页面 RED：`npm.cmd test -- LegalCreditQueriesPage.test.ts`
+  - 结果：失败于占位页未加载任务、详情和操作，符合预期。
+- 页面 GREEN：`npm.cmd test -- LegalCreditQueriesPage.test.ts`
+  - 结果：通过，1 个测试文件、6 项。
+- 页面收口：`npm.cmd run quality`
+  - 结果：通过，Vitest 38 个测试文件、197 项；`vue-tsc --noEmit` 和 `vite build` 通过。
 
 ## 未完成
 
-- 失信/限高查询任务列表页。
-- 任务详情抽屉。
-- 发布、取消、重排队和敏感信息查看交互。
-- 页面权限区分：view 可看、manage 才能操作。
+- 小程序侧专业能力入口、提交查询、任务列表和结果详情。
+- 外层本地/生产 smoke 脚本和生产测试 runbook。
 
 ## 下一步
 
-1. 继续 Task 5：按 TDD 实现 `LegalCreditQueriesPage.test.ts` 和真实页面。
-2. 完成后运行 `npm.cmd run quality`。
-3. 更新本仓变更日志和接力文档后本地提交。
+1. 切到 `lawsuit-material-assistant`，按计划 Task 6 先实现小程序 API client 和页面路由。
+2. 再实现专业能力入口、提交页、任务列表和详情页。
+3. 后续再回到外层仓库补本地/生产 smoke runbook。
