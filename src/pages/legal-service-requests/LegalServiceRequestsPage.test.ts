@@ -314,6 +314,15 @@ describe('LegalServiceRequestsPage', () => {
     });
   });
 
+  it('uses a wider service request detail drawer for operational details', async () => {
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+
+    const drawer = wrapper.findComponent({ name: 'ElDrawer' });
+    expect(drawer.props('size')).toBe('760px');
+  });
+
   it('shows user code in the table instead of only raw user id', async () => {
     const wrapper = mountPage();
 
@@ -367,6 +376,34 @@ describe('LegalServiceRequestsPage', () => {
     expect(wrapper.text()).toContain('已退款');
     expect(wrapper.text()).toContain('待支付');
     expect(wrapper.findAll('.el-tag').map((tag) => tag.text())).not.toContain('待处理');
+  });
+
+  it('prioritizes handled request status over paid order status', async () => {
+    pageLegalServiceRequestsMock.mockResolvedValueOnce({
+      dataList: [
+        {
+          ...serviceRequest,
+          requestId: 1005,
+          status: 'handled',
+          paymentStatus: 'paid',
+          orderId: 3005,
+          orderNo: 'MPO202606180005',
+          amountTotal: 990,
+          orderStatus: 'paid',
+          handler: '策凯管理员',
+          handlerId: 'admin',
+          adminRemark: '已完成',
+          handledAt: '2026-06-18T13:52:39'
+        }
+      ],
+      totalCount: 1
+    });
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('已处理');
+    expect(wrapper.findAll('.el-tag').map((tag) => tag.text())).not.toContain('已支付待服务');
   });
 
   it('shows masked phone first and reveals full phone after explicit contact view request', async () => {

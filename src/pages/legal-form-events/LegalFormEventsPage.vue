@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { Refresh, Search, View } from '@element-plus/icons-vue';
-import { useRouter } from 'vue-router';
 import { pageLegalFormEvents, type LegalFormEventItem } from '../../api/legalFormEvents';
+import { getAdminUserDetail, type AdminUserDetail } from '../../api/adminUsers';
 
-const router = useRouter();
 const loading = ref(false);
 const loadError = ref('');
 const events = ref<LegalFormEventItem[]>([]);
 const totalCount = ref(0);
+const userDetailDrawerVisible = ref(false);
+const userDetailLoading = ref(false);
+const userDetail = ref<AdminUserDetail | null>(null);
 
 const query = reactive({
   pageNo: 1,
@@ -153,10 +155,20 @@ function openUserInvestigation(userId: number) {
   if (!userId) {
     return;
   }
-  router.push({
-    path: '/users',
-    query: { userId: String(userId) }
-  });
+  userDetailDrawerVisible.value = true;
+  userDetailLoading.value = true;
+  userDetail.value = null;
+  loadError.value = '';
+  getAdminUserDetail(userId)
+    .then((result) => {
+      userDetail.value = result;
+    })
+    .catch((error) => {
+      loadError.value = error instanceof Error ? error.message : '用户详情加载失败';
+    })
+    .finally(() => {
+      userDetailLoading.value = false;
+    });
 }
 
 onMounted(() => {
@@ -261,6 +273,36 @@ onMounted(() => {
         />
       </div>
     </el-card>
+
+    <el-drawer v-model="userDetailDrawerVisible" title="用户详情" size="720px">
+      <div v-loading="userDetailLoading">
+        <el-empty v-if="!userDetail && !userDetailLoading" description="暂无用户详情" />
+        <template v-if="userDetail">
+          <el-descriptions :column="1" border>
+            <el-descriptions-item label="用户ID">{{ userDetail.id }}</el-descriptions-item>
+            <el-descriptions-item label="手机号">{{ userDetail.primaryPhone || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="UnionID">{{ userDetail.unionId || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="状态">{{ userDetail.status || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="创建时间">{{ formatTime(userDetail.createdAt) }}</el-descriptions-item>
+          </el-descriptions>
+
+          <h2 class="drawer-section-title">小程序身份</h2>
+          <el-table :data="userDetail.identities" size="small">
+            <el-table-column prop="appCode" label="小程序" min-width="170" show-overflow-tooltip />
+            <el-table-column prop="providerUserId" label="OpenID" min-width="170" show-overflow-tooltip />
+            <el-table-column prop="phoneBindingStatus" label="授权" width="88" />
+            <el-table-column prop="role" label="角色" width="120" />
+          </el-table>
+
+          <h2 class="drawer-section-title">手机号记录</h2>
+          <el-table :data="userDetail.phones" size="small">
+            <el-table-column prop="phone" label="手机号" min-width="140" />
+            <el-table-column prop="sourceAppCode" label="来源" min-width="170" show-overflow-tooltip />
+            <el-table-column prop="status" label="状态" width="100" />
+          </el-table>
+        </template>
+      </div>
+    </el-drawer>
   </section>
 </template>
 
@@ -309,5 +351,12 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   padding-top: 16px;
+}
+
+.drawer-section-title {
+  margin: 20px 0 10px;
+  color: #344054;
+  font-size: 15px;
+  font-weight: 600;
 }
 </style>

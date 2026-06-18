@@ -144,4 +144,13 @@ describe('UsersPage', () => {
     expect(wrapper.text()).toContain('用户 ID 456');
     expect(wrapper.text()).toContain('精确筛选');
   });
+
+  it('uses a wider user detail drawer for identity and phone records', async () => {
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+
+    const drawer = wrapper.findComponent({ name: 'ElDrawer' });
+    expect(drawer.props('size')).toBe('720px');
+  });
 });

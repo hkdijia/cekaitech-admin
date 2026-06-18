@@ -3,12 +3,17 @@ import ElementPlus from 'element-plus';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
 import { pageLegalFormEvents } from '../../api/legalFormEvents';
+import { getAdminUserDetail } from '../../api/adminUsers';
 import LegalFormEventsPage from './LegalFormEventsPage.vue';
 
 const routerPushMock = vi.hoisted(() => vi.fn());
 
 vi.mock('../../api/legalFormEvents', () => ({
   pageLegalFormEvents: vi.fn()
+}));
+
+vi.mock('../../api/adminUsers', () => ({
+  getAdminUserDetail: vi.fn()
 }));
 
 vi.mock('vue-router', () => ({
@@ -18,6 +23,7 @@ vi.mock('vue-router', () => ({
 }));
 
 const pageLegalFormEventsMock = vi.mocked(pageLegalFormEvents);
+const getAdminUserDetailMock = vi.mocked(getAdminUserDetail);
 
 const legalFormEvent = {
   id: 1001,
@@ -55,10 +61,47 @@ async function flushAsyncUpdates() {
 describe('LegalFormEventsPage', () => {
   beforeEach(() => {
     pageLegalFormEventsMock.mockReset();
+    getAdminUserDetailMock.mockReset();
     routerPushMock.mockReset();
     pageLegalFormEventsMock.mockResolvedValue({
       dataList: [legalFormEvent],
       totalCount: 1
+    });
+    getAdminUserDetailMock.mockResolvedValue({
+      id: 11,
+      primaryPhone: '13800000001',
+      unionId: 'union-11',
+      status: 'normal',
+      provider: 'wechat',
+      appCode: 'lawsuit-material-assistant',
+      providerUserId: 'openid-11',
+      phoneBindingStatus: 'bound',
+      role: 'verified_lawyer',
+      createdAt: '2026-05-23T08:10:00',
+      updatedAt: '2026-05-23T08:10:00',
+      identities: [
+        {
+          id: 21,
+          provider: 'wechat',
+          appCode: 'lawsuit-material-assistant',
+          providerUserId: 'openid-11',
+          unionId: 'union-11',
+          phoneSnapshot: '13800000001',
+          phoneBindingStatus: 'bound',
+          role: 'verified_lawyer',
+          identityKey: 'lma-4a378460'
+        }
+      ],
+      phones: [
+        {
+          id: 31,
+          phone: '13800000001',
+          sourceProvider: 'wechat',
+          sourceAppCode: 'lawsuit-material-assistant',
+          verifiedAt: '2026-05-23T08:10:00',
+          status: 'verified'
+        }
+      ]
     });
   });
 
@@ -141,17 +184,20 @@ describe('LegalFormEventsPage', () => {
     );
   });
 
-  it('opens user investigation from an event user id', async () => {
+  it('opens user detail drawer from an event user id without leaving the page', async () => {
     const wrapper = mountPage();
 
     await flushAsyncUpdates();
 
     const userButton = wrapper.findAll('button').find((button) => button.text().includes('查看用户'));
     await userButton?.trigger('click');
+    await flushAsyncUpdates();
 
-    expect(routerPushMock).toHaveBeenCalledWith({
-      path: '/users',
-      query: { userId: '11' }
-    });
+    expect(getAdminUserDetailMock).toHaveBeenCalledWith(11);
+    expect(routerPushMock).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('用户详情');
+    expect(wrapper.text()).toContain('13800000001');
+    const drawer = wrapper.findComponent({ name: 'ElDrawer' });
+    expect(drawer.props('size')).toBe('720px');
   });
 });

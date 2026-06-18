@@ -162,6 +162,15 @@ function statusTagType(value: string) {
 }
 
 function businessStatusText(record: Pick<LegalServiceRequestItem, 'status' | 'paymentStatus' | 'orderId' | 'orderStatus'>) {
+  if (record.status === 'handled') {
+    return '已处理';
+  }
+  if (record.status === 'closed') {
+    return '已关闭';
+  }
+  if (record.status === 'cancelled') {
+    return '已取消';
+  }
   const orderStatus = record.orderStatus || '';
   if (orderStatus === 'refunded') {
     return '已退款';
@@ -175,25 +184,22 @@ function businessStatusText(record: Pick<LegalServiceRequestItem, 'status' | 'pa
   if (orderStatus === 'pending_pay' || record.paymentStatus === 'pending_pay') {
     return '待支付';
   }
-  if (record.status === 'closed') {
-    return '已关闭';
-  }
-  if (record.status === 'cancelled') {
-    return '已取消';
-  }
   if (record.status === 'contacting') {
     return '联系中';
   }
   if (record.status === 'waiting_user') {
     return '待用户补充';
   }
-  if (record.status === 'handled') {
-    return '已处理';
-  }
   return statusText(record.status);
 }
 
 function businessStatusTagType(record: Pick<LegalServiceRequestItem, 'status' | 'paymentStatus' | 'orderId' | 'orderStatus'>) {
+  if (record.status === 'handled') {
+    return 'success';
+  }
+  if (record.status === 'closed' || record.status === 'cancelled') {
+    return 'info';
+  }
   const orderStatus = record.orderStatus || '';
   if (orderStatus === 'refunded') {
     return 'info';
@@ -685,7 +691,7 @@ onMounted(() => {
       </div>
     </el-card>
 
-    <el-drawer v-model="detailDrawerVisible" size="640px">
+    <el-drawer v-model="detailDrawerVisible" size="760px">
       <template #header>
         <div class="drawer-header">
           <span>服务请求详情</span>

@@ -414,7 +414,7 @@ onMounted(() => {
       </div>
     </el-card>
 
-    <el-drawer v-model="detailDrawerVisible" title="用户详情" size="560px">
+    <el-drawer v-model="detailDrawerVisible" title="用户详情" size="720px">
       <div v-loading="detailLoading">
         <el-empty v-if="!detail && !detailLoading" description="暂无详情" />
         <template v-if="detail">
