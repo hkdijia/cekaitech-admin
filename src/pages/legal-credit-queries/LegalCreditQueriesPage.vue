@@ -14,6 +14,7 @@ import {
   type LegalCreditQueryTaskDetail,
   type LegalCreditQueryTaskSummary
 } from '../../api/legalCreditQueries';
+import { createMiniappAccessListEntry } from '../../api/miniappAccessList';
 import { useAuthStore } from '../../stores/auth';
 import { getLegalCreditQueryStatusMeta } from './legalCreditQueryStatus';
 
@@ -253,6 +254,30 @@ async function approveTask(row: LegalCreditQueryTaskSummary) {
   }
 }
 
+async function trustAndApproveTask(row: LegalCreditQueryTaskSummary) {
+  if (!canManage.value || row.status !== 'pending_review' || !row.userId || !row.identityId) {
+    return;
+  }
+  actionLoading.value = true;
+  loadError.value = '';
+  try {
+    await createMiniappAccessListEntry({
+      appCode: row.appCode,
+      capabilityCode: 'legal_credit_query',
+      listType: 'allow',
+      userId: row.userId,
+      identityId: row.identityId,
+      reason: '失信限高查询审核通过后加入可信名单'
+    });
+    await approveLegalCreditQueryTask(row.taskId, { reason: '加入可信名单后审核通过并进入查询队列' });
+    await loadTasks();
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '加入可信名单并入队失败';
+  } finally {
+    actionLoading.value = false;
+  }
+}
+
 async function rejectTask(row: LegalCreditQueryTaskSummary) {
   if (!canManage.value || row.status !== 'pending_review') {
     return;
@@ -385,6 +410,15 @@ onMounted(() => {
             </el-button>
             <el-button v-if="canManage && row.status === 'pending_review'" text type="success" :loading="actionLoading" @click="approveTask(row)">
               通过并入队
+            </el-button>
+            <el-button
+              v-if="canManage && row.status === 'pending_review' && row.userId && row.identityId"
+              text
+              type="success"
+              :loading="actionLoading"
+              @click="trustAndApproveTask(row)"
+            >
+              加入可信并入队
             </el-button>
             <el-button v-if="canManage && row.status === 'pending_review'" text type="danger" :loading="actionLoading" @click="rejectTask(row)">
               驳回查询

@@ -13,6 +13,7 @@ import {
   rejectLegalCreditQueryTask,
   viewLegalCreditQuerySensitive
 } from '../../api/legalCreditQueries';
+import { createMiniappAccessListEntry } from '../../api/miniappAccessList';
 import { useAuthStore } from '../../stores/auth';
 import LegalCreditQueriesPage from './LegalCreditQueriesPage.vue';
 
@@ -27,6 +28,10 @@ vi.mock('../../api/legalCreditQueries', () => ({
   viewLegalCreditQuerySensitive: vi.fn()
 }));
 
+vi.mock('../../api/miniappAccessList', () => ({
+  createMiniappAccessListEntry: vi.fn()
+}));
+
 const pageLegalCreditQueryTasksMock = vi.mocked(pageLegalCreditQueryTasks);
 const getLegalCreditQueryTaskMock = vi.mocked(getLegalCreditQueryTask);
 const approveLegalCreditQueryTaskMock = vi.mocked(approveLegalCreditQueryTask);
@@ -35,12 +40,14 @@ const requeueLegalCreditQueryTaskMock = vi.mocked(requeueLegalCreditQueryTask);
 const publishLegalCreditQueryTaskMock = vi.mocked(publishLegalCreditQueryTask);
 const rejectLegalCreditQueryTaskMock = vi.mocked(rejectLegalCreditQueryTask);
 const viewLegalCreditQuerySensitiveMock = vi.mocked(viewLegalCreditQuerySensitive);
+const createMiniappAccessListEntryMock = vi.mocked(createMiniappAccessListEntry);
 
 const taskSummary = {
   taskId: 12,
   requestNo: 'LCQ202606170001',
   appCode: 'lawsuit-material-assistant',
   userId: 14,
+  identityId: 15,
   userCode: 'lma-abcd1234',
   subjectType: 'person',
   subjectName: '张三',
@@ -120,6 +127,7 @@ describe('LegalCreditQueriesPage', () => {
     publishLegalCreditQueryTaskMock.mockReset();
     rejectLegalCreditQueryTaskMock.mockReset();
     viewLegalCreditQuerySensitiveMock.mockReset();
+    createMiniappAccessListEntryMock.mockReset();
     pageLegalCreditQueryTasksMock.mockResolvedValue({
       dataList: [taskSummary],
       totalCount: 1
@@ -135,6 +143,21 @@ describe('LegalCreditQueriesPage', () => {
       subjectName: '张三',
       identityNumber: '330100199001010012',
       queryReason: '律师白名单查询'
+    });
+    createMiniappAccessListEntryMock.mockResolvedValue({
+      entryId: 8,
+      appCode: 'lawsuit-material-assistant',
+      capabilityCode: 'legal_credit_query',
+      listType: 'allow',
+      userId: 14,
+      identityId: 15,
+      userCode: 'lma-abcd1234',
+      sourceType: 'manual',
+      sourceRefId: '',
+      reason: '失信限高查询审核通过后加入可信名单',
+      status: 'active',
+      createdAt: '2026-06-18T09:00:00',
+      updatedAt: '2026-06-18T09:00:00'
     });
   });
 
@@ -245,6 +268,29 @@ describe('LegalCreditQueriesPage', () => {
 
     expect(approveLegalCreditQueryTaskMock).toHaveBeenCalledWith(12, { reason: '后台审核通过并进入查询队列' });
     expect(rejectLegalCreditQueryTaskMock).toHaveBeenCalledWith(12, { reason: '后台驳回本次查询' });
+  });
+
+  it('adds pending review requester to trusted list before approving into queue', async () => {
+    pageLegalCreditQueryTasksMock.mockResolvedValue({
+      dataList: [{ ...taskSummary, status: 'pending_review', resultSummary: '' }],
+      totalCount: 1
+    });
+    const wrapper = mountPage();
+    await flushAsyncUpdates();
+
+    const trustButton = wrapper.findAll('button').find((button) => button.text().includes('加入可信并入队'));
+    await trustButton?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(createMiniappAccessListEntryMock).toHaveBeenCalledWith({
+      appCode: 'lawsuit-material-assistant',
+      capabilityCode: 'legal_credit_query',
+      listType: 'allow',
+      userId: 14,
+      identityId: 15,
+      reason: '失信限高查询审核通过后加入可信名单'
+    });
+    expect(approveLegalCreditQueryTaskMock).toHaveBeenCalledWith(12, { reason: '加入可信名单后审核通过并进入查询队列' });
   });
 
   it('reveals sensitive fields only after explicit click', async () => {

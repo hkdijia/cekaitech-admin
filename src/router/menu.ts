@@ -55,6 +55,14 @@ export const adminMenuItems: AdminMenuItem[] = [
     workspaceCodes: legalWorkspaceCodes
   },
   {
+    path: '/miniapp-access-list',
+    title: '小程序名单管理',
+    description: '按小程序和能力维护可信名单与拒绝名单',
+    permissionCode: 'admin:miniapp-access-list:view',
+    scope: 'miniapp',
+    workspaceCodes: legalWorkspaceCodes
+  },
+  {
     path: '/legal-form-events',
     title: '法律表单事件',
     description: '法律表单填写事件和质量状态',

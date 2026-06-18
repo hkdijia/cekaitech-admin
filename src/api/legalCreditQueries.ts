@@ -19,6 +19,7 @@ export interface LegalCreditQueryTaskSummary {
   requestNo: string;
   appCode: string;
   userId?: number | null;
+  identityId?: number | null;
   userCode?: string | null;
   subjectType: string;
   subjectName: string;

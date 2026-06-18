@@ -106,6 +106,17 @@ describe('admin routes', () => {
     expect(route?.meta?.permissionCode).toBe('admin:legal-credit-query:view');
   });
 
+  it('declares miniapp access list menu and route permission', () => {
+    const menuItem = adminMenuItems.find((item) => item.path === '/miniapp-access-list');
+    const route = routes.find((item) => item.path === '/miniapp-access-list');
+    const visibleItems = filterAdminMenuItems(() => true, 'legal-material-assistant');
+
+    expect(menuItem?.title).toBe('小程序名单管理');
+    expect(menuItem?.permissionCode).toBe('admin:miniapp-access-list:view');
+    expect(route?.meta?.permissionCode).toBe('admin:miniapp-access-list:view');
+    expect(visibleItems.map((item) => item.path)).toContain('/miniapp-access-list');
+  });
+
   it('declares order operations menu and route permission', () => {
     const menuItem = adminMenuItems.find((item) => item.path === '/order-operations');
     const route = routes.find((item) => item.path === '/order-operations');
