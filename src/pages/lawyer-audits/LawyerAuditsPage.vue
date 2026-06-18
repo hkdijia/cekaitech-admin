@@ -22,7 +22,7 @@ const query = reactive({
   pageSize: 10,
   appCode: 'lawsuit-material-assistant',
   auditType: 'lawyer_professional',
-  status: 'pending',
+  status: '',
   keywords: '',
   orderBy: 'createdAt',
   order: 'desc' as const
@@ -111,7 +111,7 @@ function resetFilters() {
   query.pageNo = 1;
   query.appCode = 'lawsuit-material-assistant';
   query.auditType = 'lawyer_professional';
-  query.status = 'pending';
+  query.status = '';
   query.keywords = '';
   loadAudits();
 }

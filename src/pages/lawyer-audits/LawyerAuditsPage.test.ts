@@ -88,7 +88,7 @@ describe('LawyerAuditsPage', () => {
     vi.mocked(ElMessageBox.prompt).mockResolvedValue({ value: '材料核验通过', action: 'confirm' } as never);
   });
 
-  it('loads pending lawyer audits and renders submitted fields', async () => {
+  it('loads all lawyer audits by default and renders submitted fields', async () => {
     const wrapper = mountPage();
 
     await flushAsyncUpdates();
@@ -98,7 +98,7 @@ describe('LawyerAuditsPage', () => {
       pageSize: 10,
       appCode: 'lawsuit-material-assistant',
       auditType: 'lawyer_professional',
-      status: 'pending',
+      status: undefined,
       keywords: undefined,
       orderBy: 'createdAt',
       order: 'desc'
