@@ -238,15 +238,15 @@ describe('LegalCreditQueriesPage', () => {
     const cancelButton = wrapper.findAll('button').find((button) => button.text().includes('取消'));
     await cancelButton?.trigger('click');
     await flushAsyncUpdates();
-    expect(wrapper.text()).toContain('重新进入队列');
+    expect(wrapper.text()).toContain('重新查询');
     expect(wrapper.text()).not.toContain('重排队');
 
-    const requeueButton = wrapper.findAll('button').find((button) => button.text().includes('重新进入队列'));
+    const requeueButton = wrapper.findAll('button').find((button) => button.text().includes('重新查询'));
     await requeueButton?.trigger('click');
     await flushAsyncUpdates();
 
     expect(cancelLegalCreditQueryTaskMock).toHaveBeenCalledWith(12, { reason: '后台人工取消' });
-    expect(requeueLegalCreditQueryTaskMock).toHaveBeenCalledWith(12, { reason: '后台重新进入查询队列' });
+    expect(requeueLegalCreditQueryTaskMock).toHaveBeenCalledWith(12, { reason: '后台重新查询' });
   });
 
   it('approves and rejects pending review tasks', async () => {
@@ -321,6 +321,6 @@ describe('LegalCreditQueriesPage', () => {
     expect(wrapper.text()).not.toContain('通过并入队');
     expect(wrapper.text()).not.toContain('驳回查询');
     expect(wrapper.text()).not.toContain('取消');
-    expect(wrapper.text()).not.toContain('重新进入队列');
+    expect(wrapper.text()).not.toContain('重新查询');
   });
 });

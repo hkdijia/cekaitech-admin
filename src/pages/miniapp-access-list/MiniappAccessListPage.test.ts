@@ -7,6 +7,7 @@ import {
   createMiniappAccessListEntry,
   disableMiniappAccessListEntry,
   importApprovedLawyersToAccessList,
+  pageApprovedLawyerAccessListCandidates,
   pageMiniappAccessListEntries
 } from '../../api/miniappAccessList';
 import { useAuthStore } from '../../stores/auth';
@@ -16,13 +17,15 @@ vi.mock('../../api/miniappAccessList', () => ({
   pageMiniappAccessListEntries: vi.fn(),
   createMiniappAccessListEntry: vi.fn(),
   disableMiniappAccessListEntry: vi.fn(),
-  importApprovedLawyersToAccessList: vi.fn()
+  importApprovedLawyersToAccessList: vi.fn(),
+  pageApprovedLawyerAccessListCandidates: vi.fn()
 }));
 
 const pageMiniappAccessListEntriesMock = vi.mocked(pageMiniappAccessListEntries);
 const createMiniappAccessListEntryMock = vi.mocked(createMiniappAccessListEntry);
 const disableMiniappAccessListEntryMock = vi.mocked(disableMiniappAccessListEntry);
 const importApprovedLawyersToAccessListMock = vi.mocked(importApprovedLawyersToAccessList);
+const pageApprovedLawyerAccessListCandidatesMock = vi.mocked(pageApprovedLawyerAccessListCandidates);
 
 const accessListEntry = {
   entryId: 1,
@@ -77,6 +80,7 @@ describe('MiniappAccessListPage', () => {
     createMiniappAccessListEntryMock.mockReset();
     disableMiniappAccessListEntryMock.mockReset();
     importApprovedLawyersToAccessListMock.mockReset();
+    pageApprovedLawyerAccessListCandidatesMock.mockReset();
     pageMiniappAccessListEntriesMock.mockResolvedValue({
       dataList: [accessListEntry],
       totalCount: 1
@@ -84,6 +88,21 @@ describe('MiniappAccessListPage', () => {
     createMiniappAccessListEntryMock.mockResolvedValue(accessListEntry);
     disableMiniappAccessListEntryMock.mockResolvedValue({ ...accessListEntry, status: 'disabled' });
     importApprovedLawyersToAccessListMock.mockResolvedValue({ importedCount: 2, skippedCount: 1 });
+    pageApprovedLawyerAccessListCandidatesMock.mockResolvedValue({
+      dataList: [
+        {
+          auditId: 22,
+          userId: 16,
+          identityId: 17,
+          userCode: 'lma-candidate',
+          name: '候选律师',
+          phone: '13142020002',
+          licenseNo: 'LAW-001',
+          reviewedAt: '2026-06-18T09:00:00'
+        }
+      ],
+      totalCount: 1
+    });
   });
 
   it('loads legal credit query access list by default and renders entries', async () => {
@@ -134,20 +153,34 @@ describe('MiniappAccessListPage', () => {
     expect(pageMiniappAccessListEntriesMock).toHaveBeenCalledTimes(2);
   });
 
-  it('disables active entry and imports approved lawyers', async () => {
+  it('disables active entry and imports selected approved lawyer candidates', async () => {
     const wrapper = mountPage();
     await flushAsyncUpdates();
 
     await wrapper.findAll('button').find((button) => button.text().includes('停用'))?.trigger('click');
     await flushAsyncUpdates();
-    await wrapper.findAll('button').find((button) => button.text().includes('导入已通过律师'))?.trigger('click');
+    await wrapper.findAll('button').find((button) => button.text().includes('选择导入律师'))?.trigger('click');
+    await flushAsyncUpdates();
+    const candidateTable = wrapper.findAllComponents({ name: 'ElTable' })[1];
+    expect(candidateTable).toBeTruthy();
+    candidateTable?.vm.$emit('selection-change', [{ auditId: 22 }]);
+    await flushAsyncUpdates();
+    await wrapper.findAll('button').find((button) => button.text() === '导入所选')?.trigger('click');
     await flushAsyncUpdates();
 
     expect(disableMiniappAccessListEntryMock).toHaveBeenCalledWith(1, { reason: '后台停用名单记录' });
+    expect(pageApprovedLawyerAccessListCandidatesMock).toHaveBeenCalledWith({
+      pageNo: 1,
+      pageSize: 10,
+      appCode: 'lawsuit-material-assistant',
+      capabilityCode: 'legal_credit_query',
+      keywords: undefined
+    });
     expect(importApprovedLawyersToAccessListMock).toHaveBeenCalledWith({
       appCode: 'lawsuit-material-assistant',
       capabilityCode: 'legal_credit_query',
-      reason: '从已通过律师认证导入失信限高可信名单'
+      reason: '从已通过律师认证导入失信限高可信名单',
+      auditIds: [22]
     });
   });
 
@@ -158,7 +191,7 @@ describe('MiniappAccessListPage', () => {
 
     expect(wrapper.text()).toContain('lma-abcd1234');
     expect(wrapper.text()).not.toContain('新增名单');
-    expect(wrapper.text()).not.toContain('导入已通过律师');
+    expect(wrapper.text()).not.toContain('选择导入律师');
     expect(wrapper.findAll('button').some((button) => button.text().includes('停用'))).toBe(false);
   });
 });

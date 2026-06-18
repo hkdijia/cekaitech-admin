@@ -50,11 +50,31 @@ export interface MiniappAccessListImportRequest {
   appCode: string;
   capabilityCode: string;
   reason: string;
+  auditIds?: number[];
 }
 
 export interface MiniappAccessListImportResponse {
   importedCount: number;
   skippedCount: number;
+}
+
+export interface MiniappAccessListCandidatePageRequest {
+  pageNo: number;
+  pageSize: number;
+  appCode: string;
+  capabilityCode: string;
+  keywords?: string;
+}
+
+export interface MiniappAccessListCandidate {
+  auditId: number;
+  userId: number;
+  identityId: number;
+  userCode?: string | null;
+  name?: string | null;
+  phone?: string | null;
+  licenseNo?: string | null;
+  reviewedAt?: string | null;
 }
 
 export function pageMiniappAccessListEntries(
@@ -89,6 +109,15 @@ export function importApprovedLawyersToAccessList(
   payload: MiniappAccessListImportRequest
 ): Promise<MiniappAccessListImportResponse> {
   return request<MiniappAccessListImportResponse>('/api/admin/miniapp-access-list/import-approved-lawyers', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}
+
+export function pageApprovedLawyerAccessListCandidates(
+  payload: MiniappAccessListCandidatePageRequest
+): Promise<PageResult<MiniappAccessListCandidate>> {
+  return request<PageResult<MiniappAccessListCandidate>>('/api/admin/miniapp-access-list/approved-lawyer-candidates', {
     method: 'POST',
     body: JSON.stringify(payload)
   });

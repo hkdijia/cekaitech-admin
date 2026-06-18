@@ -6,7 +6,9 @@ import {
   createMiniappAccessListEntry,
   disableMiniappAccessListEntry,
   importApprovedLawyersToAccessList,
+  pageApprovedLawyerAccessListCandidates,
   pageMiniappAccessListEntries,
+  type MiniappAccessListCandidate,
   type MiniappAccessListEntry
 } from '../../api/miniappAccessList';
 import { useAuthStore } from '../../stores/auth';
@@ -18,6 +20,11 @@ const loadError = ref('');
 const entries = ref<MiniappAccessListEntry[]>([]);
 const totalCount = ref(0);
 const createDialogVisible = ref(false);
+const candidateDialogVisible = ref(false);
+const candidateLoading = ref(false);
+const candidates = ref<MiniappAccessListCandidate[]>([]);
+const candidateTotalCount = ref(0);
+const selectedCandidates = ref<MiniappAccessListCandidate[]>([]);
 
 const query = reactive({
   pageNo: 1,
@@ -36,6 +43,12 @@ const createForm = reactive({
   userId: undefined as number | undefined,
   identityId: undefined as number | undefined,
   reason: ''
+});
+
+const candidateQuery = reactive({
+  pageNo: 1,
+  pageSize: 10,
+  keywords: ''
 });
 
 const appOptions = [
@@ -215,8 +228,46 @@ async function disableEntry(row: MiniappAccessListEntry) {
   }
 }
 
-async function importApprovedLawyers() {
+async function loadCandidates() {
+  candidateLoading.value = true;
+  loadError.value = '';
+  try {
+    const result = await pageApprovedLawyerAccessListCandidates({
+      pageNo: candidateQuery.pageNo,
+      pageSize: candidateQuery.pageSize,
+      appCode: query.appCode,
+      capabilityCode: query.capabilityCode,
+      keywords: normalizedText(candidateQuery.keywords)
+    });
+    candidates.value = result.dataList;
+    candidateTotalCount.value = result.totalCount;
+    selectedCandidates.value = [];
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '候选律师加载失败';
+    candidates.value = [];
+    candidateTotalCount.value = 0;
+  } finally {
+    candidateLoading.value = false;
+  }
+}
+
+function openCandidateDialog() {
   if (!canManage.value) {
+    return;
+  }
+  candidateQuery.pageNo = 1;
+  candidateQuery.keywords = '';
+  candidateDialogVisible.value = true;
+  loadCandidates();
+}
+
+function handleCandidateSelectionChange(rows: MiniappAccessListCandidate[]) {
+  selectedCandidates.value = rows;
+}
+
+async function importSelectedCandidates() {
+  if (!canManage.value || selectedCandidates.value.length === 0) {
+    loadError.value = '请先选择要导入的律师';
     return;
   }
   actionLoading.value = true;
@@ -225,8 +276,10 @@ async function importApprovedLawyers() {
     const result = await importApprovedLawyersToAccessList({
       appCode: query.appCode,
       capabilityCode: query.capabilityCode,
-      reason: '从已通过律师认证导入失信限高可信名单'
+      reason: '从已通过律师认证导入失信限高可信名单',
+      auditIds: selectedCandidates.value.map((item) => item.auditId)
     });
+    candidateDialogVisible.value = false;
     await loadEntries();
     ElMessage.success(`导入 ${result.importedCount} 条，跳过 ${result.skippedCount} 条`);
   } catch (error) {
@@ -234,6 +287,17 @@ async function importApprovedLawyers() {
   } finally {
     actionLoading.value = false;
   }
+}
+
+function handleCandidatePageChange(pageNo: number) {
+  candidateQuery.pageNo = pageNo;
+  loadCandidates();
+}
+
+function handleCandidateSizeChange(pageSize: number) {
+  candidateQuery.pageNo = 1;
+  candidateQuery.pageSize = pageSize;
+  loadCandidates();
 }
 
 function handlePageChange(pageNo: number) {
@@ -286,7 +350,7 @@ onMounted(() => {
           <el-button type="primary" :icon="Search" :loading="loading" @click="searchEntries">查询</el-button>
           <el-button :icon="Refresh" @click="resetFilters">重置</el-button>
           <el-button v-if="canManage" :icon="Plus" type="success" @click="openCreateDialog">新增名单</el-button>
-          <el-button v-if="canManage" :icon="Upload" :loading="actionLoading" @click="importApprovedLawyers">导入已通过律师</el-button>
+          <el-button v-if="canManage" :icon="Upload" :loading="actionLoading" @click="openCandidateDialog">选择导入律师</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -378,6 +442,50 @@ onMounted(() => {
         <el-button type="primary" :loading="actionLoading" @click="submitCreate">保存</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="candidateDialogVisible" title="选择已认证律师导入白名单" width="760px">
+      <div class="candidate-toolbar">
+        <el-input
+          v-model="candidateQuery.keywords"
+          class="candidate-keyword"
+          clearable
+          placeholder="姓名 / 手机号 / 执业证"
+          @keyup.enter="loadCandidates"
+        />
+        <el-button :icon="Search" :loading="candidateLoading" @click="loadCandidates">查询</el-button>
+      </div>
+      <el-table
+        v-loading="candidateLoading"
+        :data="candidates"
+        row-key="auditId"
+        @selection-change="handleCandidateSelectionChange"
+      >
+        <el-table-column type="selection" width="48" />
+        <el-table-column prop="userCode" label="用户编号" width="132" show-overflow-tooltip />
+        <el-table-column prop="name" label="姓名" width="120" show-overflow-tooltip />
+        <el-table-column prop="phone" label="手机号" width="132" show-overflow-tooltip />
+        <el-table-column prop="licenseNo" label="执业证号" min-width="160" show-overflow-tooltip />
+        <el-table-column label="通过时间" width="172">
+          <template #default="{ row }">{{ formatTime(row.reviewedAt) }}</template>
+        </el-table-column>
+      </el-table>
+      <div class="pagination-bar">
+        <el-pagination
+          v-model:current-page="candidateQuery.pageNo"
+          v-model:page-size="candidateQuery.pageSize"
+          :page-sizes="[10, 20, 50]"
+          :total="candidateTotalCount"
+          background
+          layout="total, sizes, prev, pager, next"
+          @current-change="handleCandidatePageChange"
+          @size-change="handleCandidateSizeChange"
+        />
+      </div>
+      <template #footer>
+        <el-button @click="candidateDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="actionLoading" @click="importSelectedCandidates">导入所选</el-button>
+      </template>
+    </el-dialog>
   </section>
 </template>
 
@@ -425,5 +533,15 @@ onMounted(() => {
 
 .dialog-input {
   width: 100%;
+}
+
+.candidate-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.candidate-keyword {
+  width: 260px;
 }
 </style>

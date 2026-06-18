@@ -3,6 +3,7 @@ import {
   createMiniappAccessListEntry,
   disableMiniappAccessListEntry,
   importApprovedLawyersToAccessList,
+  pageApprovedLawyerAccessListCandidates,
   pageMiniappAccessListEntries
 } from './miniappAccessList';
 
@@ -61,7 +62,7 @@ describe('miniapp access list api', () => {
     expect(result.dataList[0].userCode).toBe('lma-abcd1234');
   });
 
-  it('posts create, disable and import actions to exact endpoints', async () => {
+  it('posts create, disable and selected import actions to exact endpoints', async () => {
     const fetchMock = vi
       .spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(successResponse({ entryId: 2, status: 'active' }))
@@ -80,7 +81,8 @@ describe('miniapp access list api', () => {
     await importApprovedLawyersToAccessList({
       appCode: 'lawsuit-material-assistant',
       capabilityCode: 'legal_credit_query',
-      reason: '导入已通过律师'
+      reason: '导入已通过律师',
+      auditIds: [22, 23]
     });
 
     expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/admin/miniapp-access-list/entries', {
@@ -105,10 +107,51 @@ describe('miniapp access list api', () => {
       body: JSON.stringify({
         appCode: 'lawsuit-material-assistant',
         capabilityCode: 'legal_credit_query',
-        reason: '导入已通过律师'
+        reason: '导入已通过律师',
+        auditIds: [22, 23]
       }),
       headers: { 'Content-Type': 'application/json' }
     });
+  });
+
+  it('posts approved lawyer candidate query to exact endpoint', async () => {
+    const fetchMock = mockSuccess({
+      dataList: [
+        {
+          auditId: 22,
+          userId: 16,
+          identityId: 17,
+          userCode: 'lma-candidate',
+          name: '候选律师',
+          phone: '13142020002',
+          licenseNo: 'LAW-001',
+          reviewedAt: '2026-06-18T09:00:00'
+        }
+      ],
+      totalCount: 1
+    });
+
+    const result = await pageApprovedLawyerAccessListCandidates({
+      pageNo: 1,
+      pageSize: 10,
+      appCode: 'lawsuit-material-assistant',
+      capabilityCode: 'legal_credit_query',
+      keywords: '候选'
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/admin/miniapp-access-list/approved-lawyer-candidates', {
+      method: 'POST',
+      body: JSON.stringify({
+        pageNo: 1,
+        pageSize: 10,
+        appCode: 'lawsuit-material-assistant',
+        capabilityCode: 'legal_credit_query',
+        keywords: '候选'
+      }),
+      headers: { 'Content-Type': 'application/json' }
+    });
+    expect(result.totalCount).toBe(1);
+    expect(result.dataList[0].auditId).toBe(22);
   });
 });
 

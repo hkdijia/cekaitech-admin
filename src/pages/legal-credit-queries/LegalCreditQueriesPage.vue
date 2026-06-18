@@ -311,19 +311,23 @@ async function cancelTask(row: LegalCreditQueryTaskSummary) {
 }
 
 async function requeueTask(row: LegalCreditQueryTaskSummary) {
-  if (!canManage.value) {
+  if (!canManage.value || !canRequery(row.status)) {
     return;
   }
   actionLoading.value = true;
   loadError.value = '';
   try {
-    await requeueLegalCreditQueryTask(row.taskId, { reason: '后台重新进入查询队列' });
+    await requeueLegalCreditQueryTask(row.taskId, { reason: '后台重新查询' });
     await loadTasks();
   } catch (error) {
-    loadError.value = error instanceof Error ? error.message : '重新进入队列失败';
+    loadError.value = error instanceof Error ? error.message : '重新查询失败';
   } finally {
     actionLoading.value = false;
   }
+}
+
+function canRequery(status: string) {
+  return ['failed', 'expired', 'cancelled', 'result_ready', 'published'].includes(status);
 }
 
 async function viewSensitiveFields() {
@@ -423,7 +427,7 @@ onMounted(() => {
             <el-button v-if="canManage && row.status === 'pending_review'" text type="danger" :loading="actionLoading" @click="rejectTask(row)">
               驳回查询
             </el-button>
-            <el-button v-if="canManage" text type="warning" :loading="actionLoading" @click="requeueTask(row)">重新进入队列</el-button>
+            <el-button v-if="canManage && canRequery(row.status)" text type="warning" :loading="actionLoading" @click="requeueTask(row)">重新查询</el-button>
             <el-button v-if="canManage" text type="danger" :loading="actionLoading" @click="cancelTask(row)">取消</el-button>
           </template>
         </el-table-column>
