@@ -179,6 +179,7 @@ describe('LegalCreditQueriesPage', () => {
       order: 'desc'
     });
     expect(wrapper.text()).toContain('LCQ202606170001');
+    expect(wrapper.text()).toContain('lma-abcd1234');
     expect(wrapper.text()).toContain('张三');
     expect(wrapper.text()).toContain('待复核');
   });

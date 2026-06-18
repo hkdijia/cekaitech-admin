@@ -3,7 +3,7 @@ import ElementPlus from 'element-plus';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
-import { pageAdminUsers } from '../../api/adminUsers';
+import { getAdminUserDetail, pageAdminUsers } from '../../api/adminUsers';
 import UsersPage from './UsersPage.vue';
 
 const routeMock = vi.hoisted(() => ({
@@ -28,6 +28,7 @@ vi.mock('../../api/adminUserOperationLogs', () => ({
 }));
 
 const pageAdminUsersMock = vi.mocked(pageAdminUsers);
+const getAdminUserDetailMock = vi.mocked(getAdminUserDetail);
 
 const adminUser = {
   id: 123,
@@ -65,9 +66,28 @@ describe('UsersPage', () => {
     routeMock.query = {};
     localStorage.clear();
     pageAdminUsersMock.mockReset();
+    getAdminUserDetailMock.mockReset();
     pageAdminUsersMock.mockResolvedValue({
       dataList: [adminUser],
       totalCount: 1
+    });
+    getAdminUserDetailMock.mockResolvedValue({
+      ...adminUser,
+      identities: [
+        {
+          id: 456,
+          provider: 'wechat',
+          appCode: 'lawsuit-material-assistant',
+          userCode: 'lma-4a378460',
+          providerUserId: 'openid-123',
+          unionId: 'union-123',
+          phoneSnapshot: '13800000123',
+          phoneBindingStatus: 'bound',
+          role: 'user',
+          identityKey: 'identity-123'
+        }
+      ],
+      phones: []
     });
   });
 
@@ -152,5 +172,19 @@ describe('UsersPage', () => {
 
     const drawer = wrapper.findComponent({ name: 'ElDrawer' });
     expect(drawer.props('size')).toBe('720px');
+  });
+
+  it('shows miniapp-facing user code in user detail identities', async () => {
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+
+    const detailButton = wrapper.findAll('button').find((button) => button.text().includes('详情'));
+    await detailButton?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(getAdminUserDetailMock).toHaveBeenCalledWith(123);
+    expect(wrapper.text()).toContain('用户编号');
+    expect(wrapper.text()).toContain('lma-4a378460');
   });
 });

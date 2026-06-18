@@ -2,22 +2,20 @@ import { mount } from '@vue/test-utils';
 import ElementPlus from 'element-plus';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
+import { getAdminUserDetail } from '../../api/adminUsers';
 import { pageGenerationRecords } from '../../api/generationRecords';
 import GenerationRecordsPage from './GenerationRecordsPage.vue';
-
-const routerPushMock = vi.hoisted(() => vi.fn());
 
 vi.mock('../../api/generationRecords', () => ({
   pageGenerationRecords: vi.fn()
 }));
 
-vi.mock('vue-router', () => ({
-  useRouter: () => ({
-    push: routerPushMock
-  })
+vi.mock('../../api/adminUsers', () => ({
+  getAdminUserDetail: vi.fn()
 }));
 
 const pageGenerationRecordsMock = vi.mocked(pageGenerationRecords);
+const getAdminUserDetailMock = vi.mocked(getAdminUserDetail);
 
 const generationRecord = {
   id: 1001,
@@ -55,10 +53,47 @@ async function flushAsyncUpdates() {
 describe('GenerationRecordsPage', () => {
   beforeEach(() => {
     pageGenerationRecordsMock.mockReset();
-    routerPushMock.mockReset();
+    getAdminUserDetailMock.mockReset();
     pageGenerationRecordsMock.mockResolvedValue({
       dataList: [generationRecord],
       totalCount: 1
+    });
+    getAdminUserDetailMock.mockResolvedValue({
+      id: 11,
+      primaryPhone: '13800000001',
+      unionId: 'union-11',
+      status: 'normal',
+      provider: 'wechat',
+      appCode: 'lawsuit-material-assistant',
+      providerUserId: 'openid-11',
+      phoneBindingStatus: 'bound',
+      role: 'verified_lawyer',
+      createdAt: '2026-05-23T08:10:00',
+      updatedAt: '2026-05-23T08:10:00',
+      identities: [
+        {
+          id: 21,
+          provider: 'wechat',
+          appCode: 'lawsuit-material-assistant',
+          userCode: 'lma-4a378460',
+          providerUserId: 'openid-11',
+          unionId: 'union-11',
+          phoneSnapshot: '13800000001',
+          phoneBindingStatus: 'bound',
+          role: 'verified_lawyer',
+          identityKey: 'lma-4a378460'
+        }
+      ],
+      phones: [
+        {
+          id: 31,
+          phone: '13800000001',
+          sourceProvider: 'wechat',
+          sourceAppCode: 'lawsuit-material-assistant',
+          verifiedAt: '2026-05-23T08:10:00',
+          status: 'verified'
+        }
+      ]
     });
   });
 
@@ -174,17 +209,20 @@ describe('GenerationRecordsPage', () => {
     );
   });
 
-  it('opens user investigation from a record user id', async () => {
+  it('opens user detail drawer from a record user id without leaving the page', async () => {
     const wrapper = mountPage();
 
     await flushAsyncUpdates();
 
     const userButton = wrapper.findAll('button').find((button) => button.text().includes('查看用户'));
     await userButton?.trigger('click');
+    await flushAsyncUpdates();
 
-    expect(routerPushMock).toHaveBeenCalledWith({
-      path: '/users',
-      query: { userId: '11' }
-    });
+    expect(getAdminUserDetailMock).toHaveBeenCalledWith(11);
+    expect(wrapper.text()).toContain('用户详情');
+    expect(wrapper.text()).toContain('13800000001');
+    expect(wrapper.text()).toContain('lma-4a378460');
+    const drawer = wrapper.findComponent({ name: 'ElDrawer' });
+    expect(drawer.props('size')).toBe('720px');
   });
 });

@@ -29,6 +29,7 @@ export interface AdminUserIdentity {
   id: number;
   provider: string;
   appCode: string;
+  userCode?: string;
   providerUserId: string;
   unionId: string;
   phoneSnapshot: string;

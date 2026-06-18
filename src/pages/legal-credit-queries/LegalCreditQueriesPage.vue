@@ -86,6 +86,16 @@ function formatTime(value: string | null | undefined) {
   return value.replace('T', ' ').replace(/\.\d+$/, '');
 }
 
+function requesterText(row: LegalCreditQueryTaskSummary) {
+  if (row.userCode) {
+    return row.userCode;
+  }
+  if (row.userId) {
+    return `用户 ${row.userId}`;
+  }
+  return '-';
+}
+
 function formatJsonPreview(value: unknown | string | null | undefined) {
   if (value === null || value === undefined || value === '') {
     return '-';
@@ -387,6 +397,9 @@ onMounted(() => {
     <el-card shadow="never" class="table-panel">
       <el-table v-loading="loading" :data="tasks" row-key="taskId">
         <el-table-column prop="requestNo" label="请求号" min-width="168" show-overflow-tooltip />
+        <el-table-column label="发起用户" min-width="140" show-overflow-tooltip>
+          <template #default="{ row }">{{ requesterText(row) }}</template>
+        </el-table-column>
         <el-table-column prop="subjectName" label="主体名称" min-width="140" show-overflow-tooltip />
         <el-table-column label="主体类型" width="96">
           <template #default="{ row }">{{ subjectTypeText(row.subjectType) }}</template>

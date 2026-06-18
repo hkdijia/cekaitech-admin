@@ -136,6 +136,10 @@ function formatTime(value: string) {
   return value.replace('T', ' ').replace(/\.\d+$/, '');
 }
 
+function identityUserCode(row: { userCode?: string; identityKey?: string }) {
+  return row.userCode || row.identityKey || '-';
+}
+
 function normalizedQueryUserId() {
   const value = query.userId.trim();
   if (!isPositiveSafeIntegerText(value)) {
@@ -441,6 +445,9 @@ onMounted(() => {
           <h2 class="drawer-section-title">小程序身份</h2>
           <el-table :data="detail.identities" size="small">
             <el-table-column prop="appCode" label="小程序" min-width="170" show-overflow-tooltip />
+            <el-table-column label="用户编号" min-width="140" show-overflow-tooltip>
+              <template #default="{ row }">{{ identityUserCode(row) }}</template>
+            </el-table-column>
             <el-table-column prop="providerUserId" label="OpenID" min-width="170" show-overflow-tooltip />
             <el-table-column prop="phoneBindingStatus" label="授权" width="88">
               <template #default="{ row }">{{ phoneBindingText(row.phoneBindingStatus) }}</template>

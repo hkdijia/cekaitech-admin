@@ -84,6 +84,7 @@ describe('LegalFormEventsPage', () => {
           id: 21,
           provider: 'wechat',
           appCode: 'lawsuit-material-assistant',
+          userCode: 'lma-4a378460',
           providerUserId: 'openid-11',
           unionId: 'union-11',
           phoneSnapshot: '13800000001',
@@ -197,6 +198,7 @@ describe('LegalFormEventsPage', () => {
     expect(routerPushMock).not.toHaveBeenCalled();
     expect(wrapper.text()).toContain('用户详情');
     expect(wrapper.text()).toContain('13800000001');
+    expect(wrapper.text()).toContain('lma-4a378460');
     const drawer = wrapper.findComponent({ name: 'ElDrawer' });
     expect(drawer.props('size')).toBe('720px');
   });
