@@ -5,6 +5,7 @@ import { Monitor, Setting, SwitchButton, UserFilled, Warning } from '@element-pl
 import { filterAdminMenuItems } from '../router/menu';
 import { useAuthStore } from '../stores/auth';
 import { useWorkspaceStore } from '../stores/workspace';
+import type { BackendWorkspaceMenu } from '../api/adminWorkspace';
 
 const route = useRoute();
 const router = useRouter();
@@ -32,14 +33,34 @@ async function handleWorkspaceChange(code: string) {
   router.push('/miniapp-workbench');
 }
 
-function openWorkspaceMenu(menuCode: string) {
+function openWorkspaceMenu(item: BackendWorkspaceMenu) {
+  const resolvedRoute = resolveWorkspaceMenuRoute(item);
+  if (resolvedRoute) {
+    router.push(resolvedRoute);
+    return;
+  }
   router.push({
     name: 'workspace-menu',
     params: {
       workspaceCode: workspace.currentCode,
-      menuCode
+      menuCode: item.menuCode
     }
   });
+}
+
+function resolveWorkspaceMenuRoute(item: BackendWorkspaceMenu) {
+  const routeMap: Record<string, string> = {
+    'lawyer-verifications': '/lawyer-audits',
+    'credit-restriction-queries': '/legal-credit-query-tasks'
+  };
+  if (routeMap[item.menuCode]) {
+    return routeMap[item.menuCode];
+  }
+  const matchedRoute = router.resolve(item.route);
+  if (matchedRoute.matched.length > 0 && matchedRoute.name !== 'workspace-menu') {
+    return item.route;
+  }
+  return '';
 }
 </script>
 
@@ -68,7 +89,7 @@ function openWorkspaceMenu(menuCode: string) {
           :key="item.menuCode"
           class="workspace-menu-item"
           type="button"
-          @click="openWorkspaceMenu(item.menuCode)"
+          @click="openWorkspaceMenu(item)"
         >
           {{ item.menuName }}
         </button>

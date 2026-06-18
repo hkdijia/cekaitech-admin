@@ -23,7 +23,8 @@ describe('AdminLayout', () => {
 
   it('opens miniapp workbench after switching from global workspace to legal miniapp', async () => {
     const push = vi.fn();
-    vi.mocked(useRouter).mockReturnValue({ push } as unknown as ReturnType<typeof useRouter>);
+    const resolve = vi.fn((path: string) => ({ matched: path === '/miniapp-workbench' ? [{}] : [], name: undefined }));
+    vi.mocked(useRouter).mockReturnValue({ push, resolve } as unknown as ReturnType<typeof useRouter>);
     const auth = useAuthStore();
     auth.operator = {
       id: 'admin',
@@ -57,5 +58,95 @@ describe('AdminLayout', () => {
 
     expect(workspace.switchWorkspace).toHaveBeenCalledWith('legal-material-assistant');
     expect(push).toHaveBeenCalledWith('/miniapp-workbench');
+  });
+
+  it('opens real legal credit query page from backend workspace menu', async () => {
+    const push = vi.fn();
+    const resolve = vi.fn((path: string) => ({ matched: path === '/legal-credit-query-tasks' ? [{}] : [], name: undefined }));
+    vi.mocked(useRouter).mockReturnValue({ push, resolve } as unknown as ReturnType<typeof useRouter>);
+    const auth = useAuthStore();
+    auth.operator = {
+      id: 'admin',
+      name: '管理员',
+      roleCode: 'super_admin',
+      roleName: '超级管理员',
+      permissions: ['admin:workspace:view', 'admin:legal-credit-query:view']
+    };
+    auth.token = 'token';
+    const workspace = useWorkspaceStore();
+    workspace.currentCode = 'legal-material-assistant';
+    workspace.options = [
+      { id: 0, code: 'global', name: '全局后台', appCode: 'global', status: 'enabled' },
+      { id: 1, code: 'legal-material-assistant', name: '阳律通', appCode: 'lawsuit-material-assistant', status: 'enabled' }
+    ];
+    workspace.currentMenus = [
+      {
+        menuCode: 'credit-restriction-queries',
+        menuName: '失信限高查询',
+        route: '/legal/credit-restriction-queries',
+        permissionCode: 'admin:legal-credit-query:view',
+        sortOrder: 70
+      }
+    ];
+    workspace.loadWorkspaces = vi.fn();
+
+    const wrapper = mount(AdminLayout, {
+      global: {
+        plugins: [ElementPlus],
+        stubs: {
+          RouterView: true
+        }
+      }
+    });
+    await nextTick();
+    await wrapper.find('button.workspace-menu-item').trigger('click');
+
+    expect(push).toHaveBeenCalledWith('/legal-credit-query-tasks');
+  });
+
+  it('keeps backend workspace placeholder for routes without a real admin page', async () => {
+    const push = vi.fn();
+    const resolve = vi.fn(() => ({ matched: [], name: undefined }));
+    vi.mocked(useRouter).mockReturnValue({ push, resolve } as unknown as ReturnType<typeof useRouter>);
+    const auth = useAuthStore();
+    auth.operator = {
+      id: 'admin',
+      name: '管理员',
+      roleCode: 'super_admin',
+      roleName: '超级管理员',
+      permissions: ['admin:workspace:view', 'legal:case:view']
+    };
+    auth.token = 'token';
+    const workspace = useWorkspaceStore();
+    workspace.currentCode = 'legal-material-assistant';
+    workspace.currentMenus = [
+      {
+        menuCode: 'legal-cases',
+        menuName: '法律案件',
+        route: '/legal/cases',
+        permissionCode: 'legal:case:view',
+        sortOrder: 10
+      }
+    ];
+    workspace.loadWorkspaces = vi.fn();
+
+    const wrapper = mount(AdminLayout, {
+      global: {
+        plugins: [ElementPlus],
+        stubs: {
+          RouterView: true
+        }
+      }
+    });
+    await nextTick();
+    await wrapper.find('button.workspace-menu-item').trigger('click');
+
+    expect(push).toHaveBeenCalledWith({
+      name: 'workspace-menu',
+      params: {
+        workspaceCode: 'legal-material-assistant',
+        menuCode: 'legal-cases'
+      }
+    });
   });
 });
