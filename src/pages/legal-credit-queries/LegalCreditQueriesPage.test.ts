@@ -5,10 +5,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
 import {
   cancelLegalCreditQueryTask,
+  approveLegalCreditQueryTask,
   getLegalCreditQueryTask,
   pageLegalCreditQueryTasks,
   publishLegalCreditQueryTask,
   requeueLegalCreditQueryTask,
+  rejectLegalCreditQueryTask,
   viewLegalCreditQuerySensitive
 } from '../../api/legalCreditQueries';
 import { useAuthStore } from '../../stores/auth';
@@ -17,17 +19,21 @@ import LegalCreditQueriesPage from './LegalCreditQueriesPage.vue';
 vi.mock('../../api/legalCreditQueries', () => ({
   pageLegalCreditQueryTasks: vi.fn(),
   getLegalCreditQueryTask: vi.fn(),
+  approveLegalCreditQueryTask: vi.fn(),
   cancelLegalCreditQueryTask: vi.fn(),
   requeueLegalCreditQueryTask: vi.fn(),
   publishLegalCreditQueryTask: vi.fn(),
+  rejectLegalCreditQueryTask: vi.fn(),
   viewLegalCreditQuerySensitive: vi.fn()
 }));
 
 const pageLegalCreditQueryTasksMock = vi.mocked(pageLegalCreditQueryTasks);
 const getLegalCreditQueryTaskMock = vi.mocked(getLegalCreditQueryTask);
+const approveLegalCreditQueryTaskMock = vi.mocked(approveLegalCreditQueryTask);
 const cancelLegalCreditQueryTaskMock = vi.mocked(cancelLegalCreditQueryTask);
 const requeueLegalCreditQueryTaskMock = vi.mocked(requeueLegalCreditQueryTask);
 const publishLegalCreditQueryTaskMock = vi.mocked(publishLegalCreditQueryTask);
+const rejectLegalCreditQueryTaskMock = vi.mocked(rejectLegalCreditQueryTask);
 const viewLegalCreditQuerySensitiveMock = vi.mocked(viewLegalCreditQuerySensitive);
 
 const taskSummary = {
@@ -108,18 +114,22 @@ describe('LegalCreditQueriesPage', () => {
     localStorage.clear();
     pageLegalCreditQueryTasksMock.mockReset();
     getLegalCreditQueryTaskMock.mockReset();
+    approveLegalCreditQueryTaskMock.mockReset();
     cancelLegalCreditQueryTaskMock.mockReset();
     requeueLegalCreditQueryTaskMock.mockReset();
     publishLegalCreditQueryTaskMock.mockReset();
+    rejectLegalCreditQueryTaskMock.mockReset();
     viewLegalCreditQuerySensitiveMock.mockReset();
     pageLegalCreditQueryTasksMock.mockResolvedValue({
       dataList: [taskSummary],
       totalCount: 1
     });
     getLegalCreditQueryTaskMock.mockResolvedValue(taskDetail);
+    approveLegalCreditQueryTaskMock.mockResolvedValue({ ...taskDetail, status: 'queued' });
     cancelLegalCreditQueryTaskMock.mockResolvedValue({ ...taskDetail, status: 'cancelled' });
     requeueLegalCreditQueryTaskMock.mockResolvedValue({ ...taskDetail, status: 'queued' });
     publishLegalCreditQueryTaskMock.mockResolvedValue({ ...taskDetail, status: 'published' });
+    rejectLegalCreditQueryTaskMock.mockResolvedValue({ ...taskDetail, status: 'rejected' });
     viewLegalCreditQuerySensitiveMock.mockResolvedValue({
       taskId: 12,
       subjectName: '张三',
@@ -191,6 +201,27 @@ describe('LegalCreditQueriesPage', () => {
     expect(requeueLegalCreditQueryTaskMock).toHaveBeenCalledWith(12, { reason: '后台重新排队' });
   });
 
+  it('approves and rejects pending review tasks', async () => {
+    pageLegalCreditQueryTasksMock.mockResolvedValue({
+      dataList: [{ ...taskSummary, status: 'pending_review', resultSummary: '' }],
+      totalCount: 1
+    });
+    const wrapper = mountPage();
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('待审核');
+
+    const approveButton = wrapper.findAll('button').find((button) => button.text().includes('审核通过'));
+    await approveButton?.trigger('click');
+    await flushAsyncUpdates();
+    const rejectButton = wrapper.findAll('button').find((button) => button.text().includes('拒绝'));
+    await rejectButton?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(approveLegalCreditQueryTaskMock).toHaveBeenCalledWith(12, { reason: '后台审核通过' });
+    expect(rejectLegalCreditQueryTaskMock).toHaveBeenCalledWith(12, { reason: '后台审核拒绝' });
+  });
+
   it('reveals sensitive fields only after explicit click', async () => {
     const wrapper = mountPage();
     await flushAsyncUpdates();
@@ -216,6 +247,8 @@ describe('LegalCreditQueriesPage', () => {
 
     expect(wrapper.text()).toContain('查看详情');
     expect(wrapper.text()).not.toContain('发布结果');
+    expect(wrapper.text()).not.toContain('审核通过');
+    expect(wrapper.text()).not.toContain('拒绝');
     expect(wrapper.text()).not.toContain('取消');
     expect(wrapper.text()).not.toContain('重排队');
   });

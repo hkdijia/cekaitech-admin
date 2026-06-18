@@ -128,6 +128,20 @@ export function publishLegalCreditQueryTask(
   return postTaskAction(taskId, 'publish', payload);
 }
 
+export function approveLegalCreditQueryTask(
+  taskId: number,
+  payload: LegalCreditQueryActionRequest
+): Promise<LegalCreditQueryTaskDetail> {
+  return postTaskAction(taskId, 'approve', payload);
+}
+
+export function rejectLegalCreditQueryTask(
+  taskId: number,
+  payload: LegalCreditQueryActionRequest
+): Promise<LegalCreditQueryTaskDetail> {
+  return postTaskAction(taskId, 'reject', payload);
+}
+
 export function viewLegalCreditQuerySensitive(
   taskId: number,
   payload: LegalCreditQuerySensitiveViewRequest
@@ -143,7 +157,7 @@ export function viewLegalCreditQuerySensitive(
 
 function postTaskAction(
   taskId: number,
-  action: 'cancel' | 'requeue' | 'publish',
+  action: 'cancel' | 'requeue' | 'publish' | 'approve' | 'reject',
   payload: LegalCreditQueryActionRequest
 ): Promise<LegalCreditQueryTaskDetail> {
   return request<LegalCreditQueryTaskDetail>(`/api/admin/legal/credit-query-tasks/${taskId}/${action}`, {

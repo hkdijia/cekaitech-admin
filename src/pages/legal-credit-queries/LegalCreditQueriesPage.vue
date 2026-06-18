@@ -3,10 +3,12 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { Refresh, Search, View } from '@element-plus/icons-vue';
 import {
   cancelLegalCreditQueryTask,
+  approveLegalCreditQueryTask,
   getLegalCreditQueryTask,
   pageLegalCreditQueryTasks,
   publishLegalCreditQueryTask,
   requeueLegalCreditQueryTask,
+  rejectLegalCreditQueryTask,
   viewLegalCreditQuerySensitive,
   type LegalCreditQuerySensitiveViewResult,
   type LegalCreditQueryTaskDetail,
@@ -53,13 +55,15 @@ const subjectTypeOptions = [
 
 const statusOptions = [
   { label: '全部状态', value: '' },
+  { label: '待审核', value: 'pending_review' },
   { label: '待处理', value: 'queued' },
   { label: '已领取', value: 'claimed' },
   { label: '查询中', value: 'running' },
   { label: '待复核', value: 'result_ready' },
   { label: '已发布', value: 'published' },
   { label: '查询失败', value: 'failed' },
-  { label: '已取消', value: 'cancelled' }
+  { label: '已取消', value: 'cancelled' },
+  { label: '已拒绝', value: 'rejected' }
 ];
 
 const canManage = computed(() => auth.hasPermission('admin:legal-credit-query:manage'));
@@ -210,6 +214,38 @@ async function publishTask(row: LegalCreditQueryTaskSummary) {
   }
 }
 
+async function approveTask(row: LegalCreditQueryTaskSummary) {
+  if (!canManage.value || row.status !== 'pending_review') {
+    return;
+  }
+  actionLoading.value = true;
+  loadError.value = '';
+  try {
+    await approveLegalCreditQueryTask(row.taskId, { reason: '后台审核通过' });
+    await loadTasks();
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '审核通过失败';
+  } finally {
+    actionLoading.value = false;
+  }
+}
+
+async function rejectTask(row: LegalCreditQueryTaskSummary) {
+  if (!canManage.value || row.status !== 'pending_review') {
+    return;
+  }
+  actionLoading.value = true;
+  loadError.value = '';
+  try {
+    await rejectLegalCreditQueryTask(row.taskId, { reason: '后台审核拒绝' });
+    await loadTasks();
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '审核拒绝失败';
+  } finally {
+    actionLoading.value = false;
+  }
+}
+
 async function cancelTask(row: LegalCreditQueryTaskSummary) {
   if (!canManage.value) {
     return;
@@ -323,6 +359,12 @@ onMounted(() => {
             <el-button :icon="View" text type="primary" @click="openDetail(row)">查看详情</el-button>
             <el-button v-if="canManage && row.status === 'result_ready'" text type="success" :loading="actionLoading" @click="publishTask(row)">
               发布结果
+            </el-button>
+            <el-button v-if="canManage && row.status === 'pending_review'" text type="success" :loading="actionLoading" @click="approveTask(row)">
+              审核通过
+            </el-button>
+            <el-button v-if="canManage && row.status === 'pending_review'" text type="danger" :loading="actionLoading" @click="rejectTask(row)">
+              拒绝
             </el-button>
             <el-button v-if="canManage" text type="warning" :loading="actionLoading" @click="requeueTask(row)">重排队</el-button>
             <el-button v-if="canManage" text type="danger" :loading="actionLoading" @click="cancelTask(row)">取消</el-button>

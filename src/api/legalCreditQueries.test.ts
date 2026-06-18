@@ -1,11 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   cancelLegalCreditQueryTask,
+  approveLegalCreditQueryTask,
   createLegalCreditQueryTask,
   getLegalCreditQueryTask,
   pageLegalCreditQueryTasks,
   publishLegalCreditQueryTask,
   requeueLegalCreditQueryTask,
+  rejectLegalCreditQueryTask,
   viewLegalCreditQuerySensitive
 } from './legalCreditQueries';
 
@@ -126,11 +128,15 @@ describe('legal credit queries api', () => {
       .mockResolvedValueOnce(successResponse({ taskId: 12, status: 'cancelled' }))
       .mockResolvedValueOnce(successResponse({ taskId: 12, status: 'queued' }))
       .mockResolvedValueOnce(successResponse({ taskId: 12, status: 'published' }))
+      .mockResolvedValueOnce(successResponse({ taskId: 12, status: 'queued' }))
+      .mockResolvedValueOnce(successResponse({ taskId: 12, status: 'rejected' }))
       .mockResolvedValueOnce(successResponse({ taskId: 12, subjectName: '张三', identityNumber: '3301********0012' }));
 
     await cancelLegalCreditQueryTask(12, { reason: '重复提交' });
     await requeueLegalCreditQueryTask(12, { reason: '重新查询' });
     await publishLegalCreditQueryTask(12, { remark: '复核通过' });
+    await approveLegalCreditQueryTask(12, { reason: '审核通过' });
+    await rejectLegalCreditQueryTask(12, { reason: '审核拒绝' });
     await viewLegalCreditQuerySensitive(12, { reason: '人工复核' });
 
     expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/admin/legal/credit-query-tasks/12/cancel', {
@@ -148,7 +154,17 @@ describe('legal credit queries api', () => {
       body: JSON.stringify({ remark: '复核通过' }),
       headers: { 'Content-Type': 'application/json' }
     });
-    expect(fetchMock).toHaveBeenNthCalledWith(4, '/api/admin/legal/credit-query-tasks/12/sensitive-view', {
+    expect(fetchMock).toHaveBeenNthCalledWith(4, '/api/admin/legal/credit-query-tasks/12/approve', {
+      method: 'POST',
+      body: JSON.stringify({ reason: '审核通过' }),
+      headers: { 'Content-Type': 'application/json' }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(5, '/api/admin/legal/credit-query-tasks/12/reject', {
+      method: 'POST',
+      body: JSON.stringify({ reason: '审核拒绝' }),
+      headers: { 'Content-Type': 'application/json' }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(6, '/api/admin/legal/credit-query-tasks/12/sensitive-view', {
       method: 'POST',
       body: JSON.stringify({ reason: '人工复核' }),
       headers: { 'Content-Type': 'application/json' }
