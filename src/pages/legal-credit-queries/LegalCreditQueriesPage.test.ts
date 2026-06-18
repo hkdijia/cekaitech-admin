@@ -174,6 +174,28 @@ describe('LegalCreditQueriesPage', () => {
     expect(wrapper.text()).toContain('测试法院');
   });
 
+  it('previews first result item from crawler result json shapes', async () => {
+    getLegalCreditQueryTaskMock.mockResolvedValue({
+      ...taskDetail,
+      result: {
+        ...taskDetail.result,
+        resultJson: {
+          totalCount: 1,
+          items: [{ title: '限制高消费', court: '生产法院' }]
+        }
+      }
+    });
+    const wrapper = mountPage();
+    await flushAsyncUpdates();
+
+    const detailButton = wrapper.findAll('button').find((button) => button.text().includes('查看详情'));
+    await detailButton?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('生产法院');
+    expect(wrapper.text()).not.toContain('totalCount');
+  });
+
   it('publishes only result-ready task and refreshes list', async () => {
     const wrapper = mountPage();
     await flushAsyncUpdates();
@@ -193,12 +215,15 @@ describe('LegalCreditQueriesPage', () => {
     const cancelButton = wrapper.findAll('button').find((button) => button.text().includes('取消'));
     await cancelButton?.trigger('click');
     await flushAsyncUpdates();
-    const requeueButton = wrapper.findAll('button').find((button) => button.text().includes('重排队'));
+    expect(wrapper.text()).toContain('重新进入队列');
+    expect(wrapper.text()).not.toContain('重排队');
+
+    const requeueButton = wrapper.findAll('button').find((button) => button.text().includes('重新进入队列'));
     await requeueButton?.trigger('click');
     await flushAsyncUpdates();
 
     expect(cancelLegalCreditQueryTaskMock).toHaveBeenCalledWith(12, { reason: '后台人工取消' });
-    expect(requeueLegalCreditQueryTaskMock).toHaveBeenCalledWith(12, { reason: '后台重新排队' });
+    expect(requeueLegalCreditQueryTaskMock).toHaveBeenCalledWith(12, { reason: '后台重新进入查询队列' });
   });
 
   it('approves and rejects pending review tasks', async () => {
@@ -211,15 +236,15 @@ describe('LegalCreditQueriesPage', () => {
 
     expect(wrapper.text()).toContain('待审核');
 
-    const approveButton = wrapper.findAll('button').find((button) => button.text().includes('审核通过'));
+    const approveButton = wrapper.findAll('button').find((button) => button.text().includes('通过并入队'));
     await approveButton?.trigger('click');
     await flushAsyncUpdates();
-    const rejectButton = wrapper.findAll('button').find((button) => button.text().includes('拒绝'));
+    const rejectButton = wrapper.findAll('button').find((button) => button.text().includes('驳回查询'));
     await rejectButton?.trigger('click');
     await flushAsyncUpdates();
 
-    expect(approveLegalCreditQueryTaskMock).toHaveBeenCalledWith(12, { reason: '后台审核通过' });
-    expect(rejectLegalCreditQueryTaskMock).toHaveBeenCalledWith(12, { reason: '后台审核拒绝' });
+    expect(approveLegalCreditQueryTaskMock).toHaveBeenCalledWith(12, { reason: '后台审核通过并进入查询队列' });
+    expect(rejectLegalCreditQueryTaskMock).toHaveBeenCalledWith(12, { reason: '后台驳回本次查询' });
   });
 
   it('reveals sensitive fields only after explicit click', async () => {
@@ -247,9 +272,9 @@ describe('LegalCreditQueriesPage', () => {
 
     expect(wrapper.text()).toContain('查看详情');
     expect(wrapper.text()).not.toContain('发布结果');
-    expect(wrapper.text()).not.toContain('审核通过');
-    expect(wrapper.text()).not.toContain('拒绝');
+    expect(wrapper.text()).not.toContain('通过并入队');
+    expect(wrapper.text()).not.toContain('驳回查询');
     expect(wrapper.text()).not.toContain('取消');
-    expect(wrapper.text()).not.toContain('重排队');
+    expect(wrapper.text()).not.toContain('重新进入队列');
   });
 });

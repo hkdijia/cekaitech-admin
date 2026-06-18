@@ -104,14 +104,37 @@ function firstResultRecordText(value: unknown | string | null | undefined) {
     return '';
   }
   const parsed = typeof value === 'string' ? tryParseJson(value) : value;
-  if (!parsed || typeof parsed !== 'object' || !('records' in parsed)) {
+  if (!parsed || typeof parsed !== 'object') {
     return '';
   }
-  const records = (parsed as { records?: unknown }).records;
-  if (!Array.isArray(records) || records.length === 0) {
+  const records = findFirstArrayValue(parsed, ['records', 'items', 'list', 'results', 'data']);
+  if (!records.length) {
     return '';
   }
   return JSON.stringify(records[0], null, 2);
+}
+
+function findFirstArrayValue(value: unknown, keys: string[]): unknown[] {
+  if (Array.isArray(value)) {
+    return value;
+  }
+  if (!value || typeof value !== 'object') {
+    return [];
+  }
+  const record = value as Record<string, unknown>;
+  for (const key of keys) {
+    const found = record[key];
+    if (Array.isArray(found)) {
+      return found;
+    }
+  }
+  for (const key of keys) {
+    const nested = findFirstArrayValue(record[key], keys);
+    if (nested.length) {
+      return nested;
+    }
+  }
+  return [];
 }
 
 function tryParseJson(value: string) {
@@ -221,7 +244,7 @@ async function approveTask(row: LegalCreditQueryTaskSummary) {
   actionLoading.value = true;
   loadError.value = '';
   try {
-    await approveLegalCreditQueryTask(row.taskId, { reason: '后台审核通过' });
+    await approveLegalCreditQueryTask(row.taskId, { reason: '后台审核通过并进入查询队列' });
     await loadTasks();
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : '审核通过失败';
@@ -237,7 +260,7 @@ async function rejectTask(row: LegalCreditQueryTaskSummary) {
   actionLoading.value = true;
   loadError.value = '';
   try {
-    await rejectLegalCreditQueryTask(row.taskId, { reason: '后台审核拒绝' });
+    await rejectLegalCreditQueryTask(row.taskId, { reason: '后台驳回本次查询' });
     await loadTasks();
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : '审核拒绝失败';
@@ -269,10 +292,10 @@ async function requeueTask(row: LegalCreditQueryTaskSummary) {
   actionLoading.value = true;
   loadError.value = '';
   try {
-    await requeueLegalCreditQueryTask(row.taskId, { reason: '后台重新排队' });
+    await requeueLegalCreditQueryTask(row.taskId, { reason: '后台重新进入查询队列' });
     await loadTasks();
   } catch (error) {
-    loadError.value = error instanceof Error ? error.message : '重排队失败';
+    loadError.value = error instanceof Error ? error.message : '重新进入队列失败';
   } finally {
     actionLoading.value = false;
   }
@@ -361,12 +384,12 @@ onMounted(() => {
               发布结果
             </el-button>
             <el-button v-if="canManage && row.status === 'pending_review'" text type="success" :loading="actionLoading" @click="approveTask(row)">
-              审核通过
+              通过并入队
             </el-button>
             <el-button v-if="canManage && row.status === 'pending_review'" text type="danger" :loading="actionLoading" @click="rejectTask(row)">
-              拒绝
+              驳回查询
             </el-button>
-            <el-button v-if="canManage" text type="warning" :loading="actionLoading" @click="requeueTask(row)">重排队</el-button>
+            <el-button v-if="canManage" text type="warning" :loading="actionLoading" @click="requeueTask(row)">重新进入队列</el-button>
             <el-button v-if="canManage" text type="danger" :loading="actionLoading" @click="cancelTask(row)">取消</el-button>
           </template>
         </el-table-column>
