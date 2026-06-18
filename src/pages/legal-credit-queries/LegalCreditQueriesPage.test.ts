@@ -193,9 +193,31 @@ describe('LegalCreditQueriesPage', () => {
     await flushAsyncUpdates();
 
     expect(getLegalCreditQueryTaskMock).toHaveBeenCalledWith(12);
+    expect(wrapper.text()).toContain('发起用户');
+    expect(wrapper.text()).toContain('lma-abcd1234');
     expect(wrapper.text()).toContain('命中 1 条信用风险记录');
     expect(wrapper.text()).toContain('crawler');
     expect(wrapper.text()).toContain('测试法院');
+  });
+
+  it('shows explicit empty result preview when crawler result has no structured json', async () => {
+    getLegalCreditQueryTaskMock.mockResolvedValue({
+      ...taskDetail,
+      result: {
+        ...taskDetail.result,
+        resultSummary: '未查询到公开风险记录',
+        resultJson: ''
+      }
+    });
+    const wrapper = mountPage();
+    await flushAsyncUpdates();
+
+    const detailButton = wrapper.findAll('button').find((button) => button.text().includes('查看详情'));
+    await detailButton?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('未查询到公开风险记录');
+    expect(wrapper.text()).toContain('暂无结构化结果');
   });
 
   it('previews first result item from crawler result json shapes', async () => {

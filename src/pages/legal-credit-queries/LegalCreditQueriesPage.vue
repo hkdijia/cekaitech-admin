@@ -86,6 +86,10 @@ function formatTime(value: string | null | undefined) {
   return value.replace('T', ' ').replace(/\.\d+$/, '');
 }
 
+function resultSummaryText(row: LegalCreditQueryTaskDetail) {
+  return row.result?.resultSummary || row.resultSummary || '-';
+}
+
 function requesterText(row: LegalCreditQueryTaskSummary) {
   if (row.userCode) {
     return row.userCode;
@@ -98,7 +102,7 @@ function requesterText(row: LegalCreditQueryTaskSummary) {
 
 function formatJsonPreview(value: unknown | string | null | undefined) {
   if (value === null || value === undefined || value === '') {
-    return '-';
+    return '暂无结构化结果';
   }
   if (typeof value === 'string') {
     try {
@@ -472,6 +476,7 @@ onMounted(() => {
         <template v-if="detail">
           <el-descriptions :column="1" border>
             <el-descriptions-item label="请求号">{{ detail.requestNo }}</el-descriptions-item>
+            <el-descriptions-item label="发起用户">{{ requesterText(detail) }}</el-descriptions-item>
             <el-descriptions-item label="主体名称">{{ detail.subjectName }}</el-descriptions-item>
             <el-descriptions-item label="主体类型">{{ subjectTypeText(detail.subjectType) }}</el-descriptions-item>
             <el-descriptions-item label="证件/统一代码">
@@ -493,7 +498,7 @@ onMounted(() => {
                 {{ getLegalCreditQueryStatusMeta(detail.status).label }}
               </el-tag>
             </el-descriptions-item>
-            <el-descriptions-item label="结果摘要">{{ detail.resultSummary || detail.result?.resultSummary || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="结果摘要">{{ resultSummaryText(detail) }}</el-descriptions-item>
             <el-descriptions-item label="来源系统">{{ detail.result?.sourceSystem || '-' }}</el-descriptions-item>
             <el-descriptions-item label="查询时间">{{ formatTime(detail.result?.queriedAt) }}</el-descriptions-item>
           </el-descriptions>
