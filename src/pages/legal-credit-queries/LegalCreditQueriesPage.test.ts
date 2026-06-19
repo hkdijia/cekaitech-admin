@@ -184,6 +184,15 @@ describe('LegalCreditQueriesPage', () => {
     expect(wrapper.text()).toContain('待复核');
   });
 
+  it('explains review, trusted list, and requery operation semantics', async () => {
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('认证律师不等于可信名单');
+    expect(wrapper.text()).toContain('重新查询用于失败、取消、待复核或已发布任务再次进入查询队列');
+  });
+
   it('loads detail drawer after clicking a row action', async () => {
     const wrapper = mountPage();
     await flushAsyncUpdates();
@@ -339,11 +348,12 @@ describe('LegalCreditQueriesPage', () => {
     const wrapper = mountPage(['admin:legal-credit-query:view']);
     await flushAsyncUpdates();
 
+    const buttonText = wrapper.findAll('button').map((button) => button.text()).join(' ');
     expect(wrapper.text()).toContain('查看详情');
-    expect(wrapper.text()).not.toContain('发布结果');
-    expect(wrapper.text()).not.toContain('通过并入队');
-    expect(wrapper.text()).not.toContain('驳回查询');
-    expect(wrapper.text()).not.toContain('取消');
-    expect(wrapper.text()).not.toContain('重新查询');
+    expect(buttonText).not.toContain('发布结果');
+    expect(buttonText).not.toContain('通过并入队');
+    expect(buttonText).not.toContain('驳回查询');
+    expect(buttonText).not.toContain('取消');
+    expect(buttonText).not.toContain('重新查询');
   });
 });

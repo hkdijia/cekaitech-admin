@@ -397,6 +397,13 @@ onMounted(() => {
     </el-card>
 
     <el-alert v-if="loadError" class="error-alert" type="error" :title="loadError" show-icon />
+    <el-alert
+      class="operation-hint"
+      type="info"
+      title="认证律师不等于可信名单；未进入可信名单的查询需后台审核。重新查询用于失败、取消、待复核或已发布任务再次进入查询队列。"
+      show-icon
+      :closable="false"
+    />
 
     <el-card shadow="never" class="table-panel">
       <el-table v-loading="loading" :data="tasks" row-key="taskId">
@@ -546,6 +553,10 @@ onMounted(() => {
 }
 
 .error-alert {
+  margin-bottom: 16px;
+}
+
+.operation-hint {
   margin-bottom: 16px;
 }
 
