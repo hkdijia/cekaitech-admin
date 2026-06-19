@@ -68,6 +68,37 @@ const statusOptions = [
 ];
 
 const canManage = computed(() => auth.hasPermission('admin:legal-credit-query:manage'));
+const structuredResult = computed(() => buildStructuredResult(detail.value?.result?.resultJson));
+
+interface ResultField {
+  label: string;
+  value: string;
+}
+
+interface ResultCase {
+  key: string;
+  title: string;
+  fields: ResultField[];
+}
+
+interface ResultRecord {
+  key: string;
+  name: string;
+  tags: string[];
+  fields: ResultField[];
+  cases: ResultCase[];
+}
+
+interface ResultGroup {
+  key: string;
+  title: string;
+  records: ResultRecord[];
+}
+
+interface StructuredResult {
+  metrics: ResultField[];
+  groups: ResultGroup[];
+}
 
 function normalizedText(value: string) {
   const trimmed = value.trim();
@@ -112,6 +143,127 @@ function formatJsonPreview(value: unknown | string | null | undefined) {
     }
   }
   return JSON.stringify(value, null, 2);
+}
+
+function toRecord(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {};
+  }
+  return value as Record<string, unknown>;
+}
+
+function toArray(value: unknown): Record<string, unknown>[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object' && !Array.isArray(item));
+}
+
+function valueText(value: unknown) {
+  if (value === undefined || value === null) {
+    return '';
+  }
+  if (Array.isArray(value)) {
+    return value.filter(Boolean).join('、');
+  }
+  return `${value}`.trim();
+}
+
+function createResultField(label: string, value: unknown): ResultField | null {
+  const text = valueText(value);
+  if (!text) {
+    return null;
+  }
+  return { label, value: text };
+}
+
+function compactResultFields(fields: Array<ResultField | null>) {
+  return fields.filter((field): field is ResultField => Boolean(field));
+}
+
+function tagList(values: unknown, fallback: unknown) {
+  if (Array.isArray(values) && values.length) {
+    return values.map(valueText).filter(Boolean);
+  }
+  return valueText(fallback)
+    .split(/[、,，]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function countCases(groups: ResultGroup[]) {
+  return groups.reduce((sum, group) => sum + group.records.reduce((caseSum, record) => caseSum + record.cases.length, 0), 0);
+}
+
+function buildResultCase(item: Record<string, unknown>, index: string): ResultCase {
+  const detailRecord = toRecord(item.detail);
+  const judicial = toRecord(item.judicialDetail);
+  return {
+    key: `case-${index}`,
+    title: valueText(judicial.title) || valueText(item.title) || valueText(item.caseNo) || `案件 ${index}`,
+    fields: compactResultFields([
+      createResultField('案号', item.caseNo),
+      createResultField('执行法院', item.courtName || detailRecord.executionCourtName || item.court),
+      createResultField('执行标的', detailRecord.executionAmount || item.amountInvolved),
+      createResultField('未执行金额', detailRecord.totalNoExecAmount || detailRecord.executionNoAmount),
+      createResultField('当前阶段', judicial.caseStage),
+      createResultField('最新日期', judicial.lastDate || item.caseCreateTime || detailRecord.executionCaseCreateTime)
+    ])
+  };
+}
+
+function buildResultRecord(item: Record<string, unknown>, groupIndex: number, recordIndex: number): ResultRecord {
+  const detailRecord = toRecord(item.detail);
+  const cases = toArray(item.cases).slice(0, 5);
+  return {
+    key: `record-${groupIndex}-${recordIndex}`,
+    name: valueText(item.name) || valueText(item.title) || `记录 ${recordIndex + 1}`,
+    tags: tagList(item.labels, item.status),
+    fields: compactResultFields([
+      createResultField('证件号码', item.cardNum),
+      createResultField('风险数', item.riskNum),
+      createResultField('累计执行金额', detailRecord.totalExecAmount),
+      createResultField('累计未执行金额', detailRecord.totalNoExecAmount),
+      createResultField('简介', item.resume || item.summary)
+    ]),
+    cases: cases.map((caseItem, caseIndex) => buildResultCase(caseItem, `${groupIndex}-${recordIndex}-${caseIndex}`))
+  };
+}
+
+function buildStructuredResult(value: unknown | string | null | undefined): StructuredResult {
+  const parsed = typeof value === 'string' ? tryParseJson(value) : value;
+  const root = toRecord(parsed);
+  const sourceGroups = toArray(root.groups);
+  const groups = sourceGroups.length
+    ? sourceGroups.map((group, groupIndex) => {
+        const records = toArray(group.records);
+        return {
+          key: `group-${groupIndex}`,
+          title: `${valueText(group.label) || `分组 ${groupIndex + 1}`}记录`,
+          records: records.map((record, recordIndex) => buildResultRecord(record, groupIndex, recordIndex))
+        };
+      }).filter((group) => group.records.length)
+    : [];
+  const legacyRecords = groups.length ? [] : toArray(root.records);
+  const normalizedGroups = groups.length
+    ? groups
+    : legacyRecords.length
+      ? [{
+          key: 'group-legacy',
+          title: '查询记录',
+          records: legacyRecords.map((record, recordIndex) => buildResultRecord(record, 0, recordIndex))
+        }]
+      : [];
+  const summary = toRecord(root.summary);
+  const recordCount = normalizedGroups.reduce((sum, group) => sum + group.records.length, 0);
+  return {
+    metrics: compactResultFields([
+      createResultField('总数', summary.totalCount || root.totalCount || recordCount),
+      createResultField('主体记录', recordCount),
+      createResultField('案件', countCases(normalizedGroups))
+    ]),
+    groups: normalizedGroups
+  };
 }
 
 function firstResultRecordText(value: unknown | string | null | undefined) {
@@ -510,7 +662,46 @@ onMounted(() => {
             <el-descriptions-item label="查询时间">{{ formatTime(detail.result?.queriedAt) }}</el-descriptions-item>
           </el-descriptions>
 
-          <h2 class="drawer-section-title">结果预览</h2>
+          <template v-if="structuredResult.groups.length">
+            <h2 class="drawer-section-title">结果总览</h2>
+            <div v-if="structuredResult.metrics.length" class="result-metrics">
+              <div v-for="metric in structuredResult.metrics" :key="metric.label" class="result-metric">
+                <span class="metric-label">{{ metric.label }}</span>
+                <strong>{{ metric.value }}</strong>
+              </div>
+            </div>
+            <div v-for="group in structuredResult.groups" :key="group.key" class="result-group">
+              <div class="result-group-title">{{ group.title }}</div>
+              <div v-for="record in group.records" :key="record.key" class="result-record">
+                <div class="result-record-header">
+                  <strong>{{ record.name }}</strong>
+                  <span v-if="record.cases.length" class="case-count">案件 {{ record.cases.length }}</span>
+                </div>
+                <div v-if="record.tags.length" class="tag-row">
+                  <el-tag v-for="tag in record.tags" :key="tag" size="small" type="danger" effect="plain">{{ tag }}</el-tag>
+                </div>
+                <div v-if="record.fields.length" class="field-grid">
+                  <div v-for="field in record.fields" :key="field.label" class="field-item">
+                    <span>{{ field.label }}</span>
+                    <strong>{{ field.value }}</strong>
+                  </div>
+                </div>
+                <div v-if="record.cases.length" class="case-list">
+                  <div v-for="caseItem in record.cases" :key="caseItem.key" class="case-item">
+                    <div class="case-title">{{ caseItem.title }}</div>
+                    <div class="field-grid compact">
+                      <div v-for="field in caseItem.fields" :key="field.label" class="field-item">
+                        <span>{{ field.label }}</span>
+                        <strong>{{ field.value }}</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <h2 class="drawer-section-title">原始结果</h2>
           <pre class="json-preview">{{ firstResultRecordText(detail.result?.resultJson) || formatJsonPreview(detail.result?.resultJson) }}</pre>
 
           <h2 class="drawer-section-title">操作记录</h2>
@@ -587,6 +778,116 @@ onMounted(() => {
 
 .inline-action {
   margin-left: 8px;
+}
+
+.result-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.result-metric,
+.result-record,
+.case-item {
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.result-metric {
+  padding: 10px;
+}
+
+.metric-label,
+.field-item span {
+  display: block;
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.result-metric strong,
+.field-item strong {
+  display: block;
+  margin-top: 4px;
+  color: #101828;
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.result-group {
+  margin-top: 14px;
+}
+
+.result-group-title {
+  margin-bottom: 8px;
+  color: #344054;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.result-record {
+  padding: 12px;
+}
+
+.result-record + .result-record {
+  margin-top: 10px;
+}
+
+.result-record-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #101828;
+}
+
+.case-count {
+  flex: 0 0 auto;
+  color: #c2410c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+  margin-top: 10px;
+}
+
+.field-grid.compact {
+  grid-template-columns: 1fr;
+}
+
+.case-list {
+  margin-top: 12px;
+}
+
+.case-item {
+  padding: 10px;
+  background: #f8fafc;
+}
+
+.case-item + .case-item {
+  margin-top: 8px;
+}
+
+.case-title {
+  color: #101828;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  word-break: break-word;
 }
 
 .json-preview {

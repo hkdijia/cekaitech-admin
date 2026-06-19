@@ -251,6 +251,57 @@ describe('LegalCreditQueriesPage', () => {
     expect(wrapper.text()).not.toContain('totalCount');
   });
 
+  it('renders grouped crawler result overview and case fields in detail drawer', async () => {
+    getLegalCreditQueryTaskMock.mockResolvedValue({
+      ...taskDetail,
+      result: {
+        ...taskDetail.result,
+        resultJson: {
+          summary: { totalCount: 1 },
+          groups: [
+            {
+              label: '自然人',
+              records: [
+                {
+                  name: '潘兴仕',
+                  status: '失信被执行人、限制高消费',
+                  labels: ['失信被执行人', '限制高消费'],
+                  riskNum: 2,
+                  cases: [
+                    {
+                      title: '执行案件',
+                      caseNo: '（2026）川0101执1号',
+                      courtName: '成都测试法院',
+                      detail: {
+                        executionAmount: '12000元',
+                        totalNoExecAmount: '3000元'
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    });
+    const wrapper = mountPage();
+    await flushAsyncUpdates();
+
+    const detailButton = wrapper.findAll('button').find((button) => button.text().includes('查看详情'));
+    await detailButton?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('结果总览');
+    expect(wrapper.text()).toContain('总数');
+    expect(wrapper.text()).toContain('主体记录');
+    expect(wrapper.text()).toContain('案件');
+    expect(wrapper.text()).toContain('潘兴仕');
+    expect(wrapper.text()).toContain('失信被执行人');
+    expect(wrapper.text()).toContain('成都测试法院');
+    expect(wrapper.text()).toContain('12000元');
+  });
+
   it('publishes only result-ready task and refreshes list', async () => {
     const wrapper = mountPage();
     await flushAsyncUpdates();
