@@ -74,6 +74,28 @@ function countSummary(checks) {
   );
 }
 
+function buildStoreAppointmentContract() {
+  return {
+    backendEndpoints: [
+      'POST /api/admin/store-appointments/page',
+      'GET /api/admin/store-appointments/{appointmentId}',
+      'POST /api/admin/store-appointments/{appointmentId}/status'
+    ],
+    filters: ['storeCode', 'projectCode', 'staffCode', 'status', 'appointmentDate'],
+    statuses: ['pending', 'confirmed', 'arrived', 'completed', 'cancelled'],
+    permissions: ['admin:store-appointment:view', 'admin:store-appointment:manage'],
+    firstSlice: 'read-only-list-and-detail-drawer',
+    excludedCapabilities: [
+      'real payment',
+      'member cards',
+      'writeoff',
+      'customer profile',
+      'CRM follow-up',
+      'service record'
+    ]
+  };
+}
+
 export async function buildAdminIntegrationReadinessReport(options = {}) {
   const backendBaseUrl = options.backendBaseUrl || defaultBackendBaseUrl;
   const fetchHealth = options.fetchHealth || defaultFetchHealth;
@@ -120,14 +142,23 @@ export async function buildAdminIntegrationReadinessReport(options = {}) {
   );
 
   const allChecks = [backend, viteProxy, ...routes, ...modules];
+  const storeAppointment = {
+    name: '门店预约 admin 接入前置预检',
+    status: 'warn',
+    detail: '后端契约已具备，admin 页面尚未接入；首片建议只读列表 + 详情抽屉。'
+  };
+  const storeAppointmentContract = buildStoreAppointmentContract();
   return {
     backendBaseUrl,
     backend,
     viteProxy,
     routes,
     modules,
+    storeAppointment,
+    storeAppointmentContract,
     summary: countSummary(allChecks),
     nextSteps: [
+      '门店预约 admin 首片先实现只读列表和详情抽屉；状态流转、支付、会员、核销、客户资料另行设计。',
       '启动后台前端后访问 /legal-service-requests，验证分页、详情脱敏、联系方式审计查看和状态更新。',
       '访问 /user-operation-logs，按 legal_service_request_contact_view 查询联系方式查看审计日志。',
       '用低权限账号复核服务请求和操作审计菜单、按钮、后端 403 边界。'
@@ -153,6 +184,13 @@ export function formatAdminIntegrationReadinessReport(report) {
     '',
     '关键模块',
     ...report.modules.map(formatCheck),
+    '',
+    '门店预约 admin 前置预检',
+    formatCheck(report.storeAppointment),
+    `后端接口：${report.storeAppointmentContract.backendEndpoints.join('；')}`,
+    `权限：${report.storeAppointmentContract.permissions.join(' / ')}`,
+    `首片策略：${report.storeAppointmentContract.firstSlice}`,
+    `排除能力：${report.storeAppointmentContract.excludedCapabilities.join('、')}`,
     '',
     '下一步',
     ...report.nextSteps.map((step, index) => `${index + 1}. ${step}`)

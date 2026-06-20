@@ -75,4 +75,34 @@ describe('admin integration readiness report', () => {
     expect(output).toContain('/legal-service-requests');
     expect(output).toContain('下一步');
   });
+
+  it('prechecks store appointment admin integration boundary before page work', async () => {
+    const report = await buildAdminIntegrationReadinessReport({
+      backendBaseUrl: 'http://127.0.0.1:8080',
+      fetchHealth: async () => ({
+        ok: true,
+        status: 200,
+        detail: 'OK'
+      }),
+      readText: createTextProbe(projectFiles),
+      fileExists: createFileProbe(projectFiles)
+    });
+
+    expect(report.storeAppointment).toEqual({
+      name: '门店预约 admin 接入前置预检',
+      status: 'warn',
+      detail: '后端契约已具备，admin 页面尚未接入；首片建议只读列表 + 详情抽屉。'
+    });
+    expect(report.storeAppointmentContract).toMatchObject({
+      backendEndpoints: [
+        'POST /api/admin/store-appointments/page',
+        'GET /api/admin/store-appointments/{appointmentId}',
+        'POST /api/admin/store-appointments/{appointmentId}/status'
+      ],
+      permissions: ['admin:store-appointment:view', 'admin:store-appointment:manage'],
+      firstSlice: 'read-only-list-and-detail-drawer'
+    });
+    expect(report.storeAppointmentContract.excludedCapabilities).toContain('real payment');
+    expect(report.nextSteps).toContain('门店预约 admin 首片先实现只读列表和详情抽屉；状态流转、支付、会员、核销、客户资料另行设计。');
+  });
 });
