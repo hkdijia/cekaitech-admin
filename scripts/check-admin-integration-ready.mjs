@@ -95,6 +95,57 @@ function buildStoreAppointmentContract() {
       'customer profile',
       'CRM follow-up',
       'service record'
+    ],
+    configSurfaces: [
+      {
+        key: 'store-profile',
+        name: '门店资料',
+        status: 'candidate',
+        note: '营业时间、电话、员工称谓和项目称谓可作为中性配置候选；不得带虚拟门店名或真实租户字段。'
+      },
+      {
+        key: 'service-catalog',
+        name: '项目目录',
+        status: 'candidate',
+        note: '分类、项目、时长和 priceText 可作为预约骨架；priceText 仅为展示文案，不代表支付能力。'
+      },
+      {
+        key: 'staff-roster',
+        name: '员工名册',
+        status: 'candidate',
+        note: '员工展示资料、角色和启用状态可作为候选；不包含员工账号、权限和真实排班后台。'
+      },
+      {
+        key: 'appointment-rules',
+        name: '预约规则',
+        status: 'candidate-with-caution',
+        note: '仅保留可约窗口、默认时长和默认时段；真实排班、通知和取消策略需另行生产设计。'
+      },
+      {
+        key: 'operation-summary',
+        name: '经营摘要',
+        status: 'blocked-by-production-design',
+        note: '涉及租户、权限、统计口径和经营数据可见范围，当前不能直接进入模板结构。'
+      },
+      {
+        key: 'feedback-follow-up',
+        name: '反馈跟进',
+        status: 'blocked-by-production-design',
+        note: '涉及客户表达、隐私授权和跟进状态，未来必须先做隐私和权限设计。'
+      },
+      {
+        key: 'service-record',
+        name: '服务记录',
+        status: 'blocked-by-production-design',
+        note: '只作为本机演示备注候选；康复理疗场景不能演变为病历、诊断或客户档案。'
+      }
+    ],
+    demoOnlyExcluded: [
+      'demo virtual stores and staff',
+      'sales showcase copy',
+      'simulated payment/writeoff/member content',
+      'wx storage demo keys',
+      'diagnosis/medical-record wording'
     ]
   };
 }
@@ -194,6 +245,9 @@ export function formatAdminIntegrationReadinessReport(report) {
     `权限：${report.storeAppointmentContract.permissions.join(' / ')}`,
     `首片策略：${report.storeAppointmentContract.firstSlice}`,
     `排除能力：${report.storeAppointmentContract.excludedCapabilities.join('、')}`,
+    '配置面 readiness',
+    ...report.storeAppointmentContract.configSurfaces.map((surface) => `${surface.name}(${surface.key})：${surface.status} - ${surface.note}`),
+    `demo-only-excluded：${report.storeAppointmentContract.demoOnlyExcluded.join('、')}`,
     '',
     '下一步',
     ...report.nextSteps.map((step, index) => `${index + 1}. ${step}`)

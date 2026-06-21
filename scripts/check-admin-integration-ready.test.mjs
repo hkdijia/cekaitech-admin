@@ -108,6 +108,32 @@ describe('admin integration readiness report', () => {
     expect(report.nextSteps).toContain('门店预约 admin 首片先实现只读列表和详情抽屉；状态流转、支付、会员、核销、客户资料另行设计。');
   });
 
+  it('reports store appointment config surface readiness before edit entry work', async () => {
+    const report = await buildAdminIntegrationReadinessReport({
+      backendBaseUrl: 'http://127.0.0.1:8080',
+      fetchHealth: async () => ({
+        ok: true,
+        status: 200,
+        detail: 'OK'
+      }),
+      readText: createTextProbe(projectFiles),
+      fileExists: createFileProbe(projectFiles)
+    });
+
+    expect(report.storeAppointmentContract.configSurfaces).toEqual([
+      expect.objectContaining({ key: 'store-profile', status: 'candidate' }),
+      expect.objectContaining({ key: 'service-catalog', status: 'candidate' }),
+      expect.objectContaining({ key: 'staff-roster', status: 'candidate' }),
+      expect.objectContaining({ key: 'appointment-rules', status: 'candidate-with-caution' }),
+      expect.objectContaining({ key: 'operation-summary', status: 'blocked-by-production-design' }),
+      expect.objectContaining({ key: 'feedback-follow-up', status: 'blocked-by-production-design' }),
+      expect.objectContaining({ key: 'service-record', status: 'blocked-by-production-design' })
+    ]);
+    expect(report.storeAppointmentContract.demoOnlyExcluded).toContain('demo virtual stores and staff');
+    expect(report.storeAppointmentContract.demoOnlyExcluded).toContain('sales showcase copy');
+    expect(report.storeAppointmentContract.demoOnlyExcluded).toContain('simulated payment/writeoff/member content');
+  });
+
   it('checks store appointment read-only modules after first slice lands', async () => {
     const report = await buildAdminIntegrationReadinessReport({
       backendBaseUrl: 'http://127.0.0.1:8080',

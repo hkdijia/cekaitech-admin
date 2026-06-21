@@ -305,4 +305,27 @@ describe('StoreAppointmentsPage', () => {
     expect(buttonText).not.toContain('会员配置');
     expect(buttonText).not.toContain('核销配置');
   });
+
+  it('shows admin readiness states for config surfaces without enabling edit controls', async () => {
+    const wrapper = mountPage(['admin:store-appointment:view', 'admin:store-appointment:manage']);
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('配置面 readiness');
+    expect(wrapper.text()).toContain('门店资料');
+    expect(wrapper.text()).toContain('项目目录');
+    expect(wrapper.text()).toContain('员工名册');
+    expect(wrapper.text()).toContain('预约规则');
+    expect(wrapper.text()).toContain('经营摘要');
+    expect(wrapper.text()).toContain('反馈跟进');
+    expect(wrapper.text()).toContain('服务记录');
+    expect(wrapper.text()).toContain('candidate');
+    expect(wrapper.text()).toContain('blocked-by-production-design');
+    expect(wrapper.text()).toContain('demo-only-excluded');
+
+    const buttonText = wrapper.findAll('button').map((button) => button.text()).join(' ');
+    expect(buttonText).not.toContain('新建门店');
+    expect(buttonText).not.toContain('编辑项目');
+    expect(buttonText).not.toContain('保存规则');
+    expect(buttonText).not.toContain('写入配置');
+  });
 });
