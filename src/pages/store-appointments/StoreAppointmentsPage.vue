@@ -1,20 +1,26 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { onMounted, reactive, ref } from 'vue';
-import { Refresh, Search, View } from '@element-plus/icons-vue';
+import { Check, Close, Finished, Refresh, Search, View } from '@element-plus/icons-vue';
 import {
   getStoreAppointmentDetail,
   pageStoreAppointments,
+  updateStoreAppointmentStatus,
   type StoreAppointmentDetail,
   type StoreAppointmentItem
 } from '../../api/storeAppointments';
+import { useAuthStore } from '../../stores/auth';
 
+const auth = useAuthStore();
 const loading = ref(false);
 const detailLoading = ref(false);
+const statusUpdating = ref(false);
 const loadError = ref('');
 const appointments = ref<StoreAppointmentItem[]>([]);
 const totalCount = ref(0);
 const detailDrawerVisible = ref(false);
 const detail = ref<StoreAppointmentDetail | null>(null);
+const currentDetailId = ref<number | null>(null);
 
 const query = reactive({
   pageNo: 1,
@@ -34,6 +40,8 @@ const statusOptions = [
   { label: '已完成', value: 'completed', tagType: 'success' },
   { label: '已取消', value: 'cancelled', tagType: 'info' }
 ];
+
+const canManageStatus = computed(() => auth.hasPermission('admin:store-appointment:manage'));
 
 function normalizedText(value: string) {
   const trimmed = value.trim();
@@ -59,6 +67,30 @@ function formatTime(value: string) {
     return '-';
   }
   return value.replace('T', ' ').replace(/\.\d+$/, '');
+}
+
+function statusActions(status: string) {
+  if (!canManageStatus.value) {
+    return [];
+  }
+  if (status === 'pending') {
+    return [
+      { label: '确认预约', status: 'confirmed', type: 'primary', icon: Check },
+      { label: '取消预约', status: 'cancelled', type: 'danger', icon: Close }
+    ];
+  }
+  if (status === 'confirmed') {
+    return [
+      { label: '标记到店', status: 'arrived', type: 'success', icon: Check },
+      { label: '取消预约', status: 'cancelled', type: 'danger', icon: Close }
+    ];
+  }
+  if (status === 'arrived') {
+    return [
+      { label: '完成', status: 'completed', type: 'success', icon: Finished }
+    ];
+  }
+  return [];
 }
 
 async function loadAppointments() {
@@ -112,6 +144,7 @@ function handleSizeChange(pageSize: number) {
 }
 
 async function openDetail(row: StoreAppointmentItem) {
+  currentDetailId.value = row.appointmentId;
   detailDrawerVisible.value = true;
   detailLoading.value = true;
   detail.value = null;
@@ -125,6 +158,30 @@ async function openDetail(row: StoreAppointmentItem) {
   }
 }
 
+async function refreshCurrentDetail() {
+  if (!currentDetailId.value) {
+    return;
+  }
+  detail.value = await getStoreAppointmentDetail(currentDetailId.value);
+}
+
+async function updateStatus(targetStatus: string) {
+  if (!detail.value?.appointment.appointmentId || !canManageStatus.value) {
+    return;
+  }
+  statusUpdating.value = true;
+  loadError.value = '';
+  try {
+    await updateStoreAppointmentStatus(detail.value.appointment.appointmentId, { status: targetStatus });
+    await refreshCurrentDetail();
+    await loadAppointments();
+  } catch (error) {
+    loadError.value = error instanceof Error ? error.message : '预约状态更新失败';
+  } finally {
+    statusUpdating.value = false;
+  }
+}
+
 onMounted(() => {
   loadAppointments();
 });
@@ -133,7 +190,7 @@ onMounted(() => {
 <template>
   <section>
     <h1 class="page-title">门店预约</h1>
-    <p class="page-subtitle">只读查看多行业门店预约列表、预约详情和状态日志。</p>
+    <p class="page-subtitle">查看预约、状态日志和后台流转结果；支付、会员、核销、客户资料暂不在本页处理。</p>
 
     <el-card shadow="never" class="filter-panel">
       <el-form class="filter-form" :inline="true" @submit.prevent>
@@ -216,9 +273,21 @@ onMounted(() => {
           <el-alert
             class="readonly-alert"
             type="info"
-            title="当前首片为只读查看；状态流转、核销、支付、会员和客户资料暂不在本页处理。"
+            title="本页只处理预约状态流转；核销、支付、会员和客户资料暂不在本页处理。"
             show-icon
           />
+          <div v-if="statusActions(detail.appointment.status).length > 0" class="status-action-bar">
+            <el-button
+              v-for="action in statusActions(detail.appointment.status)"
+              :key="action.status"
+              :icon="action.icon"
+              :loading="statusUpdating"
+              :type="action.type"
+              @click="updateStatus(action.status)"
+            >
+              {{ action.label }}
+            </el-button>
+          </div>
           <el-descriptions :column="1" border>
             <el-descriptions-item label="预约ID">{{ detail.appointment.appointmentId }}</el-descriptions-item>
             <el-descriptions-item label="门店">{{ detail.appointment.storeName }} / {{ detail.appointment.storeCode }}</el-descriptions-item>

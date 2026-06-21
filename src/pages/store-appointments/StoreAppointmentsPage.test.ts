@@ -3,17 +3,19 @@ import ElementPlus from 'element-plus';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
-import { getStoreAppointmentDetail, pageStoreAppointments } from '../../api/storeAppointments';
+import { getStoreAppointmentDetail, pageStoreAppointments, updateStoreAppointmentStatus } from '../../api/storeAppointments';
 import { useAuthStore } from '../../stores/auth';
 import StoreAppointmentsPage from './StoreAppointmentsPage.vue';
 
 vi.mock('../../api/storeAppointments', () => ({
   pageStoreAppointments: vi.fn(),
-  getStoreAppointmentDetail: vi.fn()
+  getStoreAppointmentDetail: vi.fn(),
+  updateStoreAppointmentStatus: vi.fn()
 }));
 
 const pageStoreAppointmentsMock = vi.mocked(pageStoreAppointments);
 const getStoreAppointmentDetailMock = vi.mocked(getStoreAppointmentDetail);
+const updateStoreAppointmentStatusMock = vi.mocked(updateStoreAppointmentStatus);
 
 const appointmentItem = {
   appointmentId: 101,
@@ -81,11 +83,17 @@ describe('StoreAppointmentsPage', () => {
     localStorage.clear();
     pageStoreAppointmentsMock.mockReset();
     getStoreAppointmentDetailMock.mockReset();
+    updateStoreAppointmentStatusMock.mockReset();
     pageStoreAppointmentsMock.mockResolvedValue({
       dataList: [appointmentItem],
       totalCount: 1
     });
     getStoreAppointmentDetailMock.mockResolvedValue(appointmentDetail);
+    updateStoreAppointmentStatusMock.mockResolvedValue({
+      ...appointmentItem,
+      status: 'confirmed',
+      updatedAt: '2026-06-19T09:30:00'
+    });
   });
 
   it('loads store appointments on mount and renders rows', async () => {
@@ -152,15 +160,68 @@ describe('StoreAppointmentsPage', () => {
     expect(wrapper.text()).toContain('admin-1');
   });
 
-  it('keeps first slice read-only even with manage permission', async () => {
-    const wrapper = mountPage(['admin:store-appointment:view', 'admin:store-appointment:manage']);
+  it('hides status actions without manage permission', async () => {
+    const wrapper = mountPage(['admin:store-appointment:view']);
 
     await flushAsyncUpdates();
 
-    expect(wrapper.text()).toContain('只读查看');
+    expect(wrapper.text()).toContain('查看预约、状态日志和后台流转结果');
     expect(wrapper.findAll('button').some((button) => button.text().includes('确认预约'))).toBe(false);
     expect(wrapper.findAll('button').some((button) => button.text().includes('标记到店'))).toBe(false);
     expect(wrapper.findAll('button').some((button) => button.text().includes('完成'))).toBe(false);
     expect(wrapper.findAll('button').some((button) => button.text().includes('取消预约'))).toBe(false);
+  });
+
+  it('shows allowed status actions for manage operator and updates pending appointment', async () => {
+    getStoreAppointmentDetailMock.mockResolvedValue({
+      ...appointmentDetail,
+      appointment: { ...appointmentItem, status: 'pending' },
+      statusLogs: []
+    });
+    const wrapper = mountPage(['admin:store-appointment:view', 'admin:store-appointment:manage']);
+    await flushAsyncUpdates();
+
+    await wrapper.findAll('button').find((button) => button.text().includes('查看详情'))?.trigger('click');
+    await flushAsyncUpdates();
+
+    const buttonText = wrapper.findAll('button').map((button) => button.text()).join(' ');
+    expect(buttonText).toContain('确认预约');
+    expect(buttonText).toContain('取消预约');
+    expect(buttonText).not.toContain('标记到店');
+    expect(buttonText).not.toContain('完成');
+
+    await wrapper.findAll('button').find((button) => button.text().includes('确认预约'))?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(updateStoreAppointmentStatusMock).toHaveBeenCalledWith(101, { status: 'confirmed' });
+    expect(getStoreAppointmentDetailMock).toHaveBeenCalledTimes(2);
+    expect(pageStoreAppointmentsMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows arrived and completed actions only for matching statuses', async () => {
+    getStoreAppointmentDetailMock.mockResolvedValueOnce({
+      ...appointmentDetail,
+      appointment: { ...appointmentItem, status: 'confirmed' }
+    }).mockResolvedValueOnce({
+      ...appointmentDetail,
+      appointment: { ...appointmentItem, status: 'arrived' }
+    });
+    const wrapper = mountPage(['admin:store-appointment:view', 'admin:store-appointment:manage']);
+    await flushAsyncUpdates();
+
+    await wrapper.findAll('button').find((button) => button.text().includes('查看详情'))?.trigger('click');
+    await flushAsyncUpdates();
+    let buttonText = wrapper.findAll('button').map((button) => button.text()).join(' ');
+    expect(buttonText).toContain('标记到店');
+    expect(buttonText).toContain('取消预约');
+    expect(buttonText).not.toContain('确认预约');
+    expect(buttonText).not.toContain('完成');
+
+    await wrapper.findAll('button').find((button) => button.text().includes('标记到店'))?.trigger('click');
+    await flushAsyncUpdates();
+    buttonText = wrapper.findAll('button').map((button) => button.text()).join(' ');
+    expect(updateStoreAppointmentStatusMock).toHaveBeenCalledWith(101, { status: 'arrived' });
+    expect(buttonText).toContain('完成');
+    expect(buttonText).not.toContain('取消预约');
   });
 });

@@ -42,6 +42,10 @@ export interface StoreAppointmentDetail {
   statusLogs: StoreAppointmentStatusLog[];
 }
 
+export interface StoreAppointmentStatusUpdateRequest {
+  status: string;
+}
+
 export function pageStoreAppointments(
   payload: StoreAppointmentPageRequest
 ): Promise<PageResult<StoreAppointmentItem>> {
@@ -54,5 +58,15 @@ export function pageStoreAppointments(
 export function getStoreAppointmentDetail(appointmentId: number): Promise<StoreAppointmentDetail> {
   return request<StoreAppointmentDetail>(`/api/admin/store-appointments/${appointmentId}`, {
     method: 'GET'
+  });
+}
+
+export function updateStoreAppointmentStatus(
+  appointmentId: number,
+  payload: StoreAppointmentStatusUpdateRequest
+): Promise<StoreAppointmentItem> {
+  return request<StoreAppointmentItem>(`/api/admin/store-appointments/${appointmentId}/status`, {
+    method: 'POST',
+    body: JSON.stringify(payload)
   });
 }
