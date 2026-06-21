@@ -328,4 +328,24 @@ describe('StoreAppointmentsPage', () => {
     expect(buttonText).not.toContain('保存规则');
     expect(buttonText).not.toContain('写入配置');
   });
+
+  it('shows candidate config admin api gaps as missing controlled backend APIs', async () => {
+    const wrapper = mountPage(['admin:store-appointment:view', 'admin:store-appointment:manage']);
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('admin API 缺口');
+    expect(wrapper.text()).toContain('/api/admin/store-appointment-config/stores');
+    expect(wrapper.text()).toContain('/api/admin/store-appointment-config/projects');
+    expect(wrapper.text()).toContain('/api/admin/store-appointment-config/staff');
+    expect(wrapper.text()).toContain('/api/admin/store-appointment-config/stores/{storeCode}/rules');
+    expect(wrapper.text()).toContain('missing-admin-api');
+    expect(wrapper.text()).toContain('admin:store-appointment-config:manage');
+    expect(wrapper.text()).toContain('tenantId');
+    expect(wrapper.text()).toContain('paymentAmount');
+
+    const buttonText = wrapper.findAll('button').map((button) => button.text()).join(' ');
+    expect(buttonText).not.toContain('创建接口');
+    expect(buttonText).not.toContain('保存配置');
+    expect(buttonText).not.toContain('立即接入');
+  });
 });

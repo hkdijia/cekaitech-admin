@@ -134,6 +134,45 @@ describe('admin integration readiness report', () => {
     expect(report.storeAppointmentContract.demoOnlyExcluded).toContain('simulated payment/writeoff/member content');
   });
 
+  it('reports candidate config admin api gaps without treating them as implemented endpoints', async () => {
+    const report = await buildAdminIntegrationReadinessReport({
+      backendBaseUrl: 'http://127.0.0.1:8080',
+      fetchHealth: async () => ({
+        ok: true,
+        status: 200,
+        detail: 'OK'
+      }),
+      readText: createTextProbe(projectFiles),
+      fileExists: createFileProbe(projectFiles)
+    });
+
+    expect(report.storeAppointmentContract.adminApiGaps).toEqual([
+      expect.objectContaining({
+        surfaceKey: 'store-profile',
+        requiredPermission: 'admin:store-appointment-config:manage',
+        status: 'missing-admin-api'
+      }),
+      expect.objectContaining({
+        surfaceKey: 'service-catalog',
+        requiredPermission: 'admin:store-appointment-config:manage',
+        status: 'missing-admin-api'
+      }),
+      expect.objectContaining({
+        surfaceKey: 'staff-roster',
+        requiredPermission: 'admin:store-appointment-config:manage',
+        status: 'missing-admin-api'
+      }),
+      expect.objectContaining({
+        surfaceKey: 'appointment-rules',
+        requiredPermission: 'admin:store-appointment-config:manage',
+        status: 'missing-admin-api'
+      })
+    ]);
+    expect(report.storeAppointmentContract.backendEndpoints).not.toContain('POST /api/admin/store-appointment-config/stores/{storeCode}');
+    expect(report.storeAppointmentContract.adminApiGaps[0].excludedFields).toContain('tenantId');
+    expect(report.storeAppointmentContract.adminApiGaps[1].excludedFields).toContain('paymentAmount');
+  });
+
   it('checks store appointment read-only modules after first slice lands', async () => {
     const report = await buildAdminIntegrationReadinessReport({
       backendBaseUrl: 'http://127.0.0.1:8080',
