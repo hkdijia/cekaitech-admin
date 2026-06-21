@@ -8,11 +8,13 @@ import {
 
 const projectFiles = new Map([
   ['vite.config.ts', "proxy: { '/api': 'http://127.0.0.1:8080' }"],
-  ['src/router/menu.ts', '/legal-service-requests\n/user-operation-logs\n/generation-records\n/users'],
-  ['src/router/index.ts', '/login\n/legal-service-requests\n/user-operation-logs\n/generation-records\n/users'],
+  ['src/router/menu.ts', '/legal-service-requests\n/user-operation-logs\n/generation-records\n/users\n/store-appointments'],
+  ['src/router/index.ts', '/login\n/legal-service-requests\n/user-operation-logs\n/generation-records\n/users\n/store-appointments'],
   ['src/api/legalServiceRequests.ts', 'export function pageLegalServiceRequests() {}'],
   ['src/api/adminUserOperationLogs.ts', 'export function pageAdminUserOperationLogs() {}'],
+  ['src/api/storeAppointments.ts', 'export function pageStoreAppointments() {}'],
   ['src/pages/legal-service-requests/LegalServiceRequestsPage.vue', '<template />'],
+  ['src/pages/store-appointments/StoreAppointmentsPage.vue', '<template />'],
   ['src/pages/user-operation-logs/UserOperationLogsPage.vue', '<template />']
 ]);
 
@@ -90,8 +92,8 @@ describe('admin integration readiness report', () => {
 
     expect(report.storeAppointment).toEqual({
       name: '门店预约 admin 接入前置预检',
-      status: 'warn',
-      detail: '后端契约已具备，admin 页面尚未接入；首片建议只读列表 + 详情抽屉。'
+      status: 'pass',
+      detail: '后端契约已具备，admin 首片按只读列表 + 详情抽屉接入。'
     });
     expect(report.storeAppointmentContract).toMatchObject({
       backendEndpoints: [
@@ -104,5 +106,22 @@ describe('admin integration readiness report', () => {
     });
     expect(report.storeAppointmentContract.excludedCapabilities).toContain('real payment');
     expect(report.nextSteps).toContain('门店预约 admin 首片先实现只读列表和详情抽屉；状态流转、支付、会员、核销、客户资料另行设计。');
+  });
+
+  it('checks store appointment read-only modules after first slice lands', async () => {
+    const report = await buildAdminIntegrationReadinessReport({
+      backendBaseUrl: 'http://127.0.0.1:8080',
+      fetchHealth: async () => ({
+        ok: true,
+        status: 200,
+        detail: 'OK'
+      }),
+      readText: createTextProbe(projectFiles),
+      fileExists: createFileProbe(projectFiles)
+    });
+
+    expect(report.routes.some((item) => item.name.includes('/store-appointments') && item.status === 'pass')).toBe(true);
+    expect(report.modules.some((item) => item.name.includes('src/api/storeAppointments.ts') && item.status === 'pass')).toBe(true);
+    expect(report.modules.some((item) => item.name.includes('StoreAppointmentsPage.vue') && item.status === 'pass')).toBe(true);
   });
 });

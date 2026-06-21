@@ -9,13 +9,16 @@ const expectedRoutes = [
   '/legal-service-requests',
   '/user-operation-logs',
   '/generation-records',
+  '/store-appointments',
   '/users'
 ];
 
 const requiredModules = [
   'src/api/legalServiceRequests.ts',
   'src/api/adminUserOperationLogs.ts',
+  'src/api/storeAppointments.ts',
   'src/pages/legal-service-requests/LegalServiceRequestsPage.vue',
+  'src/pages/store-appointments/StoreAppointmentsPage.vue',
   'src/pages/user-operation-logs/UserOperationLogsPage.vue'
 ];
 
@@ -144,8 +147,8 @@ export async function buildAdminIntegrationReadinessReport(options = {}) {
   const allChecks = [backend, viteProxy, ...routes, ...modules];
   const storeAppointment = {
     name: '门店预约 admin 接入前置预检',
-    status: 'warn',
-    detail: '后端契约已具备，admin 页面尚未接入；首片建议只读列表 + 详情抽屉。'
+    status: 'pass',
+    detail: '后端契约已具备，admin 首片按只读列表 + 详情抽屉接入。'
   };
   const storeAppointmentContract = buildStoreAppointmentContract();
   return {

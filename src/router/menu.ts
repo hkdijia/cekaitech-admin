@@ -39,6 +39,13 @@ export const adminMenuItems: AdminMenuItem[] = [
     scope: 'global'
   },
   {
+    path: '/store-appointments',
+    title: '门店预约',
+    description: '多行业门店预约列表和预约详情',
+    permissionCode: 'admin:store-appointment:view',
+    scope: 'global'
+  },
+  {
     path: '/miniapp-workbench',
     title: '小程序工作台',
     description: '当前小程序的运行概览、启用准备和待处理事项',

@@ -106,6 +106,18 @@ describe('admin routes', () => {
     expect(route?.meta?.permissionCode).toBe('admin:legal-credit-query:view');
   });
 
+  it('declares store appointments menu and route permission', () => {
+    const menuItem = adminMenuItems.find((item) => item.path === '/store-appointments');
+    const route = routes.find((item) => item.path === '/store-appointments');
+    const globalItems = filterAdminMenuItems(() => true, 'global');
+
+    expect(menuItem?.title).toBe('门店预约');
+    expect(menuItem?.description).toBe('多行业门店预约列表和预约详情');
+    expect(menuItem?.permissionCode).toBe('admin:store-appointment:view');
+    expect(route?.meta?.permissionCode).toBe('admin:store-appointment:view');
+    expect(globalItems.map((item) => item.path)).toContain('/store-appointments');
+  });
+
   it('declares miniapp access list menu and route permission', () => {
     const menuItem = adminMenuItems.find((item) => item.path === '/miniapp-access-list');
     const route = routes.find((item) => item.path === '/miniapp-access-list');
