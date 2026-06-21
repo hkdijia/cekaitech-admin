@@ -46,6 +46,58 @@ export interface StoreAppointmentStatusUpdateRequest {
   status: string;
 }
 
+export interface StoreAppointmentBookingStore {
+  storeCode: string;
+  name: string;
+  industry: string;
+  phone: string;
+  address: string;
+  businessHours: string;
+  staffLabel: string;
+  projectLabel: string;
+  showPrice: boolean;
+}
+
+export interface StoreAppointmentBookingProject {
+  projectCode: string;
+  categoryId: string;
+  name: string;
+  summary: string;
+  durationMinutes: number;
+  priceText: string;
+  showPrice: boolean;
+}
+
+export interface StoreAppointmentBookingStaff {
+  staffCode: string;
+  name: string;
+  role: string;
+  bio: string;
+  avatarUrl: string;
+  trustHighlights: string;
+}
+
+export interface StoreAppointmentBookingStaffProject {
+  staffCode: string;
+  projectCode: string;
+}
+
+export interface StoreAppointmentBookingRule {
+  bookingWindowDays: number;
+  defaultDurationMinutes: number;
+  defaultSlots: string[];
+  confirmationHint: string;
+  cancelHint: string;
+}
+
+export interface StoreAppointmentBookingConfig {
+  store: StoreAppointmentBookingStore;
+  serviceProjects: StoreAppointmentBookingProject[];
+  staffMembers: StoreAppointmentBookingStaff[];
+  staffProjects: StoreAppointmentBookingStaffProject[];
+  appointmentRule: StoreAppointmentBookingRule;
+}
+
 export function pageStoreAppointments(
   payload: StoreAppointmentPageRequest
 ): Promise<PageResult<StoreAppointmentItem>> {
@@ -68,5 +120,14 @@ export function updateStoreAppointmentStatus(
   return request<StoreAppointmentItem>(`/api/admin/store-appointments/${appointmentId}/status`, {
     method: 'POST',
     body: JSON.stringify(payload)
+  });
+}
+
+export function getStoreAppointmentBookingConfig(
+  appCode: string,
+  storeCode: string
+): Promise<StoreAppointmentBookingConfig> {
+  return request<StoreAppointmentBookingConfig>(`/api/miniapps/${appCode}/stores/${storeCode}/booking-config`, {
+    method: 'GET'
   });
 }

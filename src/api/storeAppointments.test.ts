@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { getStoreAppointmentDetail, pageStoreAppointments, updateStoreAppointmentStatus } from './storeAppointments';
+import {
+  getStoreAppointmentBookingConfig,
+  getStoreAppointmentDetail,
+  pageStoreAppointments,
+  updateStoreAppointmentStatus
+} from './storeAppointments';
 
 describe('store appointments api', () => {
   it('posts page query to backend store appointments endpoint', async () => {
@@ -127,6 +132,69 @@ describe('store appointments api', () => {
       }
     });
     expect(result.status).toBe('confirmed');
+  });
+
+  it('gets booking config snapshot from miniapp public config endpoint', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(successResponse({
+      store: {
+        storeCode: 'store-config-001',
+        name: '中性预约门店',
+        industry: 'beauty',
+        phone: '0571-00000000',
+        address: '杭州市示例路 1 号',
+        businessHours: '10:00-20:00',
+        staffLabel: '员工',
+        projectLabel: '项目',
+        showPrice: true
+      },
+      serviceProjects: [
+        {
+          projectCode: 'basic-service',
+          categoryId: 'general',
+          name: '基础服务',
+          summary: '适合首次体验',
+          durationMinutes: 60,
+          priceText: '到店咨询',
+          showPrice: true
+        }
+      ],
+      staffMembers: [
+        {
+          staffCode: 'staff-001',
+          name: '员工 A',
+          role: '服务顾问',
+          bio: '擅长基础服务',
+          avatarUrl: '',
+          trustHighlights: '3 年经验'
+        }
+      ],
+      staffProjects: [
+        {
+          staffCode: 'staff-001',
+          projectCode: 'basic-service'
+        }
+      ],
+      appointmentRule: {
+        bookingWindowDays: 14,
+        defaultDurationMinutes: 60,
+        defaultSlots: ['10:00', '14:00'],
+        confirmationHint: '到店前确认',
+        cancelHint: '如需取消请提前联系'
+      }
+    }));
+
+    const result = await getStoreAppointmentBookingConfig('store-appointment-template', 'store-config-001');
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/miniapps/store-appointment-template/stores/store-config-001/booking-config', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    expect(result.store.storeCode).toBe('store-config-001');
+    expect(result.serviceProjects[0].priceText).toBe('到店咨询');
+    expect(result.staffProjects[0].staffCode).toBe('staff-001');
+    expect(result.appointmentRule.defaultSlots).toEqual(['10:00', '14:00']);
   });
 });
 
