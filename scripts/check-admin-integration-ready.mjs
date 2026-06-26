@@ -195,7 +195,26 @@ function buildStoreAppointmentContract() {
         writableFields: ['bookingWindowDays', 'defaultDurationMinutes', 'defaultSlots', 'confirmationHint', 'cancelHint'],
         excludedFields: ['notificationTemplateId', 'refundRuleId', 'realSchedulePolicyId', 'customerAccountPolicy']
       }
-    ]
+    ],
+    adminConfigRollback: {
+      status: 'backend-ready-frontend-pending',
+      requiredPermission: 'admin:store-appointment-config:manage',
+      previewEndpoint: 'GET /api/admin/store-appointment-config/stores/{storeCode}/rollback-preview/{auditLogId}',
+      executeEndpoint: 'POST /api/admin/store-appointment-config/stores/{storeCode}/rollback/{auditLogId}',
+      rollbackSurfaces: ['store-profile', 'service-catalog', 'staff-roster', 'appointment-rules'],
+      excludedCapabilities: [
+        'real payment',
+        'membership',
+        'writeoff',
+        'customer profile',
+        'CRM',
+        'service record',
+        'employee account',
+        'real scheduling',
+        'notification',
+        'refund'
+      ]
+    }
   };
 }
 
@@ -260,14 +279,16 @@ export async function buildAdminIntegrationReadinessReport(options = {}) {
     'updateStoreAppointmentStaffRoster',
     'getStoreAppointmentRules',
     'updateStoreAppointmentRules',
+    'getStoreAppointmentRollbackPreview',
+    'rollbackStoreAppointmentConfig',
     'X-Request-Id'
   ].every((expectedText) => storeAppointmentApiText.includes(expectedText));
   const storeAppointmentConfigApiClient = {
     name: '门店预约 admin 配置 API client',
     status: hasStoreAppointmentConfigApiClient ? 'pass' : 'fail',
     detail: hasStoreAppointmentConfigApiClient
-      ? '已封装四配置块读取和写入入口，写请求携带 X-Request-Id。'
-      : '缺少四配置块 API client 或写请求 X-Request-Id。'
+      ? '已封装四配置块和回滚读取/写入入口，写请求携带 X-Request-Id。'
+      : '缺少四配置块、回滚 API client 或写请求 X-Request-Id。'
   };
   const storeAppointmentContract = buildStoreAppointmentContract();
   return {
@@ -320,6 +341,7 @@ export function formatAdminIntegrationReadinessReport(report) {
     `demo-only-excluded：${report.storeAppointmentContract.demoOnlyExcluded.join('、')}`,
     'admin 配置契约',
     ...report.storeAppointmentContract.adminConfigContract.map((item) => `${item.surfaceKey}：${item.status}；权限 ${item.requiredPermission}；后端接口 ${item.endpoints.join(' / ')}；排除字段 ${item.excludedFields.join('、')}`),
+    `admin 配置回滚：${report.storeAppointmentContract.adminConfigRollback.status}；权限 ${report.storeAppointmentContract.adminConfigRollback.requiredPermission}；预览 ${report.storeAppointmentContract.adminConfigRollback.previewEndpoint}；执行 ${report.storeAppointmentContract.adminConfigRollback.executeEndpoint}；排除能力 ${report.storeAppointmentContract.adminConfigRollback.excludedCapabilities.join('、')}`,
     '',
     '下一步',
     ...report.nextSteps.map((step, index) => `${index + 1}. ${step}`)

@@ -22,6 +22,8 @@ const projectFiles = new Map([
     'export function updateStoreAppointmentStaffRoster() {}',
     'export function getStoreAppointmentRules() {}',
     'export function updateStoreAppointmentRules() {}',
+    'export function getStoreAppointmentRollbackPreview() {}',
+    'export function rollbackStoreAppointmentConfig() {}',
     'X-Request-Id'
   ].join('\n')],
   ['src/pages/legal-service-requests/LegalServiceRequestsPage.vue', '<template />'],
@@ -218,7 +220,13 @@ describe('admin integration readiness report', () => {
     expect(report.storeAppointmentConfigApiClient).toEqual({
       name: '门店预约 admin 配置 API client',
       status: 'pass',
-      detail: '已封装四配置块读取和写入入口，写请求携带 X-Request-Id。'
+      detail: '已封装四配置块和回滚读取/写入入口，写请求携带 X-Request-Id。'
     });
+    expect(report.storeAppointmentContract.adminConfigRollback).toMatchObject({
+      requiredPermission: 'admin:store-appointment-config:manage',
+      previewEndpoint: 'GET /api/admin/store-appointment-config/stores/{storeCode}/rollback-preview/{auditLogId}',
+      executeEndpoint: 'POST /api/admin/store-appointment-config/stores/{storeCode}/rollback/{auditLogId}'
+    });
+    expect(report.storeAppointmentContract.adminConfigRollback.excludedCapabilities).toContain('real payment');
   });
 });

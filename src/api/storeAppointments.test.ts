@@ -1,12 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   getStoreAppointmentRules,
+  getStoreAppointmentRollbackPreview,
   getStoreAppointmentServiceCatalog,
   getStoreAppointmentStaffRoster,
   getStoreAppointmentStoreProfile,
   getStoreAppointmentBookingConfig,
   getStoreAppointmentDetail,
   pageStoreAppointments,
+  rollbackStoreAppointmentConfig,
   updateStoreAppointmentRules,
   updateStoreAppointmentServiceCatalog,
   updateStoreAppointmentStaffRoster,
@@ -449,6 +451,54 @@ describe('store appointments api', () => {
     expect(project.durationMinutes).toBe(75);
     expect(staff.projectCodes).toEqual(['basic-service']);
     expect(rules.bookingWindowDays).toBe(21);
+  });
+
+  it('previews and executes store appointment config rollback with request id headers', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(successResponse({
+        storeCode: 'store-config-001',
+        auditLogId: 9001,
+        configSurface: 'service-catalog',
+        targetCode: 'basic-service',
+        values: {
+          name: '基础服务',
+          summary: '适合首次体验',
+          priceText: '到店咨询'
+        },
+        projectCodes: []
+      }))
+      .mockResolvedValueOnce(successResponse({
+        storeCode: 'store-config-001',
+        projectCode: 'basic-service',
+        categoryId: 'general',
+        name: '基础服务',
+        summary: '适合首次体验',
+        durationMinutes: 60,
+        priceText: '到店咨询',
+        showPrice: true,
+        enabled: true,
+        updatedAt: '2026-06-26T09:00:00'
+      }));
+
+    const preview = await getStoreAppointmentRollbackPreview('store-config-001', 9001);
+    const rollback = await rollbackStoreAppointmentConfig('store-config-001', 9001, 'store-config-rollback-001');
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/admin/store-appointment-config/stores/store-config-001/rollback-preview/9001', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/admin/store-appointment-config/stores/store-config-001/rollback/9001', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Request-Id': 'store-config-rollback-001'
+      }
+    });
+    expect(preview.configSurface).toBe('service-catalog');
+    expect(preview.values.name).toBe('基础服务');
+    expect('name' in rollback ? rollback.name : '').toBe('基础服务');
   });
 });
 

@@ -189,6 +189,21 @@ export interface StoreAppointmentRulesUpdateRequest {
   cancelHint: string;
 }
 
+export interface StoreAppointmentRollbackPreview {
+  storeCode: string;
+  auditLogId: number;
+  configSurface: string;
+  targetCode: string;
+  values: Record<string, unknown>;
+  projectCodes: string[];
+}
+
+export type StoreAppointmentRollbackResult =
+  | StoreAppointmentStoreProfile
+  | StoreAppointmentServiceProject
+  | StoreAppointmentStaffRosterItem
+  | StoreAppointmentRules;
+
 function requestIdHeaders(requestId: string) {
   return {
     'X-Request-Id': requestId
@@ -297,6 +312,29 @@ export function updateStoreAppointmentRules(
   return request<StoreAppointmentRules>(`/api/admin/store-appointment-config/rules/${storeCode}`, {
     method: 'PUT',
     body: JSON.stringify(payload),
+    headers: requestIdHeaders(requestId)
+  });
+}
+
+export function getStoreAppointmentRollbackPreview(
+  storeCode: string,
+  auditLogId: number
+): Promise<StoreAppointmentRollbackPreview> {
+  return request<StoreAppointmentRollbackPreview>(
+    `/api/admin/store-appointment-config/stores/${storeCode}/rollback-preview/${auditLogId}`,
+    {
+      method: 'GET'
+    }
+  );
+}
+
+export function rollbackStoreAppointmentConfig(
+  storeCode: string,
+  auditLogId: number,
+  requestId: string
+): Promise<StoreAppointmentRollbackResult> {
+  return request<StoreAppointmentRollbackResult>(`/api/admin/store-appointment-config/stores/${storeCode}/rollback/${auditLogId}`, {
+    method: 'POST',
     headers: requestIdHeaders(requestId)
   });
 }

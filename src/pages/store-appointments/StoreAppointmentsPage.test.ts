@@ -5,12 +5,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
 import {
   getStoreAppointmentRules,
+  getStoreAppointmentRollbackPreview,
   getStoreAppointmentServiceCatalog,
   getStoreAppointmentStaffRoster,
   getStoreAppointmentStoreProfile,
   getStoreAppointmentBookingConfig,
   getStoreAppointmentDetail,
   pageStoreAppointments,
+  rollbackStoreAppointmentConfig,
   updateStoreAppointmentRules,
   updateStoreAppointmentServiceCatalog,
   updateStoreAppointmentStaffRoster,
@@ -32,7 +34,9 @@ vi.mock('../../api/storeAppointments', () => ({
   getStoreAppointmentStaffRoster: vi.fn(),
   updateStoreAppointmentStaffRoster: vi.fn(),
   getStoreAppointmentRules: vi.fn(),
-  updateStoreAppointmentRules: vi.fn()
+  updateStoreAppointmentRules: vi.fn(),
+  getStoreAppointmentRollbackPreview: vi.fn(),
+  rollbackStoreAppointmentConfig: vi.fn()
 }));
 
 const pageStoreAppointmentsMock = vi.mocked(pageStoreAppointments);
@@ -47,6 +51,8 @@ const getStoreAppointmentStaffRosterMock = vi.mocked(getStoreAppointmentStaffRos
 const updateStoreAppointmentStaffRosterMock = vi.mocked(updateStoreAppointmentStaffRoster);
 const getStoreAppointmentRulesMock = vi.mocked(getStoreAppointmentRules);
 const updateStoreAppointmentRulesMock = vi.mocked(updateStoreAppointmentRules);
+const getStoreAppointmentRollbackPreviewMock = vi.mocked(getStoreAppointmentRollbackPreview);
+const rollbackStoreAppointmentConfigMock = vi.mocked(rollbackStoreAppointmentConfig);
 
 const appointmentItem = {
   appointmentId: 101,
@@ -185,6 +191,19 @@ const appointmentRules = {
   updatedAt: '2026-06-26T08:00:00'
 };
 
+const rollbackPreview = {
+  storeCode: 'store-config-001',
+  auditLogId: 9001,
+  configSurface: 'service-catalog',
+  targetCode: 'basic-service',
+  values: {
+    name: '基础服务',
+    summary: '适合首次体验',
+    priceText: '到店咨询'
+  },
+  projectCodes: []
+};
+
 function mountPage(permissions: string[] = ['admin:store-appointment:view', 'admin:store-appointment:manage']) {
   const pinia = createPinia();
   setActivePinia(pinia);
@@ -230,6 +249,8 @@ describe('StoreAppointmentsPage', () => {
     updateStoreAppointmentStaffRosterMock.mockReset();
     getStoreAppointmentRulesMock.mockReset();
     updateStoreAppointmentRulesMock.mockReset();
+    getStoreAppointmentRollbackPreviewMock.mockReset();
+    rollbackStoreAppointmentConfigMock.mockReset();
     pageStoreAppointmentsMock.mockResolvedValue({
       dataList: [appointmentItem],
       totalCount: 1
@@ -269,6 +290,11 @@ describe('StoreAppointmentsPage', () => {
       defaultDurationMinutes: 75,
       defaultSlots: ['09:30', '15:00'],
       updatedAt: '2026-06-26T08:40:00'
+    });
+    getStoreAppointmentRollbackPreviewMock.mockResolvedValue(rollbackPreview);
+    rollbackStoreAppointmentConfigMock.mockResolvedValue({
+      ...serviceCatalog[0],
+      updatedAt: '2026-06-26T09:00:00'
     });
   });
 
@@ -765,5 +791,57 @@ describe('StoreAppointmentsPage', () => {
     const buttonText = wrapper.findAll('button').map((button) => button.text()).join(' ');
     expect(buttonText).not.toContain('读取预约规则');
     expect(buttonText).not.toContain('保存预约规则');
+  });
+
+  it('previews config rollback by store and audit log for config manager', async () => {
+    const wrapper = mountPage(['admin:store-appointment:view', 'admin:store-appointment-config:manage']);
+    await flushAsyncUpdates();
+
+    await wrapper.find('input[placeholder="回滚 storeCode"]').setValue('store-config-001');
+    await wrapper.find('input[placeholder="审计记录 ID"]').setValue('9001');
+    await wrapper.findAll('button').find((button) => button.text().includes('预览回滚'))?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(getStoreAppointmentRollbackPreviewMock).toHaveBeenCalledWith('store-config-001', 9001);
+    expect(wrapper.text()).toContain('配置回滚');
+    expect(wrapper.text()).toContain('service-catalog');
+    expect(wrapper.text()).toContain('basic-service');
+    expect(wrapper.text()).toContain('基础服务');
+    expect(wrapper.text()).toContain('预览不写库');
+    expect(wrapper.find('input[placeholder="paymentAmount"]').exists()).toBe(false);
+    expect(wrapper.find('input[placeholder="customerProfile"]').exists()).toBe(false);
+  });
+
+  it('executes rollback only after explicit confirmation', async () => {
+    const wrapper = mountPage(['admin:store-appointment:view', 'admin:store-appointment-config:manage']);
+    await flushAsyncUpdates();
+
+    await wrapper.find('input[placeholder="回滚 storeCode"]').setValue('store-config-001');
+    await wrapper.find('input[placeholder="审计记录 ID"]').setValue('9001');
+    await wrapper.findAll('button').find((button) => button.text().includes('预览回滚'))?.trigger('click');
+    await flushAsyncUpdates();
+    await wrapper.findAll('button').find((button) => button.text().includes('执行回滚'))?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(rollbackStoreAppointmentConfigMock).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain('请先勾选确认');
+
+    await wrapper.find('[data-test="rollback-confirm"] input[type="checkbox"]').setValue(true);
+    await wrapper.findAll('button').find((button) => button.text().includes('执行回滚'))?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(rollbackStoreAppointmentConfigMock).toHaveBeenCalledWith('store-config-001', 9001, expect.stringMatching(/^store-config-/));
+    expect(wrapper.text()).toContain('配置回滚已执行');
+  });
+
+  it('hides config rollback controls without config manage permission', async () => {
+    const wrapper = mountPage(['admin:store-appointment:view']);
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('配置回滚');
+    expect(wrapper.text()).toContain('需要 admin:store-appointment-config:manage 权限');
+    const buttonText = wrapper.findAll('button').map((button) => button.text()).join(' ');
+    expect(buttonText).not.toContain('预览回滚');
+    expect(buttonText).not.toContain('执行回滚');
   });
 });
