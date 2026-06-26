@@ -250,6 +250,25 @@ export async function buildAdminIntegrationReadinessReport(options = {}) {
     status: 'pass',
     detail: '后端契约已具备，admin 首片按只读列表 + 详情抽屉接入。'
   };
+  const storeAppointmentApiText = await readText('src/api/storeAppointments.ts');
+  const hasStoreAppointmentConfigApiClient = [
+    'getStoreAppointmentStoreProfile',
+    'updateStoreAppointmentStoreProfile',
+    'getStoreAppointmentServiceCatalog',
+    'updateStoreAppointmentServiceCatalog',
+    'getStoreAppointmentStaffRoster',
+    'updateStoreAppointmentStaffRoster',
+    'getStoreAppointmentRules',
+    'updateStoreAppointmentRules',
+    'X-Request-Id'
+  ].every((expectedText) => storeAppointmentApiText.includes(expectedText));
+  const storeAppointmentConfigApiClient = {
+    name: '门店预约 admin 配置 API client',
+    status: hasStoreAppointmentConfigApiClient ? 'pass' : 'fail',
+    detail: hasStoreAppointmentConfigApiClient
+      ? '已封装四配置块读取和写入入口，写请求携带 X-Request-Id。'
+      : '缺少四配置块 API client 或写请求 X-Request-Id。'
+  };
   const storeAppointmentContract = buildStoreAppointmentContract();
   return {
     backendBaseUrl,
@@ -258,6 +277,7 @@ export async function buildAdminIntegrationReadinessReport(options = {}) {
     routes,
     modules,
     storeAppointment,
+    storeAppointmentConfigApiClient,
     storeAppointmentContract,
     summary: countSummary(allChecks),
     nextSteps: [
@@ -290,6 +310,7 @@ export function formatAdminIntegrationReadinessReport(report) {
     '',
     '门店预约 admin 前置预检',
     formatCheck(report.storeAppointment),
+    formatCheck(report.storeAppointmentConfigApiClient),
     `后端接口：${report.storeAppointmentContract.backendEndpoints.join('；')}`,
     `权限：${report.storeAppointmentContract.permissions.join(' / ')}`,
     `首片策略：${report.storeAppointmentContract.firstSlice}`,

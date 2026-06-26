@@ -12,7 +12,18 @@ const projectFiles = new Map([
   ['src/router/index.ts', '/login\n/legal-service-requests\n/user-operation-logs\n/generation-records\n/users\n/store-appointments'],
   ['src/api/legalServiceRequests.ts', 'export function pageLegalServiceRequests() {}'],
   ['src/api/adminUserOperationLogs.ts', 'export function pageAdminUserOperationLogs() {}'],
-  ['src/api/storeAppointments.ts', 'export function pageStoreAppointments() {}'],
+  ['src/api/storeAppointments.ts', [
+    'export function pageStoreAppointments() {}',
+    'export function getStoreAppointmentStoreProfile() {}',
+    'export function updateStoreAppointmentStoreProfile() {}',
+    'export function getStoreAppointmentServiceCatalog() {}',
+    'export function updateStoreAppointmentServiceCatalog() {}',
+    'export function getStoreAppointmentStaffRoster() {}',
+    'export function updateStoreAppointmentStaffRoster() {}',
+    'export function getStoreAppointmentRules() {}',
+    'export function updateStoreAppointmentRules() {}',
+    'X-Request-Id'
+  ].join('\n')],
   ['src/pages/legal-service-requests/LegalServiceRequestsPage.vue', '<template />'],
   ['src/pages/store-appointments/StoreAppointmentsPage.vue', '<template />'],
   ['src/pages/user-operation-logs/UserOperationLogsPage.vue', '<template />']
@@ -190,5 +201,24 @@ describe('admin integration readiness report', () => {
     expect(report.routes.some((item) => item.name.includes('/store-appointments') && item.status === 'pass')).toBe(true);
     expect(report.modules.some((item) => item.name.includes('src/api/storeAppointments.ts') && item.status === 'pass')).toBe(true);
     expect(report.modules.some((item) => item.name.includes('StoreAppointmentsPage.vue') && item.status === 'pass')).toBe(true);
+  });
+
+  it('checks store appointment admin config api client before page edit work', async () => {
+    const report = await buildAdminIntegrationReadinessReport({
+      backendBaseUrl: 'http://127.0.0.1:8080',
+      fetchHealth: async () => ({
+        ok: true,
+        status: 200,
+        detail: 'OK'
+      }),
+      readText: createTextProbe(projectFiles),
+      fileExists: createFileProbe(projectFiles)
+    });
+
+    expect(report.storeAppointmentConfigApiClient).toEqual({
+      name: '门店预约 admin 配置 API client',
+      status: 'pass',
+      detail: '已封装四配置块读取和写入入口，写请求携带 X-Request-Id。'
+    });
   });
 });

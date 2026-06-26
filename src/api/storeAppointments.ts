@@ -98,6 +98,103 @@ export interface StoreAppointmentBookingConfig {
   appointmentRule: StoreAppointmentBookingRule;
 }
 
+export interface StoreAppointmentStoreProfile {
+  storeCode: string;
+  name: string;
+  industry: string;
+  phone: string;
+  address: string;
+  businessHours: string;
+  staffLabel: string;
+  projectLabel: string;
+  showPrice: boolean;
+  enabled: boolean;
+  updatedAt: string;
+}
+
+export interface StoreAppointmentStoreProfileUpdateRequest {
+  name: string;
+  industry: string;
+  phone: string;
+  address: string;
+  businessHours: string;
+  staffLabel: string;
+  projectLabel: string;
+  showPrice: boolean;
+}
+
+export interface StoreAppointmentServiceProject {
+  storeCode: string;
+  projectCode: string;
+  categoryId: string;
+  name: string;
+  summary: string;
+  durationMinutes: number;
+  priceText: string;
+  showPrice: boolean;
+  enabled: boolean;
+  updatedAt: string;
+}
+
+export interface StoreAppointmentServiceProjectUpdateRequest {
+  storeCode: string;
+  categoryId: string;
+  name: string;
+  summary: string;
+  durationMinutes: number;
+  priceText: string;
+  showPrice: boolean;
+  enabled: boolean;
+}
+
+export interface StoreAppointmentStaffRosterItem {
+  storeCode: string;
+  staffCode: string;
+  name: string;
+  role: string;
+  bio: string;
+  avatarUrl: string;
+  trustHighlights: string[];
+  enabled: boolean;
+  projectCodes: string[];
+  updatedAt: string;
+}
+
+export interface StoreAppointmentStaffRosterUpdateRequest {
+  storeCode: string;
+  name: string;
+  role: string;
+  bio: string;
+  avatarUrl: string;
+  trustHighlights: string[];
+  enabled: boolean;
+  projectCodes: string[];
+}
+
+export interface StoreAppointmentRules {
+  storeCode: string;
+  bookingWindowDays: number;
+  defaultDurationMinutes: number;
+  defaultSlots: string[];
+  confirmationHint: string;
+  cancelHint: string;
+  updatedAt: string;
+}
+
+export interface StoreAppointmentRulesUpdateRequest {
+  bookingWindowDays: number;
+  defaultDurationMinutes: number;
+  defaultSlots: string[];
+  confirmationHint: string;
+  cancelHint: string;
+}
+
+function requestIdHeaders(requestId: string) {
+  return {
+    'X-Request-Id': requestId
+  };
+}
+
 export function pageStoreAppointments(
   payload: StoreAppointmentPageRequest
 ): Promise<PageResult<StoreAppointmentItem>> {
@@ -129,5 +226,77 @@ export function getStoreAppointmentBookingConfig(
 ): Promise<StoreAppointmentBookingConfig> {
   return request<StoreAppointmentBookingConfig>(`/api/miniapps/${appCode}/stores/${storeCode}/booking-config`, {
     method: 'GET'
+  });
+}
+
+export function getStoreAppointmentStoreProfile(storeCode: string): Promise<StoreAppointmentStoreProfile> {
+  return request<StoreAppointmentStoreProfile>(`/api/admin/store-appointment-config/stores/${storeCode}`, {
+    method: 'GET'
+  });
+}
+
+export function updateStoreAppointmentStoreProfile(
+  storeCode: string,
+  payload: StoreAppointmentStoreProfileUpdateRequest,
+  requestId: string
+): Promise<StoreAppointmentStoreProfile> {
+  return request<StoreAppointmentStoreProfile>(`/api/admin/store-appointment-config/stores/${storeCode}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+    headers: requestIdHeaders(requestId)
+  });
+}
+
+export function getStoreAppointmentServiceCatalog(storeCode: string): Promise<StoreAppointmentServiceProject[]> {
+  return request<StoreAppointmentServiceProject[]>(`/api/admin/store-appointment-config/stores/${storeCode}/projects`, {
+    method: 'GET'
+  });
+}
+
+export function updateStoreAppointmentServiceCatalog(
+  projectCode: string,
+  payload: StoreAppointmentServiceProjectUpdateRequest,
+  requestId: string
+): Promise<StoreAppointmentServiceProject> {
+  return request<StoreAppointmentServiceProject>(`/api/admin/store-appointment-config/projects/${projectCode}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+    headers: requestIdHeaders(requestId)
+  });
+}
+
+export function getStoreAppointmentStaffRoster(storeCode: string): Promise<StoreAppointmentStaffRosterItem[]> {
+  return request<StoreAppointmentStaffRosterItem[]>(`/api/admin/store-appointment-config/stores/${storeCode}/staff`, {
+    method: 'GET'
+  });
+}
+
+export function updateStoreAppointmentStaffRoster(
+  staffCode: string,
+  payload: StoreAppointmentStaffRosterUpdateRequest,
+  requestId: string
+): Promise<StoreAppointmentStaffRosterItem> {
+  return request<StoreAppointmentStaffRosterItem>(`/api/admin/store-appointment-config/staff/${staffCode}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+    headers: requestIdHeaders(requestId)
+  });
+}
+
+export function getStoreAppointmentRules(storeCode: string): Promise<StoreAppointmentRules> {
+  return request<StoreAppointmentRules>(`/api/admin/store-appointment-config/rules/${storeCode}`, {
+    method: 'GET'
+  });
+}
+
+export function updateStoreAppointmentRules(
+  storeCode: string,
+  payload: StoreAppointmentRulesUpdateRequest,
+  requestId: string
+): Promise<StoreAppointmentRules> {
+  return request<StoreAppointmentRules>(`/api/admin/store-appointment-config/rules/${storeCode}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+    headers: requestIdHeaders(requestId)
   });
 }
