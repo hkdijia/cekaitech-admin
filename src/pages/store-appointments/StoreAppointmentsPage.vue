@@ -3,9 +3,12 @@ import { computed } from 'vue';
 import { onMounted, reactive, ref } from 'vue';
 import { Check, Close, Finished, Refresh, Search, View } from '@element-plus/icons-vue';
 import {
+  getStoreAppointmentStoreProfile,
   getStoreAppointmentBookingConfig,
   getStoreAppointmentDetail,
   pageStoreAppointments,
+  updateStoreAppointmentStoreProfile,
+  type StoreAppointmentStoreProfileUpdateRequest,
   updateStoreAppointmentStatus,
   type StoreAppointmentBookingConfig,
   type StoreAppointmentDetail,
@@ -26,6 +29,10 @@ const detail = ref<StoreAppointmentDetail | null>(null);
 const currentDetailId = ref<number | null>(null);
 const configLoading = ref(false);
 const bookingConfig = ref<StoreAppointmentBookingConfig | null>(null);
+const storeProfileLoading = ref(false);
+const storeProfileSaving = ref(false);
+const storeProfileError = ref('');
+const storeProfileSavedMessage = ref('');
 
 const query = reactive({
   pageNo: 1,
@@ -40,6 +47,21 @@ const query = reactive({
 const configQuery = reactive({
   appCode: 'store-appointment-template',
   storeCode: ''
+});
+
+const storeProfileQuery = reactive({
+  storeCode: ''
+});
+
+const storeProfileDraft = reactive<StoreAppointmentStoreProfileUpdateRequest>({
+  name: '',
+  industry: '',
+  phone: '',
+  address: '',
+  businessHours: '',
+  staffLabel: '',
+  projectLabel: '',
+  showPrice: true
 });
 
 const statusOptions = [
@@ -152,6 +174,7 @@ const adminConfigContract = [
 ];
 
 const canManageStatus = computed(() => auth.hasPermission('admin:store-appointment:manage'));
+const canManageStoreAppointmentConfig = computed(() => auth.hasPermission('admin:store-appointment-config:manage'));
 
 function normalizedText(value: string) {
   const trimmed = value.trim();
@@ -191,6 +214,22 @@ function formatStaffProjects(config: StoreAppointmentBookingConfig) {
     staffName: staffNameByCode.get(item.staffCode) ?? item.staffCode,
     projectName: projectNameByCode.get(item.projectCode) ?? item.projectCode
   }));
+}
+
+function assignStoreProfileDraft(payload: StoreAppointmentStoreProfileUpdateRequest) {
+  storeProfileDraft.name = payload.name;
+  storeProfileDraft.industry = payload.industry;
+  storeProfileDraft.phone = payload.phone;
+  storeProfileDraft.address = payload.address;
+  storeProfileDraft.businessHours = payload.businessHours;
+  storeProfileDraft.staffLabel = payload.staffLabel;
+  storeProfileDraft.projectLabel = payload.projectLabel;
+  storeProfileDraft.showPrice = payload.showPrice;
+}
+
+function createStoreProfileRequestId() {
+  const randomPart = Math.random().toString(16).slice(2);
+  return `store-config-${Date.now()}-${randomPart}`;
 }
 
 function statusActions(status: string) {
@@ -326,6 +365,45 @@ async function loadBookingConfig() {
   }
 }
 
+async function loadStoreProfile() {
+  const storeCode = normalizedText(storeProfileQuery.storeCode);
+  if (!storeCode || !canManageStoreAppointmentConfig.value) {
+    storeProfileError.value = storeCode ? '需要 admin:store-appointment-config:manage 权限' : '请先填写 storeCode';
+    return;
+  }
+  storeProfileLoading.value = true;
+  storeProfileError.value = '';
+  storeProfileSavedMessage.value = '';
+  try {
+    const result = await getStoreAppointmentStoreProfile(storeCode);
+    assignStoreProfileDraft(result);
+  } catch (error) {
+    storeProfileError.value = error instanceof Error ? error.message : '门店资料加载失败';
+  } finally {
+    storeProfileLoading.value = false;
+  }
+}
+
+async function saveStoreProfile() {
+  const storeCode = normalizedText(storeProfileQuery.storeCode);
+  if (!storeCode || !canManageStoreAppointmentConfig.value) {
+    storeProfileError.value = storeCode ? '需要 admin:store-appointment-config:manage 权限' : '请先填写 storeCode';
+    return;
+  }
+  storeProfileSaving.value = true;
+  storeProfileError.value = '';
+  storeProfileSavedMessage.value = '';
+  try {
+    const result = await updateStoreAppointmentStoreProfile(storeCode, { ...storeProfileDraft }, createStoreProfileRequestId());
+    assignStoreProfileDraft(result);
+    storeProfileSavedMessage.value = '门店资料已保存';
+  } catch (error) {
+    storeProfileError.value = error instanceof Error ? error.message : '门店资料保存失败';
+  } finally {
+    storeProfileSaving.value = false;
+  }
+}
+
 onMounted(() => {
   loadAppointments();
 });
@@ -443,6 +521,69 @@ onMounted(() => {
       <div class="excluded-row">
         <span v-for="item in demoOnlyExcluded" :key="item" class="excluded-chip">{{ item }}</span>
       </div>
+    </el-card>
+
+    <el-card shadow="never" class="store-profile-panel">
+      <template #header>
+        <div class="card-header">
+          <span>门店资料配置</span>
+          <el-tag type="success" effect="plain">仅保存中性展示字段</el-tag>
+        </div>
+      </template>
+      <el-alert
+        class="readonly-alert"
+        type="warning"
+        title="本区只编辑门店展示资料，不包含支付、会员、核销、客户资料、员工账号或真实排班。"
+        show-icon
+      />
+      <el-alert
+        v-if="!canManageStoreAppointmentConfig"
+        class="error-alert"
+        type="warning"
+        title="需要 admin:store-appointment-config:manage 权限"
+        show-icon
+      />
+      <template v-else>
+        <el-form class="filter-form" :inline="true" @submit.prevent>
+          <el-form-item label="门店">
+            <el-input v-model="storeProfileQuery.storeCode" class="config-input" clearable placeholder="配置 storeCode" @keyup.enter="loadStoreProfile" />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" :icon="Search" :loading="storeProfileLoading" @click="loadStoreProfile">读取门店资料</el-button>
+          </el-form-item>
+        </el-form>
+        <el-form class="store-profile-form" label-width="88px" @submit.prevent>
+          <el-form-item label="门店名称">
+            <el-input v-model="storeProfileDraft.name" placeholder="门店名称" />
+          </el-form-item>
+          <el-form-item label="行业">
+            <el-input v-model="storeProfileDraft.industry" placeholder="行业" />
+          </el-form-item>
+          <el-form-item label="展示电话">
+            <el-input v-model="storeProfileDraft.phone" placeholder="展示电话" />
+          </el-form-item>
+          <el-form-item label="地址">
+            <el-input v-model="storeProfileDraft.address" placeholder="门店地址" />
+          </el-form-item>
+          <el-form-item label="营业时间">
+            <el-input v-model="storeProfileDraft.businessHours" placeholder="营业时间" />
+          </el-form-item>
+          <el-form-item label="员工称谓">
+            <el-input v-model="storeProfileDraft.staffLabel" placeholder="员工称谓" />
+          </el-form-item>
+          <el-form-item label="项目称谓">
+            <el-input v-model="storeProfileDraft.projectLabel" placeholder="项目称谓" />
+          </el-form-item>
+          <el-form-item label="展示价格">
+            <el-switch v-model="storeProfileDraft.showPrice" />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" :loading="storeProfileSaving" @click="saveStoreProfile">保存门店资料</el-button>
+          </el-form-item>
+        </el-form>
+        <el-alert v-if="storeProfileError" class="error-alert" type="error" :title="storeProfileError" show-icon />
+        <el-alert v-if="storeProfileSavedMessage" class="readonly-alert" type="success" :title="storeProfileSavedMessage" show-icon />
+      </template>
     </el-card>
 
     <el-card shadow="never" class="api-gap-panel">
@@ -608,6 +749,7 @@ onMounted(() => {
 <style scoped>
 .config-panel,
 .readiness-panel,
+.store-profile-panel,
 .api-gap-panel,
 .filter-panel {
   margin-bottom: 16px;
@@ -655,6 +797,10 @@ onMounted(() => {
   display: grid;
   grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr);
   gap: 16px;
+}
+
+.store-profile-form {
+  max-width: 760px;
 }
 
 .excluded-row {

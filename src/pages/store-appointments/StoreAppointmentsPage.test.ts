@@ -4,9 +4,11 @@ import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
 import {
+  getStoreAppointmentStoreProfile,
   getStoreAppointmentBookingConfig,
   getStoreAppointmentDetail,
   pageStoreAppointments,
+  updateStoreAppointmentStoreProfile,
   updateStoreAppointmentStatus
 } from '../../api/storeAppointments';
 import { useAuthStore } from '../../stores/auth';
@@ -16,13 +18,17 @@ vi.mock('../../api/storeAppointments', () => ({
   pageStoreAppointments: vi.fn(),
   getStoreAppointmentDetail: vi.fn(),
   updateStoreAppointmentStatus: vi.fn(),
-  getStoreAppointmentBookingConfig: vi.fn()
+  getStoreAppointmentBookingConfig: vi.fn(),
+  getStoreAppointmentStoreProfile: vi.fn(),
+  updateStoreAppointmentStoreProfile: vi.fn()
 }));
 
 const pageStoreAppointmentsMock = vi.mocked(pageStoreAppointments);
 const getStoreAppointmentDetailMock = vi.mocked(getStoreAppointmentDetail);
 const updateStoreAppointmentStatusMock = vi.mocked(updateStoreAppointmentStatus);
 const getStoreAppointmentBookingConfigMock = vi.mocked(getStoreAppointmentBookingConfig);
+const getStoreAppointmentStoreProfileMock = vi.mocked(getStoreAppointmentStoreProfile);
+const updateStoreAppointmentStoreProfileMock = vi.mocked(updateStoreAppointmentStoreProfile);
 
 const appointmentItem = {
   appointmentId: 101,
@@ -107,6 +113,20 @@ const bookingConfig = {
   }
 };
 
+const storeProfile = {
+  storeCode: 'store-config-001',
+  name: '中性预约门店',
+  industry: 'beauty',
+  phone: '0571-00000000',
+  address: '杭州市示例路 1 号',
+  businessHours: '10:00-20:00',
+  staffLabel: '员工',
+  projectLabel: '项目',
+  showPrice: true,
+  enabled: true,
+  updatedAt: '2026-06-26T08:00:00'
+};
+
 function mountPage(permissions: string[] = ['admin:store-appointment:view', 'admin:store-appointment:manage']) {
   const pinia = createPinia();
   setActivePinia(pinia);
@@ -133,6 +153,10 @@ async function flushAsyncUpdates() {
   }
 }
 
+function inputValue(wrapper: ReturnType<typeof mount>, selector: string) {
+  return (wrapper.find(selector).element as HTMLInputElement).value;
+}
+
 describe('StoreAppointmentsPage', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -140,6 +164,8 @@ describe('StoreAppointmentsPage', () => {
     getStoreAppointmentDetailMock.mockReset();
     updateStoreAppointmentStatusMock.mockReset();
     getStoreAppointmentBookingConfigMock.mockReset();
+    getStoreAppointmentStoreProfileMock.mockReset();
+    updateStoreAppointmentStoreProfileMock.mockReset();
     pageStoreAppointmentsMock.mockResolvedValue({
       dataList: [appointmentItem],
       totalCount: 1
@@ -151,6 +177,13 @@ describe('StoreAppointmentsPage', () => {
       updatedAt: '2026-06-19T09:30:00'
     });
     getStoreAppointmentBookingConfigMock.mockResolvedValue(bookingConfig);
+    getStoreAppointmentStoreProfileMock.mockResolvedValue(storeProfile);
+    updateStoreAppointmentStoreProfileMock.mockResolvedValue({
+      ...storeProfile,
+      name: '新门店名',
+      phone: '0571-00000001',
+      updatedAt: '2026-06-26T08:10:00'
+    });
   });
 
   it('loads store appointments on mount and renders rows', async () => {
@@ -348,5 +381,76 @@ describe('StoreAppointmentsPage', () => {
     expect(buttonText).not.toContain('创建接口');
     expect(buttonText).not.toContain('保存配置');
     expect(buttonText).not.toContain('立即接入');
+  });
+
+  it('loads editable store profile block for config manager', async () => {
+    const wrapper = mountPage(['admin:store-appointment:view', 'admin:store-appointment-config:manage']);
+    await flushAsyncUpdates();
+
+    await wrapper.find('input[placeholder="配置 storeCode"]').setValue('store-config-001');
+    await wrapper.findAll('button').find((button) => button.text().includes('读取门店资料'))?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(getStoreAppointmentStoreProfileMock).toHaveBeenCalledWith('store-config-001');
+    expect(wrapper.text()).toContain('门店资料配置');
+    expect(wrapper.text()).toContain('仅保存中性展示字段');
+    expect(inputValue(wrapper, 'input[placeholder="门店名称"]')).toBe('中性预约门店');
+    expect(inputValue(wrapper, 'input[placeholder="展示电话"]')).toBe('0571-00000000');
+    expect(wrapper.text()).not.toContain('支付金额');
+    expect(wrapper.text()).not.toContain('会员权益');
+    expect(wrapper.text()).not.toContain('客户画像');
+  });
+
+  it('saves store profile draft with request id and keeps neutral fields only', async () => {
+    const wrapper = mountPage(['admin:store-appointment:view', 'admin:store-appointment-config:manage']);
+    await flushAsyncUpdates();
+
+    await wrapper.find('input[placeholder="配置 storeCode"]').setValue('store-config-001');
+    await wrapper.findAll('button').find((button) => button.text().includes('读取门店资料'))?.trigger('click');
+    await flushAsyncUpdates();
+    await wrapper.find('input[placeholder="门店名称"]').setValue('新门店名');
+    await wrapper.find('input[placeholder="展示电话"]').setValue('0571-00000001');
+    await wrapper.findAll('button').find((button) => button.text().includes('保存门店资料'))?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(updateStoreAppointmentStoreProfileMock).toHaveBeenCalledWith('store-config-001', {
+      name: '新门店名',
+      industry: 'beauty',
+      phone: '0571-00000001',
+      address: '杭州市示例路 1 号',
+      businessHours: '10:00-20:00',
+      staffLabel: '员工',
+      projectLabel: '项目',
+      showPrice: true
+    }, expect.stringMatching(/^store-config-/));
+    expect(wrapper.text()).toContain('门店资料已保存');
+    expect(inputValue(wrapper, 'input[placeholder="门店名称"]')).toBe('新门店名');
+  });
+
+  it('keeps store profile draft input when save fails', async () => {
+    updateStoreAppointmentStoreProfileMock.mockRejectedValueOnce(new Error('字段格式不符合要求，请检查后保存'));
+    const wrapper = mountPage(['admin:store-appointment:view', 'admin:store-appointment-config:manage']);
+    await flushAsyncUpdates();
+
+    await wrapper.find('input[placeholder="配置 storeCode"]').setValue('store-config-001');
+    await wrapper.findAll('button').find((button) => button.text().includes('读取门店资料'))?.trigger('click');
+    await flushAsyncUpdates();
+    await wrapper.find('input[placeholder="门店名称"]').setValue('失败后仍保留');
+    await wrapper.findAll('button').find((button) => button.text().includes('保存门店资料'))?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('字段格式不符合要求，请检查后保存');
+    expect(inputValue(wrapper, 'input[placeholder="门店名称"]')).toBe('失败后仍保留');
+  });
+
+  it('hides store profile edit controls without config manage permission', async () => {
+    const wrapper = mountPage(['admin:store-appointment:view']);
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('门店资料配置');
+    expect(wrapper.text()).toContain('需要 admin:store-appointment-config:manage 权限');
+    const buttonText = wrapper.findAll('button').map((button) => button.text()).join(' ');
+    expect(buttonText).not.toContain('读取门店资料');
+    expect(buttonText).not.toContain('保存门店资料');
   });
 });
