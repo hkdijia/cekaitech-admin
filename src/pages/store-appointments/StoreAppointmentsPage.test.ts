@@ -5,11 +5,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
 import {
   getStoreAppointmentServiceCatalog,
+  getStoreAppointmentStaffRoster,
   getStoreAppointmentStoreProfile,
   getStoreAppointmentBookingConfig,
   getStoreAppointmentDetail,
   pageStoreAppointments,
   updateStoreAppointmentServiceCatalog,
+  updateStoreAppointmentStaffRoster,
   updateStoreAppointmentStoreProfile,
   updateStoreAppointmentStatus
 } from '../../api/storeAppointments';
@@ -24,7 +26,9 @@ vi.mock('../../api/storeAppointments', () => ({
   getStoreAppointmentStoreProfile: vi.fn(),
   updateStoreAppointmentStoreProfile: vi.fn(),
   getStoreAppointmentServiceCatalog: vi.fn(),
-  updateStoreAppointmentServiceCatalog: vi.fn()
+  updateStoreAppointmentServiceCatalog: vi.fn(),
+  getStoreAppointmentStaffRoster: vi.fn(),
+  updateStoreAppointmentStaffRoster: vi.fn()
 }));
 
 const pageStoreAppointmentsMock = vi.mocked(pageStoreAppointments);
@@ -35,6 +39,8 @@ const getStoreAppointmentStoreProfileMock = vi.mocked(getStoreAppointmentStorePr
 const updateStoreAppointmentStoreProfileMock = vi.mocked(updateStoreAppointmentStoreProfile);
 const getStoreAppointmentServiceCatalogMock = vi.mocked(getStoreAppointmentServiceCatalog);
 const updateStoreAppointmentServiceCatalogMock = vi.mocked(updateStoreAppointmentServiceCatalog);
+const getStoreAppointmentStaffRosterMock = vi.mocked(getStoreAppointmentStaffRoster);
+const updateStoreAppointmentStaffRosterMock = vi.mocked(updateStoreAppointmentStaffRoster);
 
 const appointmentItem = {
   appointmentId: 101,
@@ -148,6 +154,21 @@ const serviceCatalog = [
   }
 ];
 
+const staffRoster = [
+  {
+    storeCode: 'store-config-001',
+    staffCode: 'staff-001',
+    name: '员工 A',
+    role: '服务顾问',
+    bio: '擅长基础服务',
+    avatarUrl: '',
+    trustHighlights: ['3 年经验'],
+    enabled: true,
+    projectCodes: ['basic-service'],
+    updatedAt: '2026-06-26T08:00:00'
+  }
+];
+
 function mountPage(permissions: string[] = ['admin:store-appointment:view', 'admin:store-appointment:manage']) {
   const pinia = createPinia();
   setActivePinia(pinia);
@@ -189,6 +210,8 @@ describe('StoreAppointmentsPage', () => {
     updateStoreAppointmentStoreProfileMock.mockReset();
     getStoreAppointmentServiceCatalogMock.mockReset();
     updateStoreAppointmentServiceCatalogMock.mockReset();
+    getStoreAppointmentStaffRosterMock.mockReset();
+    updateStoreAppointmentStaffRosterMock.mockReset();
     pageStoreAppointmentsMock.mockResolvedValue({
       dataList: [appointmentItem],
       totalCount: 1
@@ -213,6 +236,13 @@ describe('StoreAppointmentsPage', () => {
       name: '基础护理',
       durationMinutes: 75,
       updatedAt: '2026-06-26T08:20:00'
+    });
+    getStoreAppointmentStaffRosterMock.mockResolvedValue(staffRoster);
+    updateStoreAppointmentStaffRosterMock.mockResolvedValue({
+      ...staffRoster[0],
+      name: '员工 B',
+      role: '资深顾问',
+      updatedAt: '2026-06-26T08:30:00'
     });
   });
 
@@ -559,5 +589,85 @@ describe('StoreAppointmentsPage', () => {
     const buttonText = wrapper.findAll('button').map((button) => button.text()).join(' ');
     expect(buttonText).not.toContain('读取项目目录');
     expect(buttonText).not.toContain('保存项目');
+  });
+
+  it('loads staff roster block and selects a staff draft for config manager', async () => {
+    const wrapper = mountPage(['admin:store-appointment:view', 'admin:store-appointment-config:manage']);
+    await flushAsyncUpdates();
+
+    await wrapper.find('input[placeholder="员工名册 storeCode"]').setValue('store-config-001');
+    await wrapper.findAll('button').find((button) => button.text().includes('读取员工名册'))?.trigger('click');
+    await flushAsyncUpdates();
+    await wrapper.findAll('button').find((button) => button.text().includes('编辑员工'))?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(getStoreAppointmentStaffRosterMock).toHaveBeenCalledWith('store-config-001');
+    expect(wrapper.text()).toContain('员工名册配置');
+    expect(wrapper.text()).toContain('员工 A');
+    expect(inputValue(wrapper, 'input[placeholder="员工姓名"]')).toBe('员工 A');
+    expect(inputValue(wrapper, 'input[placeholder="员工角色"]')).toBe('服务顾问');
+    expect(wrapper.find('input[placeholder="loginAccountId"]').exists()).toBe(false);
+    expect(wrapper.find('input[placeholder="rolePermissionId"]').exists()).toBe(false);
+    expect(wrapper.find('input[placeholder="shiftScheduleId"]').exists()).toBe(false);
+    expect(wrapper.find('input[placeholder="privateContact"]').exists()).toBe(false);
+  });
+
+  it('saves selected staff draft with request id and store scope', async () => {
+    const wrapper = mountPage(['admin:store-appointment:view', 'admin:store-appointment-config:manage']);
+    await flushAsyncUpdates();
+
+    await wrapper.find('input[placeholder="员工名册 storeCode"]').setValue('store-config-001');
+    await wrapper.findAll('button').find((button) => button.text().includes('读取员工名册'))?.trigger('click');
+    await flushAsyncUpdates();
+    await wrapper.findAll('button').find((button) => button.text().includes('编辑员工'))?.trigger('click');
+    await flushAsyncUpdates();
+    await wrapper.find('input[placeholder="员工姓名"]').setValue('员工 B');
+    await wrapper.find('input[placeholder="员工角色"]').setValue('资深顾问');
+    await wrapper.find('textarea[placeholder="员工亮点，每行一条"]').setValue('5 年经验\n高复购服务');
+    await wrapper.find('textarea[placeholder="可服务项目 code，每行一条"]').setValue('basic-service\nadvanced-service');
+    await wrapper.findAll('button').find((button) => button.text().includes('保存员工'))?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(updateStoreAppointmentStaffRosterMock).toHaveBeenCalledWith('staff-001', {
+      storeCode: 'store-config-001',
+      name: '员工 B',
+      role: '资深顾问',
+      bio: '擅长基础服务',
+      avatarUrl: '',
+      trustHighlights: ['5 年经验', '高复购服务'],
+      enabled: true,
+      projectCodes: ['basic-service', 'advanced-service']
+    }, expect.stringMatching(/^store-config-/));
+    expect(wrapper.text()).toContain('员工已保存');
+    expect(inputValue(wrapper, 'input[placeholder="员工姓名"]')).toBe('员工 B');
+  });
+
+  it('keeps selected staff draft when save fails', async () => {
+    updateStoreAppointmentStaffRosterMock.mockRejectedValueOnce(new Error('该员工存在未完结预约，暂不能停用'));
+    const wrapper = mountPage(['admin:store-appointment:view', 'admin:store-appointment-config:manage']);
+    await flushAsyncUpdates();
+
+    await wrapper.find('input[placeholder="员工名册 storeCode"]').setValue('store-config-001');
+    await wrapper.findAll('button').find((button) => button.text().includes('读取员工名册'))?.trigger('click');
+    await flushAsyncUpdates();
+    await wrapper.findAll('button').find((button) => button.text().includes('编辑员工'))?.trigger('click');
+    await flushAsyncUpdates();
+    await wrapper.find('input[placeholder="员工姓名"]').setValue('失败后仍保留员工');
+    await wrapper.findAll('button').find((button) => button.text().includes('保存员工'))?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('该员工存在未完结预约，暂不能停用');
+    expect(inputValue(wrapper, 'input[placeholder="员工姓名"]')).toBe('失败后仍保留员工');
+  });
+
+  it('hides staff roster edit controls without config manage permission', async () => {
+    const wrapper = mountPage(['admin:store-appointment:view']);
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('员工名册配置');
+    expect(wrapper.text()).toContain('需要 admin:store-appointment-config:manage 权限');
+    const buttonText = wrapper.findAll('button').map((button) => button.text()).join(' ');
+    expect(buttonText).not.toContain('读取员工名册');
+    expect(buttonText).not.toContain('保存员工');
   });
 });
