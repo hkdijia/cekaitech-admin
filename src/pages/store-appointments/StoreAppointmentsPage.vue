@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { onMounted, reactive, ref } from 'vue';
-import { Check, Close, Finished, Refresh, Search, View } from '@element-plus/icons-vue';
+import { Check, Close, Finished, View } from '@element-plus/icons-vue';
 import {
   getStoreAppointmentDetail,
   pageStoreAppointments,
@@ -14,6 +14,7 @@ import StoreAppointmentAdminConfigContractPanel from './components/StoreAppointm
 import StoreAppointmentBookingConfigSnapshotPanel from './components/StoreAppointmentBookingConfigSnapshotPanel.vue';
 import StoreAppointmentConfigReadinessPanel from './components/StoreAppointmentConfigReadinessPanel.vue';
 import StoreAppointmentConfigRollbackPanel from './components/StoreAppointmentConfigRollbackPanel.vue';
+import StoreAppointmentFilterPanel from './components/StoreAppointmentFilterPanel.vue';
 import StoreAppointmentRulesPanel from './components/StoreAppointmentRulesPanel.vue';
 import StoreAppointmentServiceCatalogPanel from './components/StoreAppointmentServiceCatalogPanel.vue';
 import StoreAppointmentStaffRosterPanel from './components/StoreAppointmentStaffRosterPanel.vue';
@@ -221,37 +222,13 @@ onMounted(() => {
 
     <StoreAppointmentAdminConfigContractPanel />
 
-    <el-card shadow="never" class="filter-panel">
-      <el-form class="filter-form" :inline="true" @submit.prevent>
-        <el-form-item label="门店">
-          <el-input v-model="query.storeCode" class="code-input" clearable placeholder="storeCode" @keyup.enter="searchAppointments" />
-        </el-form-item>
-        <el-form-item label="项目">
-          <el-input v-model="query.projectCode" class="code-input" clearable placeholder="projectCode" @keyup.enter="searchAppointments" />
-        </el-form-item>
-        <el-form-item label="员工">
-          <el-input v-model="query.staffCode" class="code-input" clearable placeholder="staffCode" @keyup.enter="searchAppointments" />
-        </el-form-item>
-        <el-form-item label="预约日">
-          <el-input
-            v-model="query.appointmentDate"
-            class="date-input"
-            clearable
-            placeholder="YYYY-MM-DD"
-            @keyup.enter="searchAppointments"
-          />
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="query.status" class="status-select">
-            <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" :icon="Search" :loading="loading" @click="searchAppointments">查询</el-button>
-          <el-button :icon="Refresh" @click="resetFilters">重置</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+    <StoreAppointmentFilterPanel
+      :query="query"
+      :loading="loading"
+      :status-options="statusOptions"
+      @search="searchAppointments"
+      @reset="resetFilters"
+    />
 
     <el-alert v-if="loadError" class="error-alert" type="error" :title="loadError" show-icon />
 
@@ -359,8 +336,7 @@ onMounted(() => {
 .store-profile-panel,
 .service-catalog-panel,
 .staff-roster-panel,
-.rollback-panel,
-.filter-panel {
+.rollback-panel {
   margin-bottom: 16px;
 }
 
@@ -371,26 +347,8 @@ onMounted(() => {
   gap: 12px;
 }
 
-.filter-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 8px;
-}
-
-.code-input {
-  width: 140px;
-}
-
 .config-input {
   width: 220px;
-}
-
-.date-input {
-  width: 140px;
-}
-
-.status-select {
-  width: 120px;
 }
 
 .error-alert,
