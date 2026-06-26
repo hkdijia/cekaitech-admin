@@ -2,15 +2,15 @@
 
 ## 当前任务
 
-- 名称：门店预约 admin 员工名册配置 block 切片
-- OpenSpec 变更：无。承接 `miniapp-backend` 已验证的门店预约 admin 配置 frontend-ready-contract，在 `cekaitech-admin` 接入员工名册 block 的读取、单员工草稿、保存状态和失败保留输入。
+- 名称：门店预约 admin 预约规则配置 block 切片
+- OpenSpec 变更：无。承接 `miniapp-backend` 已验证的门店预约 admin 配置 frontend-ready-contract，在 `cekaitech-admin` 接入预约规则 block 的读取、基础规则草稿、保存状态和失败保留输入。
 
 ## 追溯信息
 
 - 反馈编号：`无`
 - 来源文档：本地工程接力、`miniapp-backend/docs/store-appointment-admin-config-frontend-flow-guide.md`
 - 本地台账：无
-- 当前状态：已验证，员工名册 block 完整质量验证已通过，待本地提交。
+- 当前状态：已验证，预约规则 block 完整质量验证已通过，待本地提交。
 
 ## 当前状态
 
@@ -20,9 +20,10 @@
 - 四配置块 API client 已具备：门店资料、项目目录、员工名册、预约规则的 GET/PUT 封装，写接口要求 `X-Request-Id`。
 - 页面已具备“门店资料配置”block，仅具备 `admin:store-appointment-config:manage` 权限时显示读取和保存入口。
 - 页面已具备“项目目录配置”block，可读取项目列表、选择单项目编辑草稿并保存。
-- 本轮新增“员工名册配置”block，可读取员工列表、选择单员工编辑草稿并保存。
-- 员工名册 block 只保存中性员工展示字段和项目 code，保存失败时保留用户草稿输入。
-- 当前页面仍不开放预约规则和回滚编辑入口。
+- 页面已具备“员工名册配置”block，可读取员工列表、选择单员工编辑草稿并保存。
+- 本轮新增“预约规则配置”block，可读取基础预约规则、编辑草稿并保存。
+- 预约规则 block 只保存可约窗口、默认时长、默认时段和提示文案，保存失败时保留用户草稿输入。
+- 当前页面仍不开放回滚编辑入口。
 
 ## 已完成
 
@@ -42,6 +43,9 @@
 - [反馈编号：无] `StoreAppointmentsPage.vue` 新增“员工名册配置”block，可按 `storeCode` 读取 `GET /api/admin/store-appointment-config/stores/{storeCode}/staff` 并选择单员工编辑。
 - [反馈编号：无] 员工保存调用 `PUT /api/admin/store-appointment-config/staff/{staffCode}`，请求体携带 `storeCode` 限定门店范围，并生成 `store-config-...` requestId。
 - [反馈编号：无] 员工名册 block 仅展示和保存 `name/role/bio/avatarUrl/trustHighlights/enabled/projectCodes`，不引入员工账号、权限、私联或真实排班字段。
+- [反馈编号：无] `StoreAppointmentsPage.vue` 新增“预约规则配置”block，可按 `storeCode` 读取 `GET /api/admin/store-appointment-config/rules/{storeCode}` 并编辑基础规则字段。
+- [反馈编号：无] 预约规则保存调用 `PUT /api/admin/store-appointment-config/rules/{storeCode}`，写请求生成 `store-config-...` requestId。
+- [反馈编号：无] 预约规则 block 仅展示和保存 `bookingWindowDays/defaultDurationMinutes/defaultSlots/confirmationHint/cancelHint`，不引入通知模板、退款规则、真实排班策略或客户账户策略字段。
 
 ## 最近验证
 
@@ -69,21 +73,25 @@
 - GREEN：同命令通过，1 个测试文件、21 项。
 - 定向组合：`npm.cmd run test -- --run src/api/storeAppointments.test.ts scripts/check-admin-integration-ready.test.mjs src/pages/store-appointments/StoreAppointmentsPage.test.ts`
   - 结果：通过，3 个测试文件、35 项。
+- RED：`npm.cmd run test -- --run src/pages/store-appointments/StoreAppointmentsPage.test.ts`
+  - 结果：失败于页面缺少“预约规则配置”block 和 `预约规则 storeCode` 输入，符合预期。
+- GREEN：同命令通过，1 个测试文件、25 项。
+- 定向组合：`npm.cmd run test -- --run src/api/storeAppointments.test.ts scripts/check-admin-integration-ready.test.mjs src/pages/store-appointments/StoreAppointmentsPage.test.ts`
+  - 结果：通过，3 个测试文件、39 项。
 - 收口：`npm.cmd run admin:check`
   - 结果：PASS 13 / WARN 1 / FAIL 0；WARN 为本地 `http://127.0.0.1:8080/api/health` 未启动，非阻塞。
 - 收口：`npm.cmd run quality`
-  - 结果：通过，44 个测试文件、256 项；`vue-tsc --noEmit` 和 `vite build` 通过，保留既有 PURE 注释和 chunk size warning。
+  - 结果：通过，44 个测试文件、260 项；`vue-tsc --noEmit` 和 `vite build` 通过，保留既有 PURE 注释和 chunk size warning。
 
 ## 未完成
 
-- 尚未新增预约规则等中性配置面的 admin 编辑入口。
-- 门店资料、项目目录和员工名册 block 尚未抽成独立组件，尚未接入更完整的后端错误码提示表。
+- 门店资料、项目目录、员工名册和预约规则 block 尚未抽成独立组件，尚未接入更完整的后端错误码提示表。
 - 尚未接入回滚预览、二次确认和执行。
 - 尚未做真实支付、会员、核销、客户资料、CRM 跟进、服务记录、员工账号、真实排班、消息通知、退款或客户账户策略。
 - 尚未做生产环境发布。
-- 尚未本地提交本轮员工名册 block 切片。
+- 尚未本地提交本轮预约规则 block 切片。
 
 ## 下一步
 
-1. 本地提交本轮员工名册 block 切片。
-2. 下一切片建议按 TDD 接入预约规则 block，仍不触碰真实排班、消息通知、退款、支付、会员、CRM 等能力。
+1. 本地提交本轮预约规则 block 切片。
+2. 下一切片建议按 TDD 接入回滚预览/确认/执行 Flow，仍不触碰真实支付、会员、CRM、服务记录或生产发布。

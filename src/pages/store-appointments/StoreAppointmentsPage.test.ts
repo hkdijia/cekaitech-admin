@@ -4,12 +4,14 @@ import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
 import {
+  getStoreAppointmentRules,
   getStoreAppointmentServiceCatalog,
   getStoreAppointmentStaffRoster,
   getStoreAppointmentStoreProfile,
   getStoreAppointmentBookingConfig,
   getStoreAppointmentDetail,
   pageStoreAppointments,
+  updateStoreAppointmentRules,
   updateStoreAppointmentServiceCatalog,
   updateStoreAppointmentStaffRoster,
   updateStoreAppointmentStoreProfile,
@@ -28,7 +30,9 @@ vi.mock('../../api/storeAppointments', () => ({
   getStoreAppointmentServiceCatalog: vi.fn(),
   updateStoreAppointmentServiceCatalog: vi.fn(),
   getStoreAppointmentStaffRoster: vi.fn(),
-  updateStoreAppointmentStaffRoster: vi.fn()
+  updateStoreAppointmentStaffRoster: vi.fn(),
+  getStoreAppointmentRules: vi.fn(),
+  updateStoreAppointmentRules: vi.fn()
 }));
 
 const pageStoreAppointmentsMock = vi.mocked(pageStoreAppointments);
@@ -41,6 +45,8 @@ const getStoreAppointmentServiceCatalogMock = vi.mocked(getStoreAppointmentServi
 const updateStoreAppointmentServiceCatalogMock = vi.mocked(updateStoreAppointmentServiceCatalog);
 const getStoreAppointmentStaffRosterMock = vi.mocked(getStoreAppointmentStaffRoster);
 const updateStoreAppointmentStaffRosterMock = vi.mocked(updateStoreAppointmentStaffRoster);
+const getStoreAppointmentRulesMock = vi.mocked(getStoreAppointmentRules);
+const updateStoreAppointmentRulesMock = vi.mocked(updateStoreAppointmentRules);
 
 const appointmentItem = {
   appointmentId: 101,
@@ -169,6 +175,16 @@ const staffRoster = [
   }
 ];
 
+const appointmentRules = {
+  storeCode: 'store-config-001',
+  bookingWindowDays: 14,
+  defaultDurationMinutes: 60,
+  defaultSlots: ['10:00', '14:00'],
+  confirmationHint: '到店前确认',
+  cancelHint: '如需取消请提前联系',
+  updatedAt: '2026-06-26T08:00:00'
+};
+
 function mountPage(permissions: string[] = ['admin:store-appointment:view', 'admin:store-appointment:manage']) {
   const pinia = createPinia();
   setActivePinia(pinia);
@@ -212,6 +228,8 @@ describe('StoreAppointmentsPage', () => {
     updateStoreAppointmentServiceCatalogMock.mockReset();
     getStoreAppointmentStaffRosterMock.mockReset();
     updateStoreAppointmentStaffRosterMock.mockReset();
+    getStoreAppointmentRulesMock.mockReset();
+    updateStoreAppointmentRulesMock.mockReset();
     pageStoreAppointmentsMock.mockResolvedValue({
       dataList: [appointmentItem],
       totalCount: 1
@@ -243,6 +261,14 @@ describe('StoreAppointmentsPage', () => {
       name: '员工 B',
       role: '资深顾问',
       updatedAt: '2026-06-26T08:30:00'
+    });
+    getStoreAppointmentRulesMock.mockResolvedValue(appointmentRules);
+    updateStoreAppointmentRulesMock.mockResolvedValue({
+      ...appointmentRules,
+      bookingWindowDays: 21,
+      defaultDurationMinutes: 75,
+      defaultSlots: ['09:30', '15:00'],
+      updatedAt: '2026-06-26T08:40:00'
     });
   });
 
@@ -669,5 +695,75 @@ describe('StoreAppointmentsPage', () => {
     const buttonText = wrapper.findAll('button').map((button) => button.text()).join(' ');
     expect(buttonText).not.toContain('读取员工名册');
     expect(buttonText).not.toContain('保存员工');
+  });
+
+  it('loads appointment rules block for config manager', async () => {
+    const wrapper = mountPage(['admin:store-appointment:view', 'admin:store-appointment-config:manage']);
+    await flushAsyncUpdates();
+
+    await wrapper.find('input[placeholder="预约规则 storeCode"]').setValue('store-config-001');
+    await wrapper.findAll('button').find((button) => button.text().includes('读取预约规则'))?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(getStoreAppointmentRulesMock).toHaveBeenCalledWith('store-config-001');
+    expect(wrapper.text()).toContain('预约规则配置');
+    expect(inputValue(wrapper, 'input[placeholder="可约窗口天数"]')).toBe('14');
+    expect(inputValue(wrapper, 'input[placeholder="默认服务时长"]')).toBe('60');
+    expect(wrapper.find('input[placeholder="notificationTemplateId"]').exists()).toBe(false);
+    expect(wrapper.find('input[placeholder="refundRuleId"]').exists()).toBe(false);
+    expect(wrapper.find('input[placeholder="realSchedulePolicyId"]').exists()).toBe(false);
+    expect(wrapper.find('input[placeholder="customerAccountPolicy"]').exists()).toBe(false);
+  });
+
+  it('saves appointment rules draft with request id and store scope', async () => {
+    const wrapper = mountPage(['admin:store-appointment:view', 'admin:store-appointment-config:manage']);
+    await flushAsyncUpdates();
+
+    await wrapper.find('input[placeholder="预约规则 storeCode"]').setValue('store-config-001');
+    await wrapper.findAll('button').find((button) => button.text().includes('读取预约规则'))?.trigger('click');
+    await flushAsyncUpdates();
+    await wrapper.find('input[placeholder="可约窗口天数"]').setValue('21');
+    await wrapper.find('input[placeholder="默认服务时长"]').setValue('75');
+    await wrapper.find('textarea[placeholder="默认时段，每行一条"]').setValue('09:30\n15:00');
+    await wrapper.find('input[placeholder="确认提示"]').setValue('请提前确认到店时间');
+    await wrapper.findAll('button').find((button) => button.text().includes('保存预约规则'))?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(updateStoreAppointmentRulesMock).toHaveBeenCalledWith('store-config-001', {
+      bookingWindowDays: 21,
+      defaultDurationMinutes: 75,
+      defaultSlots: ['09:30', '15:00'],
+      confirmationHint: '请提前确认到店时间',
+      cancelHint: '如需取消请提前联系'
+    }, expect.stringMatching(/^store-config-/));
+    expect(wrapper.text()).toContain('预约规则已保存');
+    expect(inputValue(wrapper, 'input[placeholder="可约窗口天数"]')).toBe('21');
+  });
+
+  it('keeps appointment rules draft when save fails', async () => {
+    updateStoreAppointmentRulesMock.mockRejectedValueOnce(new Error('默认时段格式不符合要求'));
+    const wrapper = mountPage(['admin:store-appointment:view', 'admin:store-appointment-config:manage']);
+    await flushAsyncUpdates();
+
+    await wrapper.find('input[placeholder="预约规则 storeCode"]').setValue('store-config-001');
+    await wrapper.findAll('button').find((button) => button.text().includes('读取预约规则'))?.trigger('click');
+    await flushAsyncUpdates();
+    await wrapper.find('input[placeholder="确认提示"]').setValue('失败后仍保留规则');
+    await wrapper.findAll('button').find((button) => button.text().includes('保存预约规则'))?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('默认时段格式不符合要求');
+    expect(inputValue(wrapper, 'input[placeholder="确认提示"]')).toBe('失败后仍保留规则');
+  });
+
+  it('hides appointment rules edit controls without config manage permission', async () => {
+    const wrapper = mountPage(['admin:store-appointment:view']);
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('预约规则配置');
+    expect(wrapper.text()).toContain('需要 admin:store-appointment-config:manage 权限');
+    const buttonText = wrapper.findAll('button').map((button) => button.text()).join(' ');
+    expect(buttonText).not.toContain('读取预约规则');
+    expect(buttonText).not.toContain('保存预约规则');
   });
 });
