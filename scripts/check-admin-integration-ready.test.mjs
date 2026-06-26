@@ -134,7 +134,7 @@ describe('admin integration readiness report', () => {
     expect(report.storeAppointmentContract.demoOnlyExcluded).toContain('simulated payment/writeoff/member content');
   });
 
-  it('reports candidate config admin api gaps without treating them as implemented endpoints', async () => {
+  it('reports backend-ready config admin contract without treating frontend forms as implemented', async () => {
     const report = await buildAdminIntegrationReadinessReport({
       backendBaseUrl: 'http://127.0.0.1:8080',
       fetchHealth: async () => ({
@@ -146,31 +146,33 @@ describe('admin integration readiness report', () => {
       fileExists: createFileProbe(projectFiles)
     });
 
-    expect(report.storeAppointmentContract.adminApiGaps).toEqual([
+    expect(report.storeAppointmentContract.adminConfigContract).toEqual([
       expect.objectContaining({
         surfaceKey: 'store-profile',
         requiredPermission: 'admin:store-appointment-config:manage',
-        status: 'missing-admin-api'
+        status: 'backend-ready-frontend-pending'
       }),
       expect.objectContaining({
         surfaceKey: 'service-catalog',
         requiredPermission: 'admin:store-appointment-config:manage',
-        status: 'missing-admin-api'
+        status: 'backend-ready-frontend-pending'
       }),
       expect.objectContaining({
         surfaceKey: 'staff-roster',
         requiredPermission: 'admin:store-appointment-config:manage',
-        status: 'missing-admin-api'
+        status: 'backend-ready-frontend-pending'
       }),
       expect.objectContaining({
         surfaceKey: 'appointment-rules',
         requiredPermission: 'admin:store-appointment-config:manage',
-        status: 'missing-admin-api'
+        status: 'backend-ready-frontend-pending'
       })
     ]);
-    expect(report.storeAppointmentContract.backendEndpoints).not.toContain('POST /api/admin/store-appointment-config/stores/{storeCode}');
-    expect(report.storeAppointmentContract.adminApiGaps[0].excludedFields).toContain('tenantId');
-    expect(report.storeAppointmentContract.adminApiGaps[1].excludedFields).toContain('paymentAmount');
+    expect(report.storeAppointmentContract.adminConfigContract[3].endpoints).toContain('GET /api/admin/store-appointment-config/rules/{storeCode}');
+    expect(report.storeAppointmentContract.adminConfigContract[3].endpoints).toContain('PUT /api/admin/store-appointment-config/rules/{storeCode}');
+    expect(report.storeAppointmentContract.adminConfigContract[3].endpoints).not.toContain('GET /api/admin/store-appointment-config/stores/{storeCode}/rules');
+    expect(report.storeAppointmentContract.adminConfigContract[0].excludedFields).toContain('tenantId');
+    expect(report.storeAppointmentContract.adminConfigContract[1].excludedFields).toContain('paymentAmount');
   });
 
   it('checks store appointment read-only modules after first slice lands', async () => {

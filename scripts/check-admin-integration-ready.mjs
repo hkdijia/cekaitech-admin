@@ -147,12 +147,12 @@ function buildStoreAppointmentContract() {
       'wx storage demo keys',
       'diagnosis/medical-record wording'
     ],
-    adminApiGaps: [
+    adminConfigContract: [
       {
         surfaceKey: 'store-profile',
-        status: 'missing-admin-api',
+        status: 'backend-ready-frontend-pending',
         requiredPermission: 'admin:store-appointment-config:manage',
-        candidateEndpoints: [
+        endpoints: [
           'GET /api/admin/store-appointment-config/stores/{storeCode}',
           'PUT /api/admin/store-appointment-config/stores/{storeCode}'
         ],
@@ -161,9 +161,9 @@ function buildStoreAppointmentContract() {
       },
       {
         surfaceKey: 'service-catalog',
-        status: 'missing-admin-api',
+        status: 'backend-ready-frontend-pending',
         requiredPermission: 'admin:store-appointment-config:manage',
-        candidateEndpoints: [
+        endpoints: [
           'GET /api/admin/store-appointment-config/stores/{storeCode}/projects',
           'POST /api/admin/store-appointment-config/stores/{storeCode}/projects',
           'PUT /api/admin/store-appointment-config/projects/{projectCode}'
@@ -173,9 +173,9 @@ function buildStoreAppointmentContract() {
       },
       {
         surfaceKey: 'staff-roster',
-        status: 'missing-admin-api',
+        status: 'backend-ready-frontend-pending',
         requiredPermission: 'admin:store-appointment-config:manage',
-        candidateEndpoints: [
+        endpoints: [
           'GET /api/admin/store-appointment-config/stores/{storeCode}/staff',
           'POST /api/admin/store-appointment-config/stores/{storeCode}/staff',
           'PUT /api/admin/store-appointment-config/staff/{staffCode}',
@@ -186,11 +186,11 @@ function buildStoreAppointmentContract() {
       },
       {
         surfaceKey: 'appointment-rules',
-        status: 'missing-admin-api',
+        status: 'backend-ready-frontend-pending',
         requiredPermission: 'admin:store-appointment-config:manage',
-        candidateEndpoints: [
-          'GET /api/admin/store-appointment-config/stores/{storeCode}/rules',
-          'PUT /api/admin/store-appointment-config/stores/{storeCode}/rules'
+        endpoints: [
+          'GET /api/admin/store-appointment-config/rules/{storeCode}',
+          'PUT /api/admin/store-appointment-config/rules/{storeCode}'
         ],
         writableFields: ['bookingWindowDays', 'defaultDurationMinutes', 'defaultSlots', 'confirmationHint', 'cancelHint'],
         excludedFields: ['notificationTemplateId', 'refundRuleId', 'realSchedulePolicyId', 'customerAccountPolicy']
@@ -297,8 +297,8 @@ export function formatAdminIntegrationReadinessReport(report) {
     '配置面 readiness',
     ...report.storeAppointmentContract.configSurfaces.map((surface) => `${surface.name}(${surface.key})：${surface.status} - ${surface.note}`),
     `demo-only-excluded：${report.storeAppointmentContract.demoOnlyExcluded.join('、')}`,
-    'admin API 缺口',
-    ...report.storeAppointmentContract.adminApiGaps.map((gap) => `${gap.surfaceKey}：${gap.status}；权限 ${gap.requiredPermission}；候选接口 ${gap.candidateEndpoints.join(' / ')}；排除字段 ${gap.excludedFields.join('、')}`),
+    'admin 配置契约',
+    ...report.storeAppointmentContract.adminConfigContract.map((item) => `${item.surfaceKey}：${item.status}；权限 ${item.requiredPermission}；后端接口 ${item.endpoints.join(' / ')}；排除字段 ${item.excludedFields.join('、')}`),
     '',
     '下一步',
     ...report.nextSteps.map((step, index) => `${index + 1}. ${step}`)

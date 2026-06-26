@@ -329,16 +329,17 @@ describe('StoreAppointmentsPage', () => {
     expect(buttonText).not.toContain('写入配置');
   });
 
-  it('shows candidate config admin api gaps as missing controlled backend APIs', async () => {
+  it('shows backend-ready config admin contract without enabling edit controls', async () => {
     const wrapper = mountPage(['admin:store-appointment:view', 'admin:store-appointment:manage']);
     await flushAsyncUpdates();
 
-    expect(wrapper.text()).toContain('admin API 缺口');
+    expect(wrapper.text()).toContain('admin 配置契约');
     expect(wrapper.text()).toContain('/api/admin/store-appointment-config/stores');
     expect(wrapper.text()).toContain('/api/admin/store-appointment-config/projects');
     expect(wrapper.text()).toContain('/api/admin/store-appointment-config/staff');
-    expect(wrapper.text()).toContain('/api/admin/store-appointment-config/stores/{storeCode}/rules');
-    expect(wrapper.text()).toContain('missing-admin-api');
+    expect(wrapper.text()).toContain('/api/admin/store-appointment-config/rules/{storeCode}');
+    expect(wrapper.text()).not.toContain('/api/admin/store-appointment-config/stores/{storeCode}/rules');
+    expect(wrapper.text()).toContain('backend-ready-frontend-pending');
     expect(wrapper.text()).toContain('admin:store-appointment-config:manage');
     expect(wrapper.text()).toContain('tenantId');
     expect(wrapper.text()).toContain('paymentAmount');
