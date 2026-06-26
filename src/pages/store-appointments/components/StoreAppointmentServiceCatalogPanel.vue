@@ -7,6 +7,7 @@ import {
   type StoreAppointmentServiceProject,
   type StoreAppointmentServiceProjectUpdateRequest
 } from '../../../api/storeAppointments';
+import { createStoreConfigRequestId, normalizeOptionalText } from './storeAppointmentConfigPanelUtils';
 
 defineProps<{
   canManage: boolean;
@@ -34,11 +35,6 @@ const serviceProjectDraft = reactive<StoreAppointmentServiceProjectUpdateRequest
   enabled: true
 });
 
-function normalizedText(value: string) {
-  const trimmed = value.trim();
-  return trimmed || undefined;
-}
-
 function assignServiceProjectDraft(payload: StoreAppointmentServiceProject) {
   selectedServiceProjectCode.value = payload.projectCode;
   serviceProjectDraft.storeCode = payload.storeCode;
@@ -51,13 +47,8 @@ function assignServiceProjectDraft(payload: StoreAppointmentServiceProject) {
   serviceProjectDraft.enabled = payload.enabled;
 }
 
-function createStoreConfigRequestId() {
-  const randomPart = Math.random().toString(16).slice(2);
-  return `store-config-${Date.now()}-${randomPart}`;
-}
-
 async function loadServiceCatalog() {
-  const storeCode = normalizedText(serviceCatalogQuery.storeCode);
+  const storeCode = normalizeOptionalText(serviceCatalogQuery.storeCode);
   if (!storeCode) {
     serviceCatalogError.value = '请先填写 storeCode';
     return;

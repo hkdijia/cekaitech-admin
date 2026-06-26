@@ -7,6 +7,7 @@ import {
   type StoreAppointmentRules,
   type StoreAppointmentRulesUpdateRequest
 } from '../../../api/storeAppointments';
+import { createStoreConfigRequestId, normalizeOptionalText, splitListText } from './storeAppointmentConfigPanelUtils';
 
 defineProps<{
   canManage: boolean;
@@ -30,18 +31,6 @@ const appointmentRulesDraft = reactive<StoreAppointmentRulesUpdateRequest>({
   cancelHint: ''
 });
 
-function normalizedText(value: string) {
-  const trimmed = value.trim();
-  return trimmed || undefined;
-}
-
-function splitListText(value: string) {
-  return value
-    .split(/\r?\n|,/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
 function assignAppointmentRulesDraft(payload: StoreAppointmentRules) {
   appointmentRulesDraft.bookingWindowDays = payload.bookingWindowDays;
   appointmentRulesDraft.defaultDurationMinutes = payload.defaultDurationMinutes;
@@ -51,13 +40,8 @@ function assignAppointmentRulesDraft(payload: StoreAppointmentRules) {
   appointmentRuleSlotsText.value = payload.defaultSlots.join('\n');
 }
 
-function createStoreConfigRequestId() {
-  const randomPart = Math.random().toString(16).slice(2);
-  return `store-config-${Date.now()}-${randomPart}`;
-}
-
 async function loadAppointmentRules() {
-  const storeCode = normalizedText(appointmentRulesQuery.storeCode);
+  const storeCode = normalizeOptionalText(appointmentRulesQuery.storeCode);
   if (!storeCode) {
     appointmentRulesError.value = '请先填写 storeCode';
     return;
@@ -76,7 +60,7 @@ async function loadAppointmentRules() {
 }
 
 async function saveAppointmentRules() {
-  const storeCode = normalizedText(appointmentRulesQuery.storeCode);
+  const storeCode = normalizeOptionalText(appointmentRulesQuery.storeCode);
   if (!storeCode) {
     appointmentRulesError.value = '请先填写 storeCode';
     return;

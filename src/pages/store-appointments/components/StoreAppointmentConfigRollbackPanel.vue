@@ -6,6 +6,7 @@ import {
   rollbackStoreAppointmentConfig,
   type StoreAppointmentRollbackPreview
 } from '../../../api/storeAppointments';
+import { createStoreConfigRequestId, normalizeOptionalText } from './storeAppointmentConfigPanelUtils';
 
 defineProps<{
   canManage: boolean;
@@ -22,11 +23,6 @@ const rollbackQuery = reactive({
   storeCode: '',
   auditLogId: ''
 });
-
-function normalizedText(value: string) {
-  const trimmed = value.trim();
-  return trimmed || undefined;
-}
 
 function formatSlots(slots: string[]) {
   return slots.length > 0 ? slots.join(' / ') : '-';
@@ -49,13 +45,8 @@ function rollbackValueEntries(preview: StoreAppointmentRollbackPreview) {
   }));
 }
 
-function createStoreConfigRequestId() {
-  const randomPart = Math.random().toString(16).slice(2);
-  return `store-config-${Date.now()}-${randomPart}`;
-}
-
 async function previewConfigRollback() {
-  const storeCode = normalizedText(rollbackQuery.storeCode);
+  const storeCode = normalizeOptionalText(rollbackQuery.storeCode);
   const auditLogId = Number(rollbackQuery.auditLogId);
   if (!storeCode || !Number.isFinite(auditLogId) || auditLogId <= 0) {
     rollbackError.value = storeCode ? '请填写有效审计记录 ID' : '请先填写 storeCode';
@@ -77,7 +68,7 @@ async function previewConfigRollback() {
 }
 
 async function executeConfigRollback() {
-  const storeCode = normalizedText(rollbackQuery.storeCode);
+  const storeCode = normalizeOptionalText(rollbackQuery.storeCode);
   const auditLogId = Number(rollbackQuery.auditLogId);
   if (!storeCode || !Number.isFinite(auditLogId) || auditLogId <= 0) {
     rollbackError.value = storeCode ? '请填写有效审计记录 ID' : '请先填写 storeCode';

@@ -6,6 +6,7 @@ import {
   updateStoreAppointmentStoreProfile,
   type StoreAppointmentStoreProfileUpdateRequest
 } from '../../../api/storeAppointments';
+import { createStoreConfigRequestId, normalizeOptionalText } from './storeAppointmentConfigPanelUtils';
 
 defineProps<{
   canManage: boolean;
@@ -31,11 +32,6 @@ const storeProfileDraft = reactive<StoreAppointmentStoreProfileUpdateRequest>({
   showPrice: true
 });
 
-function normalizedText(value: string) {
-  const trimmed = value.trim();
-  return trimmed || undefined;
-}
-
 function assignStoreProfileDraft(payload: StoreAppointmentStoreProfileUpdateRequest) {
   storeProfileDraft.name = payload.name;
   storeProfileDraft.industry = payload.industry;
@@ -47,13 +43,8 @@ function assignStoreProfileDraft(payload: StoreAppointmentStoreProfileUpdateRequ
   storeProfileDraft.showPrice = payload.showPrice;
 }
 
-function createStoreConfigRequestId() {
-  const randomPart = Math.random().toString(16).slice(2);
-  return `store-config-${Date.now()}-${randomPart}`;
-}
-
 async function loadStoreProfile() {
-  const storeCode = normalizedText(storeProfileQuery.storeCode);
+  const storeCode = normalizeOptionalText(storeProfileQuery.storeCode);
   if (!storeCode) {
     storeProfileError.value = '请先填写 storeCode';
     return;
@@ -72,7 +63,7 @@ async function loadStoreProfile() {
 }
 
 async function saveStoreProfile() {
-  const storeCode = normalizedText(storeProfileQuery.storeCode);
+  const storeCode = normalizeOptionalText(storeProfileQuery.storeCode);
   if (!storeCode) {
     storeProfileError.value = '请先填写 storeCode';
     return;

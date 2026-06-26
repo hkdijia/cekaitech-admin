@@ -7,6 +7,7 @@ import {
   type StoreAppointmentStaffRosterItem,
   type StoreAppointmentStaffRosterUpdateRequest
 } from '../../../api/storeAppointments';
+import { createStoreConfigRequestId, normalizeOptionalText, splitListText } from './storeAppointmentConfigPanelUtils';
 
 defineProps<{
   canManage: boolean;
@@ -36,18 +37,6 @@ const staffRosterDraft = reactive<StoreAppointmentStaffRosterUpdateRequest>({
   projectCodes: []
 });
 
-function normalizedText(value: string) {
-  const trimmed = value.trim();
-  return trimmed || undefined;
-}
-
-function splitListText(value: string) {
-  return value
-    .split(/\r?\n|,/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
 function formatSlots(slots: string[]) {
   return slots.length > 0 ? slots.join(' / ') : '-';
 }
@@ -66,13 +55,8 @@ function assignStaffRosterDraft(payload: StoreAppointmentStaffRosterItem) {
   staffProjectCodesText.value = payload.projectCodes.join('\n');
 }
 
-function createStoreConfigRequestId() {
-  const randomPart = Math.random().toString(16).slice(2);
-  return `store-config-${Date.now()}-${randomPart}`;
-}
-
 async function loadStaffRoster() {
-  const storeCode = normalizedText(staffRosterQuery.storeCode);
+  const storeCode = normalizeOptionalText(staffRosterQuery.storeCode);
   if (!storeCode) {
     staffRosterError.value = '请先填写 storeCode';
     return;
