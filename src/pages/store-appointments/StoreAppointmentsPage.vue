@@ -3,13 +3,9 @@ import { computed } from 'vue';
 import { onMounted, reactive, ref } from 'vue';
 import { Check, Close, Finished, Refresh, Search, View } from '@element-plus/icons-vue';
 import {
-  getStoreAppointmentRules,
   getStoreAppointmentBookingConfig,
   getStoreAppointmentDetail,
   pageStoreAppointments,
-  updateStoreAppointmentRules,
-  type StoreAppointmentRules,
-  type StoreAppointmentRulesUpdateRequest,
   updateStoreAppointmentStatus,
   type StoreAppointmentBookingConfig,
   type StoreAppointmentDetail,
@@ -17,6 +13,7 @@ import {
 } from '../../api/storeAppointments';
 import { useAuthStore } from '../../stores/auth';
 import StoreAppointmentConfigRollbackPanel from './components/StoreAppointmentConfigRollbackPanel.vue';
+import StoreAppointmentRulesPanel from './components/StoreAppointmentRulesPanel.vue';
 import StoreAppointmentServiceCatalogPanel from './components/StoreAppointmentServiceCatalogPanel.vue';
 import StoreAppointmentStaffRosterPanel from './components/StoreAppointmentStaffRosterPanel.vue';
 import StoreAppointmentStoreProfilePanel from './components/StoreAppointmentStoreProfilePanel.vue';
@@ -34,11 +31,6 @@ const detail = ref<StoreAppointmentDetail | null>(null);
 const currentDetailId = ref<number | null>(null);
 const configLoading = ref(false);
 const bookingConfig = ref<StoreAppointmentBookingConfig | null>(null);
-const appointmentRulesLoading = ref(false);
-const appointmentRulesSaving = ref(false);
-const appointmentRulesError = ref('');
-const appointmentRulesSavedMessage = ref('');
-const appointmentRuleSlotsText = ref('');
 
 const query = reactive({
   pageNo: 1,
@@ -53,18 +45,6 @@ const query = reactive({
 const configQuery = reactive({
   appCode: 'store-appointment-template',
   storeCode: ''
-});
-
-const appointmentRulesQuery = reactive({
-  storeCode: ''
-});
-
-const appointmentRulesDraft = reactive<StoreAppointmentRulesUpdateRequest>({
-  bookingWindowDays: 14,
-  defaultDurationMinutes: 60,
-  defaultSlots: [],
-  confirmationHint: '',
-  cancelHint: ''
 });
 
 const statusOptions = [
@@ -209,13 +189,6 @@ function formatSlots(slots: string[]) {
   return slots.length > 0 ? slots.join(' / ') : '-';
 }
 
-function splitListText(value: string) {
-  return value
-    .split(/\r?\n|,/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
 function formatStaffProjects(config: StoreAppointmentBookingConfig) {
   const staffNameByCode = new Map(config.staffMembers.map((staff) => [staff.staffCode, staff.name]));
   const projectNameByCode = new Map(config.serviceProjects.map((project) => [project.projectCode, project.name]));
@@ -224,20 +197,6 @@ function formatStaffProjects(config: StoreAppointmentBookingConfig) {
     staffName: staffNameByCode.get(item.staffCode) ?? item.staffCode,
     projectName: projectNameByCode.get(item.projectCode) ?? item.projectCode
   }));
-}
-
-function assignAppointmentRulesDraft(payload: StoreAppointmentRules) {
-  appointmentRulesDraft.bookingWindowDays = payload.bookingWindowDays;
-  appointmentRulesDraft.defaultDurationMinutes = payload.defaultDurationMinutes;
-  appointmentRulesDraft.defaultSlots = [...payload.defaultSlots];
-  appointmentRulesDraft.confirmationHint = payload.confirmationHint;
-  appointmentRulesDraft.cancelHint = payload.cancelHint;
-  appointmentRuleSlotsText.value = payload.defaultSlots.join('\n');
-}
-
-function createStoreConfigRequestId() {
-  const randomPart = Math.random().toString(16).slice(2);
-  return `store-config-${Date.now()}-${randomPart}`;
 }
 
 function statusActions(status: string) {
@@ -373,52 +332,6 @@ async function loadBookingConfig() {
   }
 }
 
-async function loadAppointmentRules() {
-  const storeCode = normalizedText(appointmentRulesQuery.storeCode);
-  if (!storeCode || !canManageStoreAppointmentConfig.value) {
-    appointmentRulesError.value = storeCode ? '需要 admin:store-appointment-config:manage 权限' : '请先填写 storeCode';
-    return;
-  }
-  appointmentRulesLoading.value = true;
-  appointmentRulesError.value = '';
-  appointmentRulesSavedMessage.value = '';
-  try {
-    const result = await getStoreAppointmentRules(storeCode);
-    assignAppointmentRulesDraft(result);
-  } catch (error) {
-    appointmentRulesError.value = error instanceof Error ? error.message : '预约规则加载失败';
-  } finally {
-    appointmentRulesLoading.value = false;
-  }
-}
-
-async function saveAppointmentRules() {
-  const storeCode = normalizedText(appointmentRulesQuery.storeCode);
-  if (!storeCode || !canManageStoreAppointmentConfig.value) {
-    appointmentRulesError.value = storeCode ? '需要 admin:store-appointment-config:manage 权限' : '请先填写 storeCode';
-    return;
-  }
-  appointmentRulesSaving.value = true;
-  appointmentRulesError.value = '';
-  appointmentRulesSavedMessage.value = '';
-  try {
-    const payload = {
-      bookingWindowDays: Number(appointmentRulesDraft.bookingWindowDays),
-      defaultDurationMinutes: Number(appointmentRulesDraft.defaultDurationMinutes),
-      defaultSlots: splitListText(appointmentRuleSlotsText.value),
-      confirmationHint: appointmentRulesDraft.confirmationHint,
-      cancelHint: appointmentRulesDraft.cancelHint
-    };
-    const result = await updateStoreAppointmentRules(storeCode, payload, createStoreConfigRequestId());
-    assignAppointmentRulesDraft(result);
-    appointmentRulesSavedMessage.value = '预约规则已保存';
-  } catch (error) {
-    appointmentRulesError.value = error instanceof Error ? error.message : '预约规则保存失败';
-  } finally {
-    appointmentRulesSaving.value = false;
-  }
-}
-
 onMounted(() => {
   loadAppointments();
 });
@@ -544,59 +457,7 @@ onMounted(() => {
 
     <StoreAppointmentStaffRosterPanel :can-manage="canManageStoreAppointmentConfig" />
 
-    <el-card shadow="never" class="appointment-rules-panel">
-      <template #header>
-        <div class="card-header">
-          <span>预约规则配置</span>
-          <el-tag type="warning" effect="plain">仅保存基础预约规则</el-tag>
-        </div>
-      </template>
-      <el-alert
-        class="readonly-alert"
-        type="warning"
-        title="本区只编辑可约窗口、默认时长、默认时段和提示文案，不包含真实排班、消息通知、退款或客户账户策略。"
-        show-icon
-      />
-      <el-alert
-        v-if="!canManageStoreAppointmentConfig"
-        class="error-alert"
-        type="warning"
-        title="需要 admin:store-appointment-config:manage 权限"
-        show-icon
-      />
-      <template v-else>
-        <el-form class="filter-form" :inline="true" @submit.prevent>
-          <el-form-item label="门店">
-            <el-input v-model="appointmentRulesQuery.storeCode" class="config-input" clearable placeholder="预约规则 storeCode" @keyup.enter="loadAppointmentRules" />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" :icon="Search" :loading="appointmentRulesLoading" @click="loadAppointmentRules">读取预约规则</el-button>
-          </el-form-item>
-        </el-form>
-        <el-form class="appointment-rules-form" label-width="108px" @submit.prevent>
-          <el-form-item label="可约窗口">
-            <el-input v-model.number="appointmentRulesDraft.bookingWindowDays" placeholder="可约窗口天数" />
-          </el-form-item>
-          <el-form-item label="默认时长">
-            <el-input v-model.number="appointmentRulesDraft.defaultDurationMinutes" placeholder="默认服务时长" />
-          </el-form-item>
-          <el-form-item label="默认时段">
-            <el-input v-model="appointmentRuleSlotsText" type="textarea" placeholder="默认时段，每行一条" />
-          </el-form-item>
-          <el-form-item label="确认提示">
-            <el-input v-model="appointmentRulesDraft.confirmationHint" placeholder="确认提示" />
-          </el-form-item>
-          <el-form-item label="取消提示">
-            <el-input v-model="appointmentRulesDraft.cancelHint" placeholder="取消提示" />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" :loading="appointmentRulesSaving" @click="saveAppointmentRules">保存预约规则</el-button>
-          </el-form-item>
-        </el-form>
-        <el-alert v-if="appointmentRulesError" class="error-alert" type="error" :title="appointmentRulesError" show-icon />
-        <el-alert v-if="appointmentRulesSavedMessage" class="readonly-alert" type="success" :title="appointmentRulesSavedMessage" show-icon />
-      </template>
-    </el-card>
+    <StoreAppointmentRulesPanel :can-manage="canManageStoreAppointmentConfig" />
 
     <StoreAppointmentConfigRollbackPanel :can-manage="canManageStoreAppointmentConfig" />
 
@@ -766,7 +627,6 @@ onMounted(() => {
 .store-profile-panel,
 .service-catalog-panel,
 .staff-roster-panel,
-.appointment-rules-panel,
 .rollback-panel,
 .api-gap-panel,
 .filter-panel {
@@ -815,10 +675,6 @@ onMounted(() => {
   display: grid;
   grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr);
   gap: 16px;
-}
-
-.appointment-rules-form {
-  max-width: 760px;
 }
 
 .excluded-row {
