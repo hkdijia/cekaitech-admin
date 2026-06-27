@@ -10,6 +10,27 @@ export type StoreAppointmentPageQuery = {
   appointmentDate: string;
 };
 
+export function createDefaultStoreAppointmentPageQuery(): StoreAppointmentPageQuery {
+  return {
+    pageNo: 1,
+    pageSize: 10,
+    storeCode: '',
+    projectCode: '',
+    staffCode: '',
+    status: '',
+    appointmentDate: ''
+  };
+}
+
+export function resetStoreAppointmentPageQuery(query: StoreAppointmentPageQuery) {
+  query.pageNo = 1;
+  query.storeCode = '';
+  query.projectCode = '';
+  query.staffCode = '';
+  query.status = '';
+  query.appointmentDate = '';
+}
+
 function normalizedText(value: string) {
   const trimmed = value.trim();
   return trimmed || undefined;

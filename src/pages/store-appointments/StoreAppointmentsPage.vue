@@ -20,7 +20,11 @@ import StoreAppointmentRulesPanel from './components/StoreAppointmentRulesPanel.
 import StoreAppointmentServiceCatalogPanel from './components/StoreAppointmentServiceCatalogPanel.vue';
 import StoreAppointmentStaffRosterPanel from './components/StoreAppointmentStaffRosterPanel.vue';
 import StoreAppointmentStoreProfilePanel from './components/StoreAppointmentStoreProfilePanel.vue';
-import { buildStoreAppointmentPageRequest } from './storeAppointmentQueryUtils';
+import {
+  buildStoreAppointmentPageRequest,
+  createDefaultStoreAppointmentPageQuery,
+  resetStoreAppointmentPageQuery
+} from './storeAppointmentQueryUtils';
 
 const auth = useAuthStore();
 const loading = ref(false);
@@ -33,15 +37,7 @@ const detailDrawerVisible = ref(false);
 const detail = ref<StoreAppointmentDetail | null>(null);
 const currentDetailId = ref<number | null>(null);
 
-const query = reactive({
-  pageNo: 1,
-  pageSize: 10,
-  storeCode: '',
-  projectCode: '',
-  staffCode: '',
-  status: '',
-  appointmentDate: ''
-});
+const query = reactive(createDefaultStoreAppointmentPageQuery());
 
 const statusOptions = [
   { label: '全部状态', value: '', tagType: 'info' },
@@ -77,12 +73,7 @@ function searchAppointments() {
 }
 
 function resetFilters() {
-  query.pageNo = 1;
-  query.storeCode = '';
-  query.projectCode = '';
-  query.staffCode = '';
-  query.status = '';
-  query.appointmentDate = '';
+  resetStoreAppointmentPageQuery(query);
   loadAppointments();
 }
 
