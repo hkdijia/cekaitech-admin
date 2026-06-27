@@ -47,7 +47,7 @@ describe('store appointment admin pack contract index', () => {
     expect(content).toContain('npm.cmd run test -- --run scripts/store-appointment-frontend-contract-guard.test.mjs');
     expect(content).toContain('npm.cmd run admin:check');
     expect(content).toContain('npm.cmd run quality');
-    expect(checkpoint).toContain('门店预约 admin 可移植能力包契约索引');
+    expect(checkpoint).toContain('docs/store-appointment-admin-pack-contract-index.md');
     expect(checkpoint).toContain('Refs: none');
   });
 });

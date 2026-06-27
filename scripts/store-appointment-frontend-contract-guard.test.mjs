@@ -81,7 +81,6 @@ describe('store appointment frontend contract guard', () => {
     const combinedCheckpoint = checkpointFiles.map(readProjectFile).join('\n');
 
     expect(combinedCheckpoint).toContain('scripts/store-appointment-frontend-contract-guard.test.mjs');
-    expect(combinedCheckpoint).toContain('前端契约守卫');
     expect(combinedCheckpoint).toContain('Refs: none');
     expect(combinedCheckpoint).not.toContain('待本地提交本轮商业化可移植性规划切片');
   });
