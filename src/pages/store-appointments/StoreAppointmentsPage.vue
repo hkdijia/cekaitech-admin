@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { onMounted, reactive, ref } from 'vue';
-import { Check, Close, Finished, View } from '@element-plus/icons-vue';
+import { Check, Close, Finished } from '@element-plus/icons-vue';
 import {
   getStoreAppointmentDetail,
   pageStoreAppointments,
@@ -15,6 +15,7 @@ import StoreAppointmentBookingConfigSnapshotPanel from './components/StoreAppoin
 import StoreAppointmentConfigReadinessPanel from './components/StoreAppointmentConfigReadinessPanel.vue';
 import StoreAppointmentConfigRollbackPanel from './components/StoreAppointmentConfigRollbackPanel.vue';
 import StoreAppointmentFilterPanel from './components/StoreAppointmentFilterPanel.vue';
+import StoreAppointmentListPanel from './components/StoreAppointmentListPanel.vue';
 import StoreAppointmentRulesPanel from './components/StoreAppointmentRulesPanel.vue';
 import StoreAppointmentServiceCatalogPanel from './components/StoreAppointmentServiceCatalogPanel.vue';
 import StoreAppointmentStaffRosterPanel from './components/StoreAppointmentStaffRosterPanel.vue';
@@ -232,45 +233,16 @@ onMounted(() => {
 
     <el-alert v-if="loadError" class="error-alert" type="error" :title="loadError" show-icon />
 
-    <el-card shadow="never" class="table-panel">
-      <el-table v-loading="loading" :data="appointments" row-key="appointmentId">
-        <el-table-column prop="appointmentId" label="预约ID" width="96" />
-        <el-table-column prop="storeName" label="门店" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="projectName" label="项目" min-width="130" show-overflow-tooltip />
-        <el-table-column prop="staffName" label="员工" width="110" show-overflow-tooltip />
-        <el-table-column prop="customerDisplayName" label="客户" width="110" show-overflow-tooltip />
-        <el-table-column label="预约时间" width="150">
-          <template #default="{ row }">{{ row.appointmentDate }} {{ row.timeSlot }}</template>
-        </el-table-column>
-        <el-table-column label="状态" width="108">
-          <template #default="{ row }">
-            <el-tag :type="statusMeta(row.status).tagType" effect="plain">{{ statusMeta(row.status).label }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />
-        <el-table-column label="更新时间" width="172">
-          <template #default="{ row }">{{ formatTime(row.updatedAt) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="116" fixed="right">
-          <template #default="{ row }">
-            <el-button :icon="View" text type="primary" @click="openDetail(row)">查看详情</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <div class="pagination-bar">
-        <el-pagination
-          v-model:current-page="query.pageNo"
-          v-model:page-size="query.pageSize"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="totalCount"
-          background
-          layout="total, sizes, prev, pager, next"
-          @current-change="handlePageChange"
-          @size-change="handleSizeChange"
-        />
-      </div>
-    </el-card>
+    <StoreAppointmentListPanel
+      :appointments="appointments"
+      :loading="loading"
+      :page-no="query.pageNo"
+      :page-size="query.pageSize"
+      :total-count="totalCount"
+      @open-detail="openDetail"
+      @page-change="handlePageChange"
+      @size-change="handleSizeChange"
+    />
 
     <el-drawer v-model="detailDrawerVisible" size="720px" title="预约详情">
       <div v-loading="detailLoading">
@@ -354,16 +326,6 @@ onMounted(() => {
 .error-alert,
 .readonly-alert {
   margin-bottom: 16px;
-}
-
-.table-panel {
-  min-height: 420px;
-}
-
-.pagination-bar {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 16px;
 }
 
 .drawer-section-title {
