@@ -54,6 +54,23 @@ describe('party score api', () => {
     expect(result.totalCount).toBe(1);
     expect(result.dataList[0].roomCode).toBe('ABCD12');
   });
+
+  it('posts party score long running filter to readonly page endpoint', async () => {
+    const fetchMock = mockSuccess({
+      dataList: [],
+      totalCount: 0
+    });
+
+    await pagePartyScoreRooms({ pageNo: 1, pageSize: 20, longRunningOnly: true });
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/admin/party-score/rooms/page', {
+      method: 'POST',
+      body: JSON.stringify({ pageNo: 1, pageSize: 20, longRunningOnly: true }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+  });
 });
 
 function mockSuccess(data: unknown) {

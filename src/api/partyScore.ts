@@ -26,6 +26,7 @@ export interface PartyScoreRoomListItem {
 
 export interface PartyScoreRoomPageRequest {
   status?: string;
+  longRunningOnly?: boolean;
   pageNo: number;
   pageSize: number;
 }

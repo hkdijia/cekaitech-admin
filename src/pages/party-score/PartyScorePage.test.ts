@@ -90,8 +90,8 @@ describe('PartyScorePage', () => {
     expect(pagePartyScoreRoomsMock).toHaveBeenLastCalledWith({ pageNo: 1, pageSize: 20, status: 'settled' });
   });
 
-  it('filters long running rooms on the current readonly result set', async () => {
-    pagePartyScoreRoomsMock.mockResolvedValueOnce({
+  it('requests long running rooms from readonly backend filter', async () => {
+    const longRunningResult = {
       dataList: [
         {
           roomId: 201,
@@ -119,16 +119,24 @@ describe('PartyScorePage', () => {
         }
       ],
       totalCount: 2
-    });
+    };
+    pagePartyScoreRoomsMock.mockResolvedValueOnce(longRunningResult).mockResolvedValueOnce(longRunningResult);
     const wrapper = mountPage();
     await flushAsyncUpdates();
 
     await wrapper.find('[data-test="long-running-only"] input[type="checkbox"]').setValue(true);
     await flushAsyncUpdates();
+    await wrapper.findAll('button').find((button) => button.text().includes('查询'))?.trigger('click');
+    await flushAsyncUpdates();
 
     expect(wrapper.text()).toContain('LONG01');
-    expect(wrapper.text()).not.toContain('FRESH1');
     expect(wrapper.text()).toContain('仅看长时间活跃');
+    expect(pagePartyScoreRoomsMock).toHaveBeenLastCalledWith({
+      pageNo: 1,
+      pageSize: 20,
+      status: undefined,
+      longRunningOnly: true
+    });
   });
 
   it('shows empty state when readonly room list has no records', async () => {
