@@ -59,7 +59,7 @@ describe('store appointment payment contract plan', () => {
 
     expect(packIndex).toContain(contractPath);
     expect(packIndex).toContain('支付商业闭环包契约规划');
-    expect(checkpoint).toContain('门店预约支付商业闭环包契约规划');
+    expect(checkpoint).toContain(contractPath);
     expect(checkpoint).toContain('scripts/store-appointment-payment-contract-plan.test.mjs');
     expect(checkpoint).toContain('Refs: none');
   });

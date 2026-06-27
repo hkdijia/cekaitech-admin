@@ -1,0 +1,100 @@
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { describe, expect, it } from 'vitest';
+
+const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const contractPath = 'docs/store-appointment-white-label-pack-plan.md';
+
+function readProjectFile(relativePath) {
+  return readFileSync(resolve(projectRoot, relativePath), 'utf8');
+}
+
+function listChangedFiles() {
+  const output = execFileSync('git', ['status', '--porcelain=v1', '-z'], {
+    cwd: projectRoot,
+    encoding: 'utf8'
+  });
+
+  return output
+    .split('\0')
+    .map((line) => line.slice(3).trim())
+    .filter(Boolean)
+    .map((line) => line.replaceAll('\\', '/'));
+}
+
+describe('store appointment white label pack plan', () => {
+  it('exists as a white label deployment planning asset only', () => {
+    expect(existsSync(resolve(projectRoot, contractPath))).toBe(true);
+  });
+
+  it('defines white label branding and deployment boundaries without adding runtime implementation', () => {
+    const content = readProjectFile(contractPath);
+    const router = readProjectFile('src/router/index.ts');
+    const layout = readProjectFile('src/layouts/AdminLayout.vue');
+
+    expect(content).toContain('白标托管后台');
+    expect(content).toContain('规划态');
+    expect(content).toContain('品牌配置');
+    expect(content).toContain('权限映射');
+    expect(content).toContain('部署配置');
+    expect(content).toContain('API base URL');
+    expect(content).toContain('客户域名');
+    expect(content).toContain('不新增运行时代码');
+    expect(content).toContain('不新增路由');
+    expect(router).not.toContain('white-label');
+    expect(layout).not.toContain('白标托管后台');
+  });
+
+  it('keeps this slice limited to documentation, tests, and checkpoint assets', () => {
+    const changedFiles = listChangedFiles();
+    const allowedFiles = new Set([
+      'codex-handoff.md',
+      'docs/store-appointment-admin-pack-contract-index.md',
+      'docs/store-appointment-white-label-pack-plan.md',
+      'docs/变更日志.md',
+      'scripts/store-appointment-payment-contract-plan.test.mjs',
+      'scripts/store-appointment-white-label-pack-plan.test.mjs',
+      'tasks/current-task.md'
+    ]);
+
+    expect(changedFiles).toContain(contractPath);
+    expect(changedFiles).not.toContain('dist/index.html');
+    for (const file of changedFiles) {
+      expect(allowedFiles.has(file)).toBe(true);
+      expect(file.startsWith('src/')).toBe(false);
+      expect(file.startsWith('vite.config')).toBe(false);
+      expect(file.startsWith('.env')).toBe(false);
+    }
+  });
+
+  it('keeps store appointment pack portable without leaking internal demo assets or secrets', () => {
+    const content = readProjectFile(contractPath);
+
+    expect(content).toContain('后台名称');
+    expect(content).toContain('Logo');
+    expect(content).toContain('主题色');
+    expect(content).toContain('员工称谓');
+    expect(content).toContain('项目称谓');
+    expect(content).toContain('门店称谓');
+    expect(content).toContain('客户 secret');
+    expect(content).toContain('商户密钥');
+    expect(content).toContain('内部演示数据');
+    expect(content).toContain('不能写入前端构建产物');
+  });
+
+  it('links the white label plan from pack index and checkpoint documents', () => {
+    const packIndex = readProjectFile('docs/store-appointment-admin-pack-contract-index.md');
+    const checkpoint = [
+      readProjectFile('tasks/current-task.md'),
+      readProjectFile('codex-handoff.md')
+    ].join('\n');
+
+    expect(packIndex).toContain(contractPath);
+    expect(packIndex).toContain('白标托管后台配置清单');
+    expect(checkpoint).toContain('门店预约白标托管后台配置清单');
+    expect(checkpoint).toContain('scripts/store-appointment-white-label-pack-plan.test.mjs');
+    expect(checkpoint).toContain('Refs: none');
+  });
+});
