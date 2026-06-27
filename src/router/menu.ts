@@ -8,6 +8,7 @@ export interface AdminMenuItem {
 }
 
 const legalWorkspaceCodes = ['legal-material-assistant'];
+const scorekeeperWorkspaceCodes = ['scorekeeper'];
 
 export const adminMenuItems: AdminMenuItem[] = [
   {
@@ -44,6 +45,14 @@ export const adminMenuItems: AdminMenuItem[] = [
     description: '多行业门店预约列表和预约详情',
     permissionCode: 'admin:store-appointment:view',
     scope: 'global'
+  },
+  {
+    path: '/party-score',
+    title: '朋友局计分',
+    description: '联机房间只读运营观测',
+    permissionCode: 'admin:party-score:view',
+    scope: 'miniapp',
+    workspaceCodes: scorekeeperWorkspaceCodes
   },
   {
     path: '/miniapp-workbench',

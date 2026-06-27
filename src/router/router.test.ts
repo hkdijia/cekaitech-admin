@@ -61,7 +61,19 @@ describe('admin routes', () => {
     expect(visibleItems.map((item) => item.path)).not.toContain('/miniapp-workbench');
     expect(visibleItems.map((item) => item.path)).not.toContain('/legal-tool-center');
     expect(visibleItems.map((item) => item.path)).not.toContain('/data-governance');
-    expect(visibleItems).toHaveLength(0);
+    expect(visibleItems.map((item) => item.path)).toEqual(['/party-score']);
+  });
+
+  it('declares party score readonly observability menu and route permission', () => {
+    const menuItem = adminMenuItems.find((item) => item.path === '/party-score');
+    const route = routes.find((item) => item.path === '/party-score');
+    const visibleItems = filterAdminMenuItems(() => true, 'scorekeeper');
+
+    expect(menuItem?.title).toBe('朋友局计分');
+    expect(menuItem?.description).toBe('联机房间只读运营观测');
+    expect(menuItem?.permissionCode).toBe('admin:party-score:view');
+    expect(route?.meta?.permissionCode).toBe('admin:party-score:view');
+    expect(visibleItems.map((item) => item.path)).toContain('/party-score');
   });
 
   it('declares miniapp workbench menu and route permission', () => {
