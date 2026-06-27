@@ -10,6 +10,7 @@
 
 - 商业化可移植规划：`docs/store-appointment-admin-commercial-portability-guide.md`
 - 配置审计记录列表后端契约设计：`docs/store-appointment-config-audit-contract-design.md`
+- 配置审计记录列表后端接口契约测试规划：`docs/store-appointment-config-audit-api-contract-plan.md`
 - 支付商业闭环包契约规划：`docs/store-appointment-payment-contract-plan.md`
 - 白标托管后台配置清单：`docs/store-appointment-white-label-pack-plan.md`
 - 前端契约守卫：`scripts/store-appointment-frontend-contract-guard.test.mjs`
@@ -73,7 +74,7 @@
 
 - 支付、会员、核销、客户资料、CRM、服务记录、员工账号、真实排班、消息通知、退款、客户账户策略
 - 商户号、真实支付金额、定金、会员卡、核销码、退款规则、通知模板、员工登录账号、私联信息、客户画像
-- 配置审计记录列表入口；当前只支持按已知 `auditLogId` 做配置回滚预览和执行
+- 配置审计记录列表入口；当前只支持按已知 `auditLogId` 做配置回滚预览和执行，后续需先完成 `docs/store-appointment-config-audit-api-contract-plan.md` 中规划的后端契约测试
 
 这些能力可以成为后续商业闭环包或增长运营包，但必须有独立需求、后端契约、权限、审计、安全和验收设计。
 
@@ -82,6 +83,7 @@
 本索引相关的最小验收命令：
 
 - `npm.cmd run test -- --run scripts/store-appointment-admin-pack-contract-index.test.mjs`
+- `npm.cmd run test -- --run scripts/store-appointment-config-audit-api-contract-plan.test.mjs`
 - `npm.cmd run test -- --run scripts/store-appointment-frontend-contract-guard.test.mjs`
 - `npm.cmd run test -- --run src/api/storeAppointments.test.ts src/pages/store-appointments/StoreAppointmentsPage.test.ts scripts/store-appointment-admin-pack-contract-index.test.mjs scripts/store-appointment-frontend-contract-guard.test.mjs`
 - `npm.cmd run admin:check`
@@ -107,6 +109,6 @@
 
 下一阶段可以继续补强：
 
-1. 配置审计记录列表后端契约设计已补充为 `docs/store-appointment-config-audit-contract-design.md`；后续仍需先实现后端接口和契约测试，不能虚构前端入口。
+1. 配置审计记录列表后端契约设计已补充为 `docs/store-appointment-config-audit-contract-design.md`，后端接口契约测试规划已补充为 `docs/store-appointment-config-audit-api-contract-plan.md`；后续仍需先补后端契约测试和后端接口实现，不能虚构前端入口。
 2. 支付商业闭环包契约规划已补充为 `docs/store-appointment-payment-contract-plan.md`；后续仍需先完成后端接口、权限、审计、安全和验收设计，不能在当前页面落半成品支付入口。
 3. 白标托管后台配置清单已补充为 `docs/store-appointment-white-label-pack-plan.md`；后续仍需先完成品牌配置来源、权限映射、环境配置、模块开关和部署验收设计，不能直接把当前内部后台改造成客户后台。

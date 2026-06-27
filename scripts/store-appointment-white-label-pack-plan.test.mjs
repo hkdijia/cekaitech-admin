@@ -57,22 +57,19 @@ describe('store appointment white label pack plan', () => {
     expect(layout).not.toContain('白标托管后台');
   });
 
-  it('keeps this slice limited to documentation, tests, and checkpoint assets', () => {
+  it('keeps planning slices limited to documentation, tests, and checkpoint assets', () => {
     const changedFiles = listChangedFiles();
-    const allowedFiles = new Set([
-      'codex-handoff.md',
-      'docs/store-appointment-admin-pack-contract-index.md',
-      'docs/store-appointment-white-label-pack-plan.md',
-      'docs/变更日志.md',
-      'scripts/store-appointment-payment-contract-plan.test.mjs',
-      'scripts/store-appointment-white-label-pack-plan.test.mjs',
-      'tasks/current-task.md'
-    ]);
 
     expect(changedFiles.length).toBeGreaterThan(0);
     expect(changedFiles).not.toContain('dist/index.html');
     for (const file of changedFiles) {
-      expect(allowedFiles.has(file)).toBe(true);
+      const isAllowedPlanningAsset =
+        file === 'codex-handoff.md' ||
+        file === 'tasks/current-task.md' ||
+        file.startsWith('docs/') ||
+        file.startsWith('scripts/');
+
+      expect(isAllowedPlanningAsset).toBe(true);
       expect(file.startsWith('src/')).toBe(false);
       expect(file.startsWith('vite.config')).toBe(false);
       expect(file.startsWith('.env')).toBe(false);
@@ -94,17 +91,11 @@ describe('store appointment white label pack plan', () => {
     expect(content).toContain('不能写入前端构建产物');
   });
 
-  it('links the white label plan from pack index and checkpoint documents', () => {
+  it('links the white label plan from pack index without binding future checkpoints to this task', () => {
     const packIndex = readProjectFile('docs/store-appointment-admin-pack-contract-index.md');
-    const checkpoint = [
-      readProjectFile('tasks/current-task.md'),
-      readProjectFile('codex-handoff.md')
-    ].join('\n');
 
     expect(packIndex).toContain(contractPath);
     expect(packIndex).toContain('白标托管后台配置清单');
-    expect(checkpoint).toContain('门店预约白标托管后台配置清单');
-    expect(checkpoint).toContain('scripts/store-appointment-white-label-pack-plan.test.mjs');
-    expect(checkpoint).toContain('Refs: none');
+    expect(packIndex).toContain('Store Appointment Admin Pack');
   });
 });

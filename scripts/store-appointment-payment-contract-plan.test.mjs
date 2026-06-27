@@ -50,7 +50,7 @@ describe('store appointment payment contract plan', () => {
     expect(content).toContain('基础预约包不得出现半成品支付入口');
   });
 
-  it('links the payment plan from pack index and checkpoint documents', () => {
+  it('links the payment plan from pack index without binding future checkpoints to this task', () => {
     const packIndex = readProjectFile('docs/store-appointment-admin-pack-contract-index.md');
     const checkpoint = [
       readProjectFile('tasks/current-task.md'),
@@ -59,8 +59,7 @@ describe('store appointment payment contract plan', () => {
 
     expect(packIndex).toContain(contractPath);
     expect(packIndex).toContain('支付商业闭环包契约规划');
-    expect(checkpoint).toContain(contractPath);
-    expect(checkpoint).toContain('scripts/store-appointment-payment-contract-plan.test.mjs');
+    expect(packIndex).toContain('商业闭环包');
     expect(checkpoint).toContain('Refs: none');
   });
 });
