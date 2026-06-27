@@ -6,6 +6,7 @@ import {
   formatStoreAppointmentTime,
   storeAppointmentStatusMeta
 } from './storeAppointmentDisplayUtils';
+import { getStoreAppointmentStatusActions } from './storeAppointmentStatusActionUtils';
 
 const props = defineProps<{
   visible: boolean;
@@ -21,27 +22,17 @@ defineEmits<{
 }>();
 
 function statusActions(status: string) {
-  if (!props.canManageStatus) {
-    return [];
+  return getStoreAppointmentStatusActions(status, props.canManageStatus);
+}
+
+function statusActionIcon(iconKey: string) {
+  if (iconKey === 'close') {
+    return Close;
   }
-  if (status === 'pending') {
-    return [
-      { label: '确认预约', status: 'confirmed', type: 'primary', icon: Check },
-      { label: '取消预约', status: 'cancelled', type: 'danger', icon: Close }
-    ];
+  if (iconKey === 'finished') {
+    return Finished;
   }
-  if (status === 'confirmed') {
-    return [
-      { label: '标记到店', status: 'arrived', type: 'success', icon: Check },
-      { label: '取消预约', status: 'cancelled', type: 'danger', icon: Close }
-    ];
-  }
-  if (status === 'arrived') {
-    return [
-      { label: '完成', status: 'completed', type: 'success', icon: Finished }
-    ];
-  }
-  return [];
+  return Check;
 }
 </script>
 
@@ -60,7 +51,7 @@ function statusActions(status: string) {
           <el-button
             v-for="action in statusActions(detail.appointment.status)"
             :key="action.status"
-            :icon="action.icon"
+            :icon="statusActionIcon(action.iconKey)"
             :loading="statusUpdating"
             :type="action.type"
             @click="$emit('update-status', action.status)"
