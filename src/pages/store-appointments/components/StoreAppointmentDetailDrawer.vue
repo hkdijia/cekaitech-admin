@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { Check, Close, Finished } from '@element-plus/icons-vue';
 import type { StoreAppointmentDetail } from '../../../api/storeAppointments';
+import {
+  formatStoreAppointmentStatusTransition,
+  formatStoreAppointmentTime,
+  storeAppointmentStatusMeta
+} from './storeAppointmentDisplayUtils';
 
 const props = defineProps<{
   visible: boolean;
@@ -14,36 +19,6 @@ defineEmits<{
   'update:visible': [visible: boolean];
   'update-status': [status: string];
 }>();
-
-const statusOptions = [
-  { label: '全部状态', value: '', tagType: 'info' },
-  { label: '待确认', value: 'pending', tagType: 'warning' },
-  { label: '已确认', value: 'confirmed', tagType: 'primary' },
-  { label: '已到店', value: 'arrived', tagType: 'success' },
-  { label: '已完成', value: 'completed', tagType: 'success' },
-  { label: '已取消', value: 'cancelled', tagType: 'info' }
-];
-
-function statusMeta(value: string) {
-  const found = statusOptions.find((item) => item.value === value);
-  return found ?? { label: value || '-', tagType: 'info' };
-}
-
-function statusText(value: string) {
-  return statusMeta(value).label;
-}
-
-function formatStatusTransition(fromStatus: string, toStatus: string) {
-  const fromText = fromStatus ? statusText(fromStatus) : '创建';
-  return `${fromText} -> ${statusText(toStatus)}`;
-}
-
-function formatTime(value: string) {
-  if (!value) {
-    return '-';
-  }
-  return value.replace('T', ' ').replace(/\.\d+$/, '');
-}
 
 function statusActions(status: string) {
   if (!props.canManageStatus) {
@@ -104,24 +79,24 @@ function statusActions(status: string) {
             {{ detail.appointment.appointmentDate }} {{ detail.appointment.timeSlot }}
           </el-descriptions-item>
           <el-descriptions-item label="状态">
-            <el-tag :type="statusMeta(detail.appointment.status).tagType" effect="plain">
-              {{ statusMeta(detail.appointment.status).label }}
+            <el-tag :type="storeAppointmentStatusMeta(detail.appointment.status).tagType" effect="plain">
+              {{ storeAppointmentStatusMeta(detail.appointment.status).label }}
             </el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="备注">{{ detail.appointment.remark || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="创建时间">{{ formatTime(detail.appointment.createdAt) }}</el-descriptions-item>
-          <el-descriptions-item label="更新时间">{{ formatTime(detail.appointment.updatedAt) }}</el-descriptions-item>
+          <el-descriptions-item label="创建时间">{{ formatStoreAppointmentTime(detail.appointment.createdAt) }}</el-descriptions-item>
+          <el-descriptions-item label="更新时间">{{ formatStoreAppointmentTime(detail.appointment.updatedAt) }}</el-descriptions-item>
         </el-descriptions>
 
         <h2 class="drawer-section-title">状态日志</h2>
         <el-table :data="detail.statusLogs" row-key="createdAt" size="small">
           <el-table-column label="流转" min-width="150">
-            <template #default="{ row }">{{ formatStatusTransition(row.fromStatus, row.toStatus) }}</template>
+            <template #default="{ row }">{{ formatStoreAppointmentStatusTransition(row.fromStatus, row.toStatus) }}</template>
           </el-table-column>
           <el-table-column prop="operatorType" label="操作方" width="96" />
           <el-table-column prop="operatorId" label="操作人" min-width="140" show-overflow-tooltip />
           <el-table-column label="时间" width="172">
-            <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
+            <template #default="{ row }">{{ formatStoreAppointmentTime(row.createdAt) }}</template>
           </el-table-column>
         </el-table>
       </template>

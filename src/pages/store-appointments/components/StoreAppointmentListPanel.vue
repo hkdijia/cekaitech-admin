@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { View } from '@element-plus/icons-vue';
 import type { StoreAppointmentItem } from '../../../api/storeAppointments';
+import { formatStoreAppointmentTime, storeAppointmentStatusMeta } from './storeAppointmentDisplayUtils';
 
 defineProps<{
   appointments: StoreAppointmentItem[];
@@ -16,26 +17,6 @@ defineEmits<{
   'size-change': [pageSize: number];
 }>();
 
-const statusOptions = [
-  { label: '全部状态', value: '', tagType: 'info' },
-  { label: '待确认', value: 'pending', tagType: 'warning' },
-  { label: '已确认', value: 'confirmed', tagType: 'primary' },
-  { label: '已到店', value: 'arrived', tagType: 'success' },
-  { label: '已完成', value: 'completed', tagType: 'success' },
-  { label: '已取消', value: 'cancelled', tagType: 'info' }
-];
-
-function statusMeta(value: string) {
-  const found = statusOptions.find((item) => item.value === value);
-  return found ?? { label: value || '-', tagType: 'info' };
-}
-
-function formatTime(value: string) {
-  if (!value) {
-    return '-';
-  }
-  return value.replace('T', ' ').replace(/\.\d+$/, '');
-}
 </script>
 
 <template>
@@ -51,12 +32,12 @@ function formatTime(value: string) {
       </el-table-column>
       <el-table-column label="状态" width="108">
         <template #default="{ row }">
-          <el-tag :type="statusMeta(row.status).tagType" effect="plain">{{ statusMeta(row.status).label }}</el-tag>
+          <el-tag :type="storeAppointmentStatusMeta(row.status).tagType" effect="plain">{{ storeAppointmentStatusMeta(row.status).label }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />
       <el-table-column label="更新时间" width="172">
-        <template #default="{ row }">{{ formatTime(row.updatedAt) }}</template>
+        <template #default="{ row }">{{ formatStoreAppointmentTime(row.updatedAt) }}</template>
       </el-table-column>
       <el-table-column label="操作" width="116" fixed="right">
         <template #default="{ row }">
