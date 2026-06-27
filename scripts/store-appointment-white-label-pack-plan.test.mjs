@@ -17,11 +17,11 @@ function listChangedFiles() {
     encoding: 'utf8'
   });
   if (!statusOutput) {
-    return execFileSync('git', ['diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD'], {
+    return execFileSync('git', ['diff-tree', '--no-commit-id', '--name-only', '-z', '-r', 'HEAD'], {
       cwd: projectRoot,
       encoding: 'utf8'
     })
-      .split(/\r?\n/)
+      .split('\0')
       .map((line) => line.trim())
       .filter(Boolean)
       .map((line) => line.replaceAll('\\', '/'));
