@@ -53,7 +53,7 @@ describe('store appointment config audit contract index', () => {
 
     expect(packIndex).toContain(contractPath);
     expect(packIndex).toContain('配置审计记录列表后端契约设计');
-    expect(checkpoint).toContain('门店预约配置审计记录列表后端契约设计索引');
+    expect(checkpoint).toContain(contractPath);
     expect(checkpoint).toContain('scripts/store-appointment-config-audit-contract-index.test.mjs');
     expect(checkpoint).toContain('Refs: none');
   });

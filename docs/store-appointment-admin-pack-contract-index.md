@@ -10,6 +10,7 @@
 
 - 商业化可移植规划：`docs/store-appointment-admin-commercial-portability-guide.md`
 - 配置审计记录列表后端契约设计：`docs/store-appointment-config-audit-contract-design.md`
+- 支付商业闭环包契约规划：`docs/store-appointment-payment-contract-plan.md`
 - 前端契约守卫：`scripts/store-appointment-frontend-contract-guard.test.mjs`
 - 本索引契约测试：`scripts/store-appointment-admin-pack-contract-index.test.mjs`
 - API client：`src/api/storeAppointments.ts`
@@ -106,5 +107,5 @@
 下一阶段可以继续补强：
 
 1. 配置审计记录列表后端契约设计已补充为 `docs/store-appointment-config-audit-contract-design.md`；后续仍需先实现后端接口和契约测试，不能虚构前端入口。
-2. 支付商业闭环包的产品和后端契约规划，不能在当前页面落半成品支付入口。
+2. 支付商业闭环包契约规划已补充为 `docs/store-appointment-payment-contract-plan.md`；后续仍需先完成后端接口、权限、审计、安全和验收设计，不能在当前页面落半成品支付入口。
 3. 白标托管后台的品牌、权限和部署配置清单。
