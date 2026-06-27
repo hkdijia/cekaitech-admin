@@ -90,6 +90,73 @@ describe('PartyScorePage', () => {
     expect(pagePartyScoreRoomsMock).toHaveBeenLastCalledWith({ pageNo: 1, pageSize: 20, status: 'settled' });
   });
 
+  it('filters long running rooms on the current readonly result set', async () => {
+    pagePartyScoreRoomsMock.mockResolvedValueOnce({
+      dataList: [
+        {
+          roomId: 201,
+          roomCode: 'LONG01',
+          status: 'playing',
+          memberCount: 3,
+          version: 5,
+          createdAt: '2026-06-27T01:00:00',
+          updatedAt: '2026-06-27T01:10:00',
+          lastEventAt: '2026-06-27T01:10:00',
+          ownerMemberId: 601,
+          longRunning: true
+        },
+        {
+          roomId: 202,
+          roomCode: 'FRESH1',
+          status: 'playing',
+          memberCount: 4,
+          version: 8,
+          createdAt: '2026-06-28T08:00:00',
+          updatedAt: '2026-06-28T08:20:00',
+          lastEventAt: '2026-06-28T08:20:00',
+          ownerMemberId: 602,
+          longRunning: false
+        }
+      ],
+      totalCount: 2
+    });
+    const wrapper = mountPage();
+    await flushAsyncUpdates();
+
+    await wrapper.find('[data-test="long-running-only"] input[type="checkbox"]').setValue(true);
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('LONG01');
+    expect(wrapper.text()).not.toContain('FRESH1');
+    expect(wrapper.text()).toContain('仅看长时间活跃');
+  });
+
+  it('shows empty state when readonly room list has no records', async () => {
+    pagePartyScoreRoomsMock.mockResolvedValueOnce({
+      dataList: [],
+      totalCount: 0
+    });
+
+    const wrapper = mountPage();
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('暂无匹配房间');
+    expect(wrapper.text()).toContain('可以调整状态筛选或稍后刷新');
+  });
+
+  it('shows error state and keeps readonly controls when loading fails', async () => {
+    getPartyScoreOverviewMock.mockRejectedValueOnce(new Error('只读观测加载失败'));
+
+    const wrapper = mountPage();
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('只读观测加载失败');
+    const buttonText = wrapper.findAll('button').map((button) => button.text()).join(' ');
+    expect(buttonText).toContain('刷新');
+    expect(buttonText).not.toContain('归档');
+    expect(buttonText).not.toContain('删除');
+  });
+
   it('shows readonly boundary copy without write controls', async () => {
     const wrapper = mountPage();
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import {
   getPartyScoreOverview,
   pagePartyScoreRooms,
@@ -12,6 +12,7 @@ const loadError = ref('');
 const overview = ref<PartyScoreOverview | null>(null);
 const rooms = ref<PartyScoreRoomListItem[]>([]);
 const totalCount = ref(0);
+const longRunningOnly = ref(false);
 
 const query = reactive({
   status: '',
@@ -26,6 +27,13 @@ const statusOptions = [
   { label: '已完结', value: 'settled' },
   { label: '已归档', value: 'expired' }
 ];
+
+const visibleRooms = computed(() => {
+  if (!longRunningOnly.value) {
+    return rooms.value;
+  }
+  return rooms.value.filter((item) => item.longRunning);
+});
 
 async function loadData() {
   loading.value = true;
@@ -184,13 +192,19 @@ onMounted(() => {
                 :value="item.value"
               />
             </el-select>
+            <el-checkbox v-model="longRunningOnly" data-test="long-running-only">仅看长时间活跃</el-checkbox>
             <el-button :loading="loading" @click="searchRooms">查询</el-button>
             <el-button type="primary" plain :loading="loading" @click="loadData">刷新</el-button>
           </div>
         </div>
       </template>
 
-      <el-table :data="rooms" v-loading="loading">
+      <el-empty
+        v-if="!loading && visibleRooms.length === 0"
+        description="暂无匹配房间，可以调整状态筛选或稍后刷新"
+      />
+
+      <el-table v-else :data="visibleRooms" v-loading="loading">
         <el-table-column prop="roomCode" label="房间码" width="110" />
         <el-table-column label="状态" width="110">
           <template #default="{ row }">
