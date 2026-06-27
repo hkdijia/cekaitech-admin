@@ -20,6 +20,7 @@ import StoreAppointmentRulesPanel from './components/StoreAppointmentRulesPanel.
 import StoreAppointmentServiceCatalogPanel from './components/StoreAppointmentServiceCatalogPanel.vue';
 import StoreAppointmentStaffRosterPanel from './components/StoreAppointmentStaffRosterPanel.vue';
 import StoreAppointmentStoreProfilePanel from './components/StoreAppointmentStoreProfilePanel.vue';
+import { buildStoreAppointmentPageRequest } from './storeAppointmentQueryUtils';
 
 const auth = useAuthStore();
 const loading = ref(false);
@@ -54,24 +55,11 @@ const statusOptions = [
 const canManageStatus = computed(() => auth.hasPermission('admin:store-appointment:manage'));
 const canManageStoreAppointmentConfig = computed(() => auth.hasPermission('admin:store-appointment-config:manage'));
 
-function normalizedText(value: string) {
-  const trimmed = value.trim();
-  return trimmed || undefined;
-}
-
 async function loadAppointments() {
   loading.value = true;
   loadError.value = '';
   try {
-    const result = await pageStoreAppointments({
-      pageNo: query.pageNo,
-      pageSize: Math.min(query.pageSize, 100),
-      storeCode: normalizedText(query.storeCode),
-      projectCode: normalizedText(query.projectCode),
-      staffCode: normalizedText(query.staffCode),
-      status: normalizedText(query.status),
-      appointmentDate: normalizedText(query.appointmentDate)
-    });
+    const result = await pageStoreAppointments(buildStoreAppointmentPageRequest(query));
     appointments.value = result.dataList;
     totalCount.value = result.totalCount;
   } catch (error) {
