@@ -30,6 +30,7 @@ const eventDialogLoading = ref(false);
 const eventDialogError = ref('');
 const eventRows = ref<PartyScoreRoomEvent[]>([]);
 const eventTotalCount = ref(0);
+const statusHelpVisible = ref(false);
 
 const eventQuery = reactive({
   pageNo: 1,
@@ -380,30 +381,28 @@ onMounted(() => {
         description="暂无匹配房间，可以调整状态筛选或稍后刷新"
       />
 
-      <el-table v-else :data="rooms" v-loading="loading">
+      <div v-if="statusHelpVisible" class="status-help-panel">
+        <div class="status-help-title">状态说明</div>
+        <div v-for="item in roomStatusMetas" :key="item.value" class="status-help-item">
+          <el-tag :type="item.tagType" size="small">{{ item.label }}</el-tag>
+          <span>{{ item.label }}：{{ item.description }}</span>
+        </div>
+      </div>
+
+      <el-table v-if="rooms.length > 0" :data="rooms" v-loading="loading">
         <el-table-column prop="roomCode" label="房间码" width="110" />
         <el-table-column width="120">
           <template #header>
             <div class="status-column-head">
               <span>状态</span>
-              <el-popover placement="bottom-start" trigger="click" width="320" :teleported="false">
-                <template #reference>
-                  <el-button
-                    class="status-help-button"
-                    text
-                    type="primary"
-                    :icon="InfoFilled"
-                    aria-label="状态说明"
-                  />
-                </template>
-                <div class="status-help">
-                  <div class="status-help-title">状态说明</div>
-                  <div v-for="item in roomStatusMetas" :key="item.value" class="status-help-item">
-                    <el-tag :type="item.tagType" size="small">{{ item.label }}</el-tag>
-                    <span>{{ item.label }}：{{ item.description }}</span>
-                  </div>
-                </div>
-              </el-popover>
+              <el-button
+                class="status-help-button"
+                text
+                type="primary"
+                :icon="InfoFilled"
+                aria-label="状态说明"
+                @click.stop="statusHelpVisible = !statusHelpVisible"
+              />
             </div>
           </template>
           <template #default="{ row }">

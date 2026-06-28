@@ -171,6 +171,7 @@ describe('PartyScorePage', () => {
     await flushAsyncUpdates();
     const statusHelpButton = wrapper.find('[aria-label="状态说明"]');
     expect(statusHelpButton.exists()).toBe(true);
+    expect(wrapper.text()).not.toContain('进行中：房间仍在计分或等待结算，玩家可继续提交计分。');
 
     await statusHelpButton.trigger('click');
     await flushAsyncUpdates();
@@ -180,6 +181,11 @@ describe('PartyScorePage', () => {
     expect(wrapper.text()).toContain('结算中：房主已发起结算流程，但尚未确认完结。');
     expect(wrapper.text()).toContain('已完结：房主已确认结算，房间结束，仅保留只读历史。');
     expect(wrapper.text()).toContain('已归档：系统因长时间无活跃自动归档，用于释放活跃房间资源。');
+
+    await statusHelpButton.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).not.toContain('进行中：房间仍在计分或等待结算，玩家可继续提交计分。');
   });
 
   it('opens readonly room detail drawer with members and event timeline', async () => {
