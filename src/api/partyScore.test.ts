@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { getPartyScoreOverview, pagePartyScoreRooms } from './partyScore';
+import { getPartyScoreOverview, getPartyScoreRoomDetail, pagePartyScoreRooms } from './partyScore';
 
 describe('party score api', () => {
   it('gets party score readonly overview', async () => {
@@ -70,6 +70,36 @@ describe('party score api', () => {
         'Content-Type': 'application/json'
       }
     });
+  });
+
+  it('gets party score room detail from readonly detail endpoint', async () => {
+    const fetchMock = mockSuccess({
+      room: {
+        roomId: 101,
+        roomCode: 'ABCD12',
+        status: 'playing',
+        memberCount: 2,
+        version: 3,
+        createdAt: '2026-06-28T08:00:00',
+        updatedAt: '2026-06-28T08:20:00',
+        lastEventAt: '2026-06-28T08:20:00',
+        ownerMemberId: 501,
+        longRunning: false
+      },
+      members: [{ memberId: 501, nickname: '房主', avatarText: '房', role: 'owner', status: 'joined', score: -6 }],
+      events: [{ eventId: 9001, version: 3, type: 'score_transferred', submittedByMemberId: 501, submittedByNickname: '房主', amount: 6, status: 'active', createdAt: '2026-06-28T08:20:00' }]
+    });
+
+    const result = await getPartyScoreRoomDetail(101);
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/admin/party-score/rooms/101', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    expect(result.members[0].nickname).toBe('房主');
+    expect(result.events[0].type).toBe('score_transferred');
   });
 });
 

@@ -24,6 +24,39 @@ export interface PartyScoreRoomListItem {
   longRunning: boolean;
 }
 
+export interface PartyScoreRoomMember {
+  memberId: number;
+  nickname: string;
+  avatarText: string;
+  role: string;
+  status: string;
+  score: number;
+  joinedAt: string;
+  updatedAt: string;
+}
+
+export interface PartyScoreRoomEvent {
+  eventId: number;
+  version: number;
+  type: string;
+  submittedByMemberId: number;
+  submittedByNickname: string;
+  fromMemberId?: number;
+  fromMemberNickname?: string;
+  toMemberId?: number;
+  toMemberNickname?: string;
+  amount?: number;
+  targetEventId?: number;
+  status: string;
+  createdAt: string;
+}
+
+export interface PartyScoreRoomDetail {
+  room: PartyScoreRoomListItem;
+  members: PartyScoreRoomMember[];
+  events: PartyScoreRoomEvent[];
+}
+
 export interface PartyScoreRoomPageRequest {
   status?: string;
   longRunningOnly?: boolean;
@@ -43,5 +76,11 @@ export function pagePartyScoreRooms(
   return request<PageResult<PartyScoreRoomListItem>>('/api/admin/party-score/rooms/page', {
     method: 'POST',
     body: JSON.stringify(payload)
+  });
+}
+
+export function getPartyScoreRoomDetail(roomId: number): Promise<PartyScoreRoomDetail> {
+  return request<PartyScoreRoomDetail>(`/api/admin/party-score/rooms/${roomId}`, {
+    method: 'GET'
   });
 }
