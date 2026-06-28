@@ -6,6 +6,7 @@ import {
   getPartyScoreCleanupStatus,
   getPartyScoreOverview,
   getPartyScoreRoomDetail,
+  pagePartyScoreRoomEvents,
   pagePartyScoreRooms
 } from '../../api/partyScore';
 import PartyScorePage from './PartyScorePage.vue';
@@ -14,12 +15,14 @@ vi.mock('../../api/partyScore', () => ({
   getPartyScoreOverview: vi.fn(),
   getPartyScoreCleanupStatus: vi.fn(),
   getPartyScoreRoomDetail: vi.fn(),
+  pagePartyScoreRoomEvents: vi.fn(),
   pagePartyScoreRooms: vi.fn()
 }));
 
 const getPartyScoreOverviewMock = vi.mocked(getPartyScoreOverview);
 const getPartyScoreCleanupStatusMock = vi.mocked(getPartyScoreCleanupStatus);
 const getPartyScoreRoomDetailMock = vi.mocked(getPartyScoreRoomDetail);
+const pagePartyScoreRoomEventsMock = vi.mocked(pagePartyScoreRoomEvents);
 const pagePartyScoreRoomsMock = vi.mocked(pagePartyScoreRooms);
 
 async function flushAsyncUpdates() {
@@ -42,6 +45,7 @@ describe('PartyScorePage', () => {
     getPartyScoreOverviewMock.mockReset();
     getPartyScoreCleanupStatusMock.mockReset();
     getPartyScoreRoomDetailMock.mockReset();
+    pagePartyScoreRoomEventsMock.mockReset();
     pagePartyScoreRoomsMock.mockReset();
     getPartyScoreOverviewMock.mockResolvedValue({
       todayCreatedRooms: 8,
@@ -116,6 +120,25 @@ describe('PartyScorePage', () => {
         }
       ]
     });
+    pagePartyScoreRoomEventsMock.mockResolvedValue({
+      dataList: [
+        {
+          eventId: 9101,
+          version: 12,
+          type: 'score_transferred',
+          submittedByMemberId: 501,
+          submittedByNickname: '房主',
+          fromMemberId: 501,
+          fromMemberNickname: '房主',
+          toMemberId: 502,
+          toMemberNickname: '朋友2',
+          amount: 8,
+          status: 'active',
+          createdAt: '2026-06-28T08:25:00'
+        }
+      ],
+      totalCount: 25
+    });
   });
 
   it('loads overview and readonly room list on mount', async () => {
@@ -153,6 +176,8 @@ describe('PartyScorePage', () => {
     expect(wrapper.text()).toContain('房间详情');
     expect(wrapper.text()).toContain('成员列表');
     expect(wrapper.text()).toContain('现场流水');
+    expect(wrapper.text()).toContain('最近 10 条');
+    expect(wrapper.text()).toContain('查看全部');
     expect(wrapper.text()).toContain('房主');
     expect(wrapper.text()).toContain('朋友2');
     expect(wrapper.text()).toContain('计分转移');
@@ -162,6 +187,21 @@ describe('PartyScorePage', () => {
     expect(buttonText).not.toContain('删除');
     expect(buttonText).not.toContain('改分');
     expect(buttonText).not.toContain('踢人');
+  });
+
+  it('opens paged room event dialog from detail drawer', async () => {
+    const wrapper = mountPage();
+    await flushAsyncUpdates();
+
+    await wrapper.findAll('button').find((button) => button.text().includes('查看详情'))?.trigger('click');
+    await flushAsyncUpdates();
+    await wrapper.findAll('button').find((button) => button.text().includes('查看全部'))?.trigger('click');
+    await flushAsyncUpdates();
+
+    expect(pagePartyScoreRoomEventsMock).toHaveBeenCalledWith(101, { pageNo: 1, pageSize: 20 });
+    expect(wrapper.text()).toContain('完整现场流水');
+    expect(wrapper.text()).toContain('共 25 条');
+    expect(wrapper.text()).toContain('房主 -> 朋友2，8 分');
   });
 
   it('filters rooms by status and resets to first page', async () => {

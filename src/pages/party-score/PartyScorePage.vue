@@ -4,6 +4,7 @@ import {
   getPartyScoreCleanupStatus,
   getPartyScoreOverview,
   getPartyScoreRoomDetail,
+  pagePartyScoreRoomEvents,
   pagePartyScoreRooms,
   type PartyScoreCleanupStatus,
   type PartyScoreOverview,
@@ -23,6 +24,16 @@ const detailVisible = ref(false);
 const detailLoading = ref(false);
 const detailError = ref('');
 const roomDetail = ref<PartyScoreRoomDetail | null>(null);
+const eventDialogVisible = ref(false);
+const eventDialogLoading = ref(false);
+const eventDialogError = ref('');
+const eventRows = ref<PartyScoreRoomEvent[]>([]);
+const eventTotalCount = ref(0);
+
+const eventQuery = reactive({
+  pageNo: 1,
+  pageSize: 20
+});
 
 const query = reactive({
   status: '',
@@ -93,6 +104,45 @@ async function openRoomDetail(row: PartyScoreRoomListItem) {
   } finally {
     detailLoading.value = false;
   }
+}
+
+async function loadRoomEvents() {
+  if (!roomDetail.value) {
+    return;
+  }
+  eventDialogLoading.value = true;
+  eventDialogError.value = '';
+  try {
+    const pageResult = await pagePartyScoreRoomEvents(roomDetail.value.room.roomId, {
+      pageNo: eventQuery.pageNo,
+      pageSize: eventQuery.pageSize
+    });
+    eventRows.value = pageResult.dataList;
+    eventTotalCount.value = pageResult.totalCount;
+  } catch (error) {
+    eventDialogError.value = error instanceof Error ? error.message : '完整流水加载失败';
+    eventRows.value = [];
+    eventTotalCount.value = 0;
+  } finally {
+    eventDialogLoading.value = false;
+  }
+}
+
+async function openEventDialog() {
+  eventDialogVisible.value = true;
+  eventQuery.pageNo = 1;
+  await loadRoomEvents();
+}
+
+function handleEventPageChange(pageNo: number) {
+  eventQuery.pageNo = pageNo;
+  loadRoomEvents();
+}
+
+function handleEventSizeChange(pageSize: number) {
+  eventQuery.pageNo = 1;
+  eventQuery.pageSize = pageSize;
+  loadRoomEvents();
 }
 
 function statusText(status: string) {
@@ -417,7 +467,13 @@ onMounted(() => {
             <el-table-column prop="score" label="分数" width="90" />
           </el-table>
 
-          <h2 class="detail-title">现场流水</h2>
+          <div class="detail-title-row">
+            <h2 class="detail-title">现场流水</h2>
+            <div class="detail-title-actions">
+              <span>最近 10 条</span>
+              <el-button text type="primary" @click="openEventDialog">查看全部</el-button>
+            </div>
+          </div>
           <el-timeline class="event-timeline">
             <el-timeline-item
               v-for="event in roomDetail.events"
@@ -437,6 +493,47 @@ onMounted(() => {
         </template>
       </div>
     </el-drawer>
+
+    <el-dialog v-model="eventDialogVisible" title="完整现场流水" width="860px" destroy-on-close>
+      <el-alert
+        v-if="eventDialogError"
+        class="readonly-alert"
+        type="error"
+        :title="eventDialogError"
+        :closable="false"
+        show-icon
+      />
+      <div class="event-dialog-meta">共 {{ eventTotalCount }} 条</div>
+      <el-table :data="eventRows" v-loading="eventDialogLoading" size="small">
+        <el-table-column label="版本" width="80">
+          <template #default="{ row }">v{{ row.version }}</template>
+        </el-table-column>
+        <el-table-column label="类型" width="120">
+          <template #default="{ row }">{{ eventTypeText(row.type) }}</template>
+        </el-table-column>
+        <el-table-column label="摘要" min-width="260">
+          <template #default="{ row }">{{ eventSummary(row) }}</template>
+        </el-table-column>
+        <el-table-column label="提交人" min-width="120">
+          <template #default="{ row }">{{ row.submittedByNickname || row.submittedByMemberId || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="时间" min-width="150">
+          <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
+        </el-table-column>
+      </el-table>
+      <div class="pagination-row">
+        <el-pagination
+          background
+          layout="total, sizes, prev, pager, next"
+          :total="eventTotalCount"
+          :current-page="eventQuery.pageNo"
+          :page-size="eventQuery.pageSize"
+          :page-sizes="[20, 50, 100]"
+          @current-change="handleEventPageChange"
+          @size-change="handleEventSizeChange"
+        />
+      </div>
+    </el-dialog>
   </section>
 </template>
 
@@ -533,6 +630,33 @@ onMounted(() => {
 .detail-title {
   margin: 20px 0 12px;
   font-size: 16px;
+}
+
+.detail-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.detail-title-row .detail-title {
+  margin: 0 0 12px;
+}
+
+.detail-title-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: #667085;
+  font-size: 13px;
+}
+
+.event-dialog-meta {
+  margin-bottom: 12px;
+  color: #667085;
+  font-size: 13px;
 }
 
 .avatar-chip {

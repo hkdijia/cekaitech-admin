@@ -105,3 +105,13 @@ export function getPartyScoreRoomDetail(roomId: number): Promise<PartyScoreRoomD
     method: 'GET'
   });
 }
+
+export function pagePartyScoreRoomEvents(
+  roomId: number,
+  payload: { pageNo: number; pageSize: number }
+): Promise<PageResult<PartyScoreRoomEvent>> {
+  return request<PageResult<PartyScoreRoomEvent>>(`/api/admin/party-score/rooms/${roomId}/events/page`, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+}

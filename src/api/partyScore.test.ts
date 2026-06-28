@@ -3,6 +3,7 @@ import {
   getPartyScoreCleanupStatus,
   getPartyScoreOverview,
   getPartyScoreRoomDetail,
+  pagePartyScoreRoomEvents,
   pagePartyScoreRooms
 } from './partyScore';
 
@@ -133,6 +134,36 @@ describe('party score api', () => {
     });
     expect(result.members[0].nickname).toBe('房主');
     expect(result.events[0].type).toBe('score_transferred');
+  });
+
+  it('posts party score room event page query to readonly event endpoint', async () => {
+    const fetchMock = mockSuccess({
+      dataList: [
+        {
+          eventId: 9001,
+          version: 12,
+          type: 'score_transferred',
+          submittedByMemberId: 501,
+          submittedByNickname: '房主',
+          amount: 6,
+          status: 'active',
+          createdAt: '2026-06-28T08:20:00'
+        }
+      ],
+      totalCount: 25
+    });
+
+    const result = await pagePartyScoreRoomEvents(101, { pageNo: 2, pageSize: 20 });
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/admin/party-score/rooms/101/events/page', {
+      method: 'POST',
+      body: JSON.stringify({ pageNo: 2, pageSize: 20 }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    expect(result.totalCount).toBe(25);
+    expect(result.dataList[0].version).toBe(12);
   });
 });
 
