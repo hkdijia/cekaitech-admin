@@ -4,11 +4,7 @@ export interface AdminMenuItem {
   description: string;
   permissionCode: string;
   scope?: 'global' | 'miniapp';
-  workspaceCodes?: string[];
 }
-
-const legalWorkspaceCodes = ['legal-material-assistant'];
-const scorekeeperWorkspaceCodes = ['scorekeeper'];
 
 export const adminMenuItems: AdminMenuItem[] = [
   {
@@ -47,102 +43,6 @@ export const adminMenuItems: AdminMenuItem[] = [
     scope: 'global'
   },
   {
-    path: '/party-score',
-    title: '朋友局计分',
-    description: '联机房间只读运营观测',
-    permissionCode: 'admin:party-score:view',
-    scope: 'miniapp',
-    workspaceCodes: scorekeeperWorkspaceCodes
-  },
-  {
-    path: '/miniapp-workbench',
-    title: '小程序工作台',
-    description: '当前小程序的运行概览、启用准备和待处理事项',
-    permissionCode: 'admin:workspace:view',
-    scope: 'miniapp',
-    workspaceCodes: legalWorkspaceCodes
-  },
-  {
-    path: '/lawyer-audits',
-    title: '律师认证审核',
-    description: '资质审核和审核意见占位',
-    permissionCode: 'admin:lawyer-audit:view',
-    scope: 'miniapp',
-    workspaceCodes: legalWorkspaceCodes
-  },
-  {
-    path: '/miniapp-access-list',
-    title: '小程序名单管理',
-    description: '按小程序和能力维护可信名单与拒绝名单',
-    permissionCode: 'admin:miniapp-access-list:view',
-    scope: 'miniapp',
-    workspaceCodes: legalWorkspaceCodes
-  },
-  {
-    path: '/legal-form-events',
-    title: '法律表单事件',
-    description: '法律表单填写事件和质量状态',
-    permissionCode: 'admin:legal-form-event:view',
-    scope: 'miniapp',
-    workspaceCodes: legalWorkspaceCodes
-  },
-  {
-    path: '/generation-records',
-    title: '生成记录',
-    description: '法律助手云端生成记录',
-    permissionCode: 'admin:generation-record:view',
-    scope: 'miniapp',
-    workspaceCodes: legalWorkspaceCodes
-  },
-  {
-    path: '/legal-service-requests',
-    title: '服务请求',
-    description: '人工服务请求处理',
-    permissionCode: 'admin:legal-service-request:view',
-    scope: 'miniapp',
-    workspaceCodes: legalWorkspaceCodes
-  },
-  {
-    path: '/miniapp-home-config',
-    title: '首页配置',
-    description: '小程序首页模块、功能入口和公告',
-    permissionCode: 'admin:miniapp-home-config:view',
-    scope: 'miniapp',
-    workspaceCodes: legalWorkspaceCodes
-  },
-  {
-    path: '/miniapp-orchestration',
-    title: '页面菜单管理',
-    description: '按页面、模块和功能入口编排对客展示',
-    permissionCode: 'admin:miniapp-home-config:view',
-    scope: 'miniapp',
-    workspaceCodes: legalWorkspaceCodes
-  },
-  {
-    path: '/legal-tool-center',
-    title: '法律工具中心',
-    description: '竞品工具能力库、展示分组和曝光入口',
-    permissionCode: 'admin:legal-tool-center:view',
-    scope: 'miniapp',
-    workspaceCodes: legalWorkspaceCodes
-  },
-  {
-    path: '/data-governance',
-    title: '数据同步/发布',
-    description: '同步批次、修订记录和 LPR JSON 发布',
-    permissionCode: 'admin:data-governance:view',
-    scope: 'miniapp',
-    workspaceCodes: legalWorkspaceCodes
-  },
-  {
-    path: '/private-lending-result-template',
-    title: '结果模板配置',
-    description: '起诉文书生成结果模板和预览',
-    permissionCode: 'admin:private-lending-result-template:view',
-    scope: 'miniapp',
-    workspaceCodes: legalWorkspaceCodes
-  },
-  {
     path: '/user-operation-logs',
     title: '操作审计',
     description: '用户相关后台操作审计',
@@ -172,9 +72,6 @@ export function filterAdminMenuItems(
   const scope = workspaceCode === 'global' ? 'global' : 'miniapp';
   return adminMenuItems.filter((item) => {
     if (item.scope !== scope) {
-      return false;
-    }
-    if (item.workspaceCodes && !item.workspaceCodes.includes(workspaceCode)) {
       return false;
     }
     return hasPermission(item.permissionCode);

@@ -45,70 +45,50 @@ describe('admin routes', () => {
     expect(visibleItems.map((item) => item.path)).not.toContain('/data-governance');
   });
 
-  it('shows miniapp configuration menu after selecting a business workspace', () => {
+  it('does not use frontend hardcoded menus for business workspaces', () => {
     const visibleItems = filterAdminMenuItems(() => true, 'legal-material-assistant');
 
-    expect(visibleItems.map((item) => item.path)).toContain('/miniapp-workbench');
-    expect(visibleItems.map((item) => item.path)).toContain('/miniapp-home-config');
-    expect(visibleItems.map((item) => item.path)).toContain('/legal-tool-center');
-    expect(visibleItems.map((item) => item.path)).toContain('/data-governance');
+    expect(visibleItems).toEqual([]);
   });
 
   it('does not reuse legal assistant menus for other business workspaces', () => {
     const visibleItems = filterAdminMenuItems(() => true, 'scorekeeper');
 
-    expect(visibleItems.map((item) => item.path)).not.toContain('/miniapp-home-config');
-    expect(visibleItems.map((item) => item.path)).not.toContain('/miniapp-workbench');
-    expect(visibleItems.map((item) => item.path)).not.toContain('/legal-tool-center');
-    expect(visibleItems.map((item) => item.path)).not.toContain('/data-governance');
-    expect(visibleItems.map((item) => item.path)).toEqual(['/party-score']);
+    expect(visibleItems).toEqual([]);
   });
 
-  it('declares party score readonly observability menu and route permission', () => {
-    const menuItem = adminMenuItems.find((item) => item.path === '/party-score');
+  it('declares party score readonly observability route permission', () => {
     const route = routes.find((item) => item.path === '/party-score');
-    const visibleItems = filterAdminMenuItems(() => true, 'scorekeeper');
 
-    expect(menuItem?.title).toBe('朋友局计分');
-    expect(menuItem?.description).toBe('联机房间只读运营观测');
-    expect(menuItem?.permissionCode).toBe('admin:party-score:view');
+    expect(adminMenuItems.some((item) => item.path === '/party-score')).toBe(false);
     expect(route?.meta?.permissionCode).toBe('admin:party-score:view');
-    expect(visibleItems.map((item) => item.path)).toContain('/party-score');
   });
 
-  it('declares miniapp workbench menu and route permission', () => {
-    const menuItem = adminMenuItems.find((item) => item.path === '/miniapp-workbench');
+  it('declares miniapp workbench route permission', () => {
     const route = routes.find((item) => item.path === '/miniapp-workbench');
 
-    expect(menuItem?.title).toBe('小程序工作台');
-    expect(menuItem?.permissionCode).toBe('admin:workspace:view');
+    expect(adminMenuItems.some((item) => item.path === '/miniapp-workbench')).toBe(false);
     expect(route?.meta?.permissionCode).toBe('admin:workspace:view');
   });
 
-  it('declares legal form events menu and route permission', () => {
-    const menuItem = adminMenuItems.find((item) => item.path === '/legal-form-events');
+  it('declares legal form events route permission', () => {
     const route = routes.find((item) => item.path === '/legal-form-events');
 
-    expect(menuItem?.title).toBe('法律表单事件');
-    expect(menuItem?.permissionCode).toBe('admin:legal-form-event:view');
+    expect(adminMenuItems.some((item) => item.path === '/legal-form-events')).toBe(false);
     expect(route?.meta?.permissionCode).toBe('admin:legal-form-event:view');
   });
 
-  it('declares generation records menu and route permission', () => {
-    const menuItem = adminMenuItems.find((item) => item.path === '/generation-records');
+  it('declares generation records route permission', () => {
     const route = routes.find((item) => item.path === '/generation-records');
 
-    expect(menuItem?.title).toBe('生成记录');
-    expect(menuItem?.permissionCode).toBe('admin:generation-record:view');
+    expect(adminMenuItems.some((item) => item.path === '/generation-records')).toBe(false);
     expect(route?.meta?.permissionCode).toBe('admin:generation-record:view');
   });
 
-  it('declares legal service requests menu and route permission', () => {
-    const menuItem = adminMenuItems.find((item) => item.path === '/legal-service-requests');
+  it('declares legal service requests route permission', () => {
     const route = routes.find((item) => item.path === '/legal-service-requests');
 
-    expect(menuItem?.title).toBe('服务请求');
-    expect(menuItem?.permissionCode).toBe('admin:legal-service-request:view');
+    expect(adminMenuItems.some((item) => item.path === '/legal-service-requests')).toBe(false);
     expect(route?.meta?.permissionCode).toBe('admin:legal-service-request:view');
   });
 
@@ -130,15 +110,11 @@ describe('admin routes', () => {
     expect(globalItems.map((item) => item.path)).toContain('/store-appointments');
   });
 
-  it('declares miniapp access list menu and route permission', () => {
-    const menuItem = adminMenuItems.find((item) => item.path === '/miniapp-access-list');
+  it('declares miniapp access list route permission', () => {
     const route = routes.find((item) => item.path === '/miniapp-access-list');
-    const visibleItems = filterAdminMenuItems(() => true, 'legal-material-assistant');
 
-    expect(menuItem?.title).toBe('小程序名单管理');
-    expect(menuItem?.permissionCode).toBe('admin:miniapp-access-list:view');
+    expect(adminMenuItems.some((item) => item.path === '/miniapp-access-list')).toBe(false);
     expect(route?.meta?.permissionCode).toBe('admin:miniapp-access-list:view');
-    expect(visibleItems.map((item) => item.path)).toContain('/miniapp-access-list');
   });
 
   it('declares order operations menu and route permission', () => {
@@ -152,22 +128,17 @@ describe('admin routes', () => {
     expect(globalItems.map((item) => item.path)).toContain('/order-operations');
   });
 
-  it('declares miniapp home config menu and route permission', () => {
-    const menuItem = adminMenuItems.find((item) => item.path === '/miniapp-home-config');
+  it('declares miniapp home config route permission', () => {
     const route = routes.find((item) => item.path === '/miniapp-home-config');
 
-    expect(menuItem?.title).toBe('首页配置');
-    expect(menuItem?.permissionCode).toBe('admin:miniapp-home-config:view');
+    expect(adminMenuItems.some((item) => item.path === '/miniapp-home-config')).toBe(false);
     expect(route?.meta?.permissionCode).toBe('admin:miniapp-home-config:view');
   });
 
-  it('declares miniapp orchestration menu and route permission', () => {
-    const menuItem = adminMenuItems.find((item) => item.path === '/miniapp-orchestration');
+  it('declares miniapp orchestration route permission', () => {
     const route = routes.find((item) => item.path === '/miniapp-orchestration');
 
-    expect(menuItem?.title).toBe('页面菜单管理');
-    expect(menuItem?.description).toBe('按页面、模块和功能入口编排对客展示');
-    expect(menuItem?.permissionCode).toBe('admin:miniapp-home-config:view');
+    expect(adminMenuItems.some((item) => item.path === '/miniapp-orchestration')).toBe(false);
     expect(route?.meta?.permissionCode).toBe('admin:miniapp-home-config:view');
   });
 
@@ -176,31 +147,24 @@ describe('admin routes', () => {
     expect(routes.some((item) => item.path === '/miniapp-document-catalog')).toBe(false);
   });
 
-  it('declares legal tool center menu and route permission', () => {
-    const menuItem = adminMenuItems.find((item) => item.path === '/legal-tool-center');
+  it('declares legal tool center route permission', () => {
     const route = routes.find((item) => item.path === '/legal-tool-center');
 
-    expect(menuItem?.title).toBe('法律工具中心');
-    expect(menuItem?.permissionCode).toBe('admin:legal-tool-center:view');
+    expect(adminMenuItems.some((item) => item.path === '/legal-tool-center')).toBe(false);
     expect(route?.meta?.permissionCode).toBe('admin:legal-tool-center:view');
   });
 
-  it('declares data governance menu and route permission', () => {
-    const menuItem = adminMenuItems.find((item) => item.path === '/data-governance');
+  it('declares data governance route permission', () => {
     const route = routes.find((item) => item.path === '/data-governance');
 
-    expect(menuItem?.title).toBe('数据同步/发布');
-    expect(menuItem?.permissionCode).toBe('admin:data-governance:view');
+    expect(adminMenuItems.some((item) => item.path === '/data-governance')).toBe(false);
     expect(route?.meta?.permissionCode).toBe('admin:data-governance:view');
   });
 
-  it('declares private lending result template menu and route permission', () => {
-    const menuItem = adminMenuItems.find((item) => item.path === '/private-lending-result-template');
+  it('declares private lending result template route permission', () => {
     const route = routes.find((item) => item.path === '/private-lending-result-template');
 
-    expect(menuItem?.title).toBe('结果模板配置');
-    expect(menuItem?.description).toBe('起诉文书生成结果模板和预览');
-    expect(menuItem?.permissionCode).toBe('admin:private-lending-result-template:view');
+    expect(adminMenuItems.some((item) => item.path === '/private-lending-result-template')).toBe(false);
     expect(route?.meta?.permissionCode).toBe('admin:private-lending-result-template:view');
   });
 

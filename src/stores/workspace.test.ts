@@ -102,14 +102,14 @@ describe('useWorkspaceStore', () => {
     expect(workspace.currentMenus[0].permissionCode).toBe('legal:verification:review');
   });
 
-  it('keeps fallback workspaces when backend workspace loading fails', async () => {
+  it('keeps only global workspace when backend workspace loading fails', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('network down'));
 
     const workspace = useWorkspaceStore();
 
     await workspace.loadWorkspaces();
 
-    expect(workspace.options.length).toBeGreaterThan(0);
+    expect(workspace.options.map((item) => item.code)).toEqual(['global']);
     expect(workspace.currentWorkspace.name).toBe('全局后台');
     expect(workspace.loadError).toBe('network down');
   });

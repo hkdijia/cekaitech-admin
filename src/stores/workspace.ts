@@ -16,10 +16,7 @@ export interface WorkspaceOption {
 }
 
 export const workspaceOptions: WorkspaceOption[] = [
-  { id: 0, code: 'global', name: '全局后台', appCode: 'global', status: 'enabled' },
-  { id: 1, code: 'legal-material-assistant', name: '阳律通', appCode: 'lawsuit-material-assistant', status: 'enabled' },
-  { id: 2, code: 'scorekeeper', name: '朋友局计分', appCode: 'party-scorekeeper-miniapp', status: 'enabled' },
-  { id: 3, code: 'appointment', name: '预约服务', appCode: 'rehab-appointment-miniapp', status: 'enabled' }
+  { id: 0, code: 'global', name: '全局后台', appCode: 'global', status: 'enabled' }
 ];
 
 export const useWorkspaceStore = defineStore('workspace', {
