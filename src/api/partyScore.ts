@@ -10,6 +10,21 @@ export interface PartyScoreOverview {
   longRunningActiveRooms: number;
 }
 
+export interface PartyScoreCleanupStatus {
+  enabled: boolean;
+  fixedDelay: string;
+  initialDelay: string;
+  emptyRoomInactiveHours: number;
+  activeRoomInactiveHours: number;
+  batchSize: number;
+  historyVisibleDays: number;
+  maxActiveRooms: number;
+  archiveEligibleRooms: number;
+  historyExpiredRooms: number;
+  archivedRoomsToday: number;
+  latestArchivedAt?: string;
+}
+
 export interface PartyScoreRoomListItem {
   roomId: number;
   roomCode: string;
@@ -66,6 +81,12 @@ export interface PartyScoreRoomPageRequest {
 
 export function getPartyScoreOverview(): Promise<PartyScoreOverview> {
   return request<PartyScoreOverview>('/api/admin/party-score/overview', {
+    method: 'GET'
+  });
+}
+
+export function getPartyScoreCleanupStatus(): Promise<PartyScoreCleanupStatus> {
+  return request<PartyScoreCleanupStatus>('/api/admin/party-score/cleanup', {
     method: 'GET'
   });
 }

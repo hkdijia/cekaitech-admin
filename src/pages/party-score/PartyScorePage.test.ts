@@ -2,16 +2,23 @@ import { mount } from '@vue/test-utils';
 import ElementPlus from 'element-plus';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
-import { getPartyScoreOverview, getPartyScoreRoomDetail, pagePartyScoreRooms } from '../../api/partyScore';
+import {
+  getPartyScoreCleanupStatus,
+  getPartyScoreOverview,
+  getPartyScoreRoomDetail,
+  pagePartyScoreRooms
+} from '../../api/partyScore';
 import PartyScorePage from './PartyScorePage.vue';
 
 vi.mock('../../api/partyScore', () => ({
   getPartyScoreOverview: vi.fn(),
+  getPartyScoreCleanupStatus: vi.fn(),
   getPartyScoreRoomDetail: vi.fn(),
   pagePartyScoreRooms: vi.fn()
 }));
 
 const getPartyScoreOverviewMock = vi.mocked(getPartyScoreOverview);
+const getPartyScoreCleanupStatusMock = vi.mocked(getPartyScoreCleanupStatus);
 const getPartyScoreRoomDetailMock = vi.mocked(getPartyScoreRoomDetail);
 const pagePartyScoreRoomsMock = vi.mocked(pagePartyScoreRooms);
 
@@ -33,6 +40,7 @@ function mountPage() {
 describe('PartyScorePage', () => {
   beforeEach(() => {
     getPartyScoreOverviewMock.mockReset();
+    getPartyScoreCleanupStatusMock.mockReset();
     getPartyScoreRoomDetailMock.mockReset();
     pagePartyScoreRoomsMock.mockReset();
     getPartyScoreOverviewMock.mockResolvedValue({
@@ -42,6 +50,20 @@ describe('PartyScorePage', () => {
       expiredRoomsToday: 1,
       averageMemberCountToday: 4.5,
       longRunningActiveRooms: 1
+    });
+    getPartyScoreCleanupStatusMock.mockResolvedValue({
+      enabled: true,
+      fixedDelay: 'PT30M',
+      initialDelay: 'PT2M',
+      emptyRoomInactiveHours: 24,
+      activeRoomInactiveHours: 24,
+      batchSize: 100,
+      historyVisibleDays: 7,
+      maxActiveRooms: 500,
+      archiveEligibleRooms: 2,
+      historyExpiredRooms: 1,
+      archivedRoomsToday: 3,
+      latestArchivedAt: '2026-06-28T08:30:00'
     });
     pagePartyScoreRoomsMock.mockResolvedValue({
       dataList: [
@@ -102,11 +124,17 @@ describe('PartyScorePage', () => {
     await flushAsyncUpdates();
 
     expect(getPartyScoreOverviewMock).toHaveBeenCalledTimes(1);
+    expect(getPartyScoreCleanupStatusMock).toHaveBeenCalledTimes(1);
     expect(pagePartyScoreRoomsMock).toHaveBeenCalledWith({ pageNo: 1, pageSize: 20, status: undefined });
     expect(wrapper.text()).toContain('朋友局计分');
     expect(wrapper.text()).toContain('今日开局');
     expect(wrapper.text()).toContain('活跃房间');
     expect(wrapper.text()).toContain('房间列表');
+    expect(wrapper.text()).toContain('自动清理策略');
+    expect(wrapper.text()).toContain('24 小时无活跃自动归档');
+    expect(wrapper.text()).toContain('历史记录可查看 7 天');
+    expect(wrapper.text()).toContain('待归档 2 间');
+    expect(wrapper.text()).toContain('超过可见期 1 间');
     expect(wrapper.text()).toContain('ABCD12');
     expect(wrapper.text()).toContain('进行中');
     expect(wrapper.text()).not.toContain('强制归档');

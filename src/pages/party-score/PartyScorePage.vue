@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import {
+  getPartyScoreCleanupStatus,
   getPartyScoreOverview,
   getPartyScoreRoomDetail,
   pagePartyScoreRooms,
+  type PartyScoreCleanupStatus,
   type PartyScoreOverview,
   type PartyScoreRoomDetail,
   type PartyScoreRoomEvent,
@@ -13,6 +15,7 @@ import {
 const loading = ref(false);
 const loadError = ref('');
 const overview = ref<PartyScoreOverview | null>(null);
+const cleanupStatus = ref<PartyScoreCleanupStatus | null>(null);
 const rooms = ref<PartyScoreRoomListItem[]>([]);
 const totalCount = ref(0);
 const longRunningOnly = ref(false);
@@ -39,8 +42,9 @@ async function loadData() {
   loading.value = true;
   loadError.value = '';
   try {
-    const [overviewResult, pageResult] = await Promise.all([
+    const [overviewResult, cleanupResult, pageResult] = await Promise.all([
       getPartyScoreOverview(),
+      getPartyScoreCleanupStatus(),
       pagePartyScoreRooms({
         pageNo: query.pageNo,
         pageSize: query.pageSize,
@@ -49,6 +53,7 @@ async function loadData() {
       })
     ]);
     overview.value = overviewResult;
+    cleanupStatus.value = cleanupResult;
     rooms.value = pageResult.dataList;
     totalCount.value = pageResult.totalCount;
   } catch (error) {
@@ -258,6 +263,39 @@ onMounted(() => {
       </el-col>
     </el-row>
 
+    <el-card shadow="never" class="section-card cleanup-card">
+      <template #header>
+        <div class="section-head">
+          <span>自动清理策略</span>
+          <el-tag :type="cleanupStatus?.enabled ? 'success' : 'info'">
+            {{ cleanupStatus?.enabled ? '已启用' : '未启用' }}
+          </el-tag>
+        </div>
+      </template>
+      <div class="cleanup-grid">
+        <div>
+          <span class="detail-label">归档规则</span>
+          <strong>{{ cleanupStatus?.activeRoomInactiveHours ?? '-' }} 小时无活跃自动归档</strong>
+          <p>单人空房同样按 {{ cleanupStatus?.emptyRoomInactiveHours ?? '-' }} 小时无活跃归档。</p>
+        </div>
+        <div>
+          <span class="detail-label">历史可见期</span>
+          <strong>历史记录可查看 {{ cleanupStatus?.historyVisibleDays ?? '-' }} 天</strong>
+          <p>超过可见期后，用户端不再开放房间详情和流水。</p>
+        </div>
+        <div>
+          <span class="detail-label">当前待处理</span>
+          <strong>待归档 {{ cleanupStatus?.archiveEligibleRooms ?? '-' }} 间</strong>
+          <p>超过可见期 {{ cleanupStatus?.historyExpiredRooms ?? '-' }} 间</p>
+        </div>
+        <div>
+          <span class="detail-label">调度状态</span>
+          <strong>每 {{ cleanupStatus?.fixedDelay ?? '-' }} 扫描，批量 {{ cleanupStatus?.batchSize ?? '-' }}</strong>
+          <p>今日归档 {{ cleanupStatus?.archivedRoomsToday ?? '-' }} 间，最近 {{ formatDateTime(cleanupStatus?.latestArchivedAt) }}</p>
+        </div>
+      </div>
+    </el-card>
+
     <el-card shadow="never" class="section-card">
       <template #header>
         <div class="section-head">
@@ -422,6 +460,30 @@ onMounted(() => {
 
 .section-card {
   margin-top: 8px;
+}
+
+.cleanup-card {
+  margin-bottom: 16px;
+}
+
+.cleanup-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.cleanup-grid > div {
+  min-height: 96px;
+  padding: 12px;
+  border: 1px solid #eaecf0;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.cleanup-grid p {
+  margin: 8px 0 0;
+  color: #667085;
+  font-size: 13px;
 }
 
 .section-head {

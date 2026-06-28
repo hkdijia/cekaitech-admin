@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { getPartyScoreOverview, getPartyScoreRoomDetail, pagePartyScoreRooms } from './partyScore';
+import {
+  getPartyScoreCleanupStatus,
+  getPartyScoreOverview,
+  getPartyScoreRoomDetail,
+  pagePartyScoreRooms
+} from './partyScore';
 
 describe('party score api', () => {
   it('gets party score readonly overview', async () => {
@@ -21,6 +26,34 @@ describe('party score api', () => {
       }
     });
     expect(result.activeRooms).toBe(3);
+  });
+
+  it('gets party score cleanup readonly status', async () => {
+    const fetchMock = mockSuccess({
+      enabled: true,
+      fixedDelay: 'PT30M',
+      initialDelay: 'PT2M',
+      emptyRoomInactiveHours: 24,
+      activeRoomInactiveHours: 24,
+      batchSize: 100,
+      historyVisibleDays: 7,
+      maxActiveRooms: 500,
+      archiveEligibleRooms: 2,
+      historyExpiredRooms: 1,
+      archivedRoomsToday: 3,
+      latestArchivedAt: '2026-06-28T08:30:00'
+    });
+
+    const result = await getPartyScoreCleanupStatus();
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/admin/party-score/cleanup', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    expect(result.archiveEligibleRooms).toBe(2);
+    expect(result.historyVisibleDays).toBe(7);
   });
 
   it('posts party score room page query to readonly page endpoint', async () => {
