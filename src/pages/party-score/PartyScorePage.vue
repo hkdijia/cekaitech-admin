@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
+import { InfoFilled } from '@element-plus/icons-vue';
 import {
   getPartyScoreCleanupStatus,
   getPartyScoreOverview,
@@ -41,12 +42,36 @@ const query = reactive({
   pageSize: 20
 });
 
+const roomStatusMetas = [
+  {
+    label: '进行中',
+    value: 'playing',
+    tagType: 'success',
+    description: '房间仍在计分或等待结算，玩家可继续提交计分。'
+  },
+  {
+    label: '结算中',
+    value: 'settling',
+    tagType: 'warning',
+    description: '房主已发起结算流程，但尚未确认完结。'
+  },
+  {
+    label: '已完结',
+    value: 'settled',
+    tagType: 'info',
+    description: '房主已确认结算，房间结束，仅保留只读历史。'
+  },
+  {
+    label: '已归档',
+    value: 'expired',
+    tagType: 'danger',
+    description: '系统因长时间无活跃自动归档，用于释放活跃房间资源。'
+  }
+];
+
 const statusOptions = [
   { label: '全部状态', value: '' },
-  { label: '进行中', value: 'playing' },
-  { label: '结算中', value: 'settling' },
-  { label: '已完结', value: 'settled' },
-  { label: '已归档', value: 'expired' }
+  ...roomStatusMetas.map((item) => ({ label: item.label, value: item.value }))
 ];
 
 async function loadData() {
@@ -146,33 +171,17 @@ function handleEventSizeChange(pageSize: number) {
 }
 
 function statusText(status: string) {
-  if (status === 'playing') {
-    return '进行中';
-  }
-  if (status === 'settling') {
-    return '结算中';
-  }
-  if (status === 'settled') {
-    return '已完结';
-  }
-  if (status === 'expired') {
-    return '已归档';
+  const meta = roomStatusMetas.find((item) => item.value === status);
+  if (meta) {
+    return meta.label;
   }
   return status || '-';
 }
 
 function statusTagType(status: string) {
-  if (status === 'playing') {
-    return 'success';
-  }
-  if (status === 'settling') {
-    return 'warning';
-  }
-  if (status === 'settled') {
-    return 'info';
-  }
-  if (status === 'expired') {
-    return 'danger';
+  const meta = roomStatusMetas.find((item) => item.value === status);
+  if (meta) {
+    return meta.tagType;
   }
   return 'info';
 }
@@ -373,7 +382,30 @@ onMounted(() => {
 
       <el-table v-else :data="rooms" v-loading="loading">
         <el-table-column prop="roomCode" label="房间码" width="110" />
-        <el-table-column label="状态" width="110">
+        <el-table-column width="120">
+          <template #header>
+            <div class="status-column-head">
+              <span>状态</span>
+              <el-popover placement="bottom-start" trigger="click" width="320" :teleported="false">
+                <template #reference>
+                  <el-button
+                    class="status-help-button"
+                    text
+                    type="primary"
+                    :icon="InfoFilled"
+                    aria-label="状态说明"
+                  />
+                </template>
+                <div class="status-help">
+                  <div class="status-help-title">状态说明</div>
+                  <div v-for="item in roomStatusMetas" :key="item.value" class="status-help-item">
+                    <el-tag :type="item.tagType" size="small">{{ item.label }}</el-tag>
+                    <span>{{ item.label }}：{{ item.description }}</span>
+                  </div>
+                </div>
+              </el-popover>
+            </div>
+          </template>
           <template #default="{ row }">
             <el-tag :type="statusTagType(row.status)">{{ statusText(row.status) }}</el-tag>
           </template>
@@ -598,6 +630,33 @@ onMounted(() => {
 
 .status-select {
   width: 140px;
+}
+
+.status-column-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-help-button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+}
+
+.status-help-title {
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.status-help-item {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  margin-bottom: 8px;
+  color: #475467;
+  line-height: 1.5;
 }
 
 .pagination-row {
