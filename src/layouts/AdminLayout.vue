@@ -13,7 +13,12 @@ const auth = useAuthStore();
 const workspace = useWorkspaceStore();
 
 const activeMenu = computed(() => route.path);
-const visibleAdminMenuItems = computed(() => filterAdminMenuItems(auth.hasPermission, workspace.currentCode));
+const visibleAdminMenuItems = computed(() => {
+  if (workspace.currentCode !== 'global') {
+    return [];
+  }
+  return filterAdminMenuItems(auth.hasPermission, workspace.currentCode);
+});
 
 onMounted(() => {
   workspace.loadWorkspaces();
@@ -30,7 +35,12 @@ async function handleWorkspaceChange(code: string) {
     router.push('/dashboard');
     return;
   }
-  router.push('/miniapp-workbench');
+  const firstMenu = workspace.currentMenus[0];
+  if (firstMenu) {
+    openWorkspaceMenu(firstMenu);
+    return;
+  }
+  router.push('/dashboard');
 }
 
 function openWorkspaceMenu(item: BackendWorkspaceMenu) {
