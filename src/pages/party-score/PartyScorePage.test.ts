@@ -3,6 +3,7 @@ import ElementPlus from 'element-plus';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
 import {
+  getMiniappDictionaryItems,
   getPartyScoreCleanupStatus,
   getPartyScoreOverview,
   getPartyScoreRoomDetail,
@@ -12,6 +13,7 @@ import {
 import PartyScorePage from './PartyScorePage.vue';
 
 vi.mock('../../api/partyScore', () => ({
+  getMiniappDictionaryItems: vi.fn(),
   getPartyScoreOverview: vi.fn(),
   getPartyScoreCleanupStatus: vi.fn(),
   getPartyScoreRoomDetail: vi.fn(),
@@ -19,6 +21,7 @@ vi.mock('../../api/partyScore', () => ({
   pagePartyScoreRooms: vi.fn()
 }));
 
+const getMiniappDictionaryItemsMock = vi.mocked(getMiniappDictionaryItems);
 const getPartyScoreOverviewMock = vi.mocked(getPartyScoreOverview);
 const getPartyScoreCleanupStatusMock = vi.mocked(getPartyScoreCleanupStatus);
 const getPartyScoreRoomDetailMock = vi.mocked(getPartyScoreRoomDetail);
@@ -42,11 +45,50 @@ function mountPage() {
 
 describe('PartyScorePage', () => {
   beforeEach(() => {
+    getMiniappDictionaryItemsMock.mockReset();
     getPartyScoreOverviewMock.mockReset();
     getPartyScoreCleanupStatusMock.mockReset();
     getPartyScoreRoomDetailMock.mockReset();
     pagePartyScoreRoomEventsMock.mockReset();
     pagePartyScoreRoomsMock.mockReset();
+    getMiniappDictionaryItemsMock.mockResolvedValue([
+      {
+        appCode: 'party-scorekeeper-miniapp',
+        groupCode: 'party_score_room_status',
+        itemCode: 'playing',
+        itemLabel: '进行中',
+        itemValue: 'playing',
+        description: '房间仍在计分或等待结算，玩家可继续提交计分。',
+        tagType: 'success'
+      },
+      {
+        appCode: 'party-scorekeeper-miniapp',
+        groupCode: 'party_score_room_status',
+        itemCode: 'settling',
+        itemLabel: '结算中',
+        itemValue: 'settling',
+        description: '房主已发起结算流程，但尚未确认完结。',
+        tagType: 'warning'
+      },
+      {
+        appCode: 'party-scorekeeper-miniapp',
+        groupCode: 'party_score_room_status',
+        itemCode: 'settled',
+        itemLabel: '已完结',
+        itemValue: 'settled',
+        description: '房主已确认结算，房间结束，仅保留只读历史。',
+        tagType: 'info'
+      },
+      {
+        appCode: 'party-scorekeeper-miniapp',
+        groupCode: 'party_score_room_status',
+        itemCode: 'expired',
+        itemLabel: '已归档',
+        itemValue: 'expired',
+        description: '系统因长时间无活跃自动归档，用于释放活跃房间资源。',
+        tagType: 'danger'
+      }
+    ]);
     getPartyScoreOverviewMock.mockResolvedValue({
       todayCreatedRooms: 8,
       activeRooms: 3,
@@ -147,6 +189,10 @@ describe('PartyScorePage', () => {
     await flushAsyncUpdates();
 
     expect(getPartyScoreOverviewMock).toHaveBeenCalledTimes(1);
+    expect(getMiniappDictionaryItemsMock).toHaveBeenCalledWith(
+      'party-scorekeeper-miniapp',
+      'party_score_room_status'
+    );
     expect(getPartyScoreCleanupStatusMock).toHaveBeenCalledTimes(1);
     expect(pagePartyScoreRoomsMock).toHaveBeenCalledWith({ pageNo: 1, pageSize: 20, status: undefined });
     expect(wrapper.text()).toContain('朋友局计分');
@@ -163,6 +209,59 @@ describe('PartyScorePage', () => {
     expect(wrapper.text()).not.toContain('强制归档');
     expect(wrapper.text()).not.toContain('删除房间');
     expect(wrapper.text()).not.toContain('改分');
+  });
+
+  it('uses backend dictionary status metadata when available', async () => {
+    getMiniappDictionaryItemsMock.mockResolvedValueOnce([
+      {
+        appCode: 'party-scorekeeper-miniapp',
+        groupCode: 'party_score_room_status',
+        itemCode: 'playing',
+        itemLabel: '开局中',
+        itemValue: 'playing',
+        description: '来自后端字典的状态说明。',
+        tagType: 'success'
+      }
+    ]);
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+    await wrapper.find('[aria-label="状态说明"]').trigger('click');
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('开局中');
+    expect(wrapper.text()).toContain('开局中：来自后端字典的状态说明。');
+  });
+
+  it('matches room status by backend dictionary item value when code differs', async () => {
+    getMiniappDictionaryItemsMock.mockResolvedValueOnce([
+      {
+        appCode: 'party-scorekeeper-miniapp',
+        groupCode: 'party_score_room_status',
+        itemCode: 'party_score_status_playing',
+        itemLabel: '开局中',
+        itemValue: 'playing',
+        description: '使用 itemValue 匹配真实房间状态。',
+        tagType: 'success'
+      }
+    ]);
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('开局中');
+    expect(pagePartyScoreRoomsMock).toHaveBeenCalledWith({ pageNo: 1, pageSize: 20, status: undefined });
+  });
+
+  it('falls back to local status metadata when backend dictionary loading fails', async () => {
+    getMiniappDictionaryItemsMock.mockRejectedValueOnce(new Error('字典不可用'));
+    const wrapper = mountPage();
+
+    await flushAsyncUpdates();
+    await wrapper.find('[aria-label="状态说明"]').trigger('click');
+    await flushAsyncUpdates();
+
+    expect(wrapper.text()).toContain('进行中：房间仍在计分或等待结算，玩家可继续提交计分。');
   });
 
   it('renders expandable room status explanations near status column', async () => {

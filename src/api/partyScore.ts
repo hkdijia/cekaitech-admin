@@ -66,6 +66,21 @@ export interface PartyScoreRoomEvent {
   createdAt: string;
 }
 
+export interface MiniappDictionaryItem {
+  itemId?: number;
+  appCode: string;
+  groupCode: string;
+  itemCode: string;
+  itemLabel: string;
+  itemValue: string;
+  description: string;
+  tagType: string;
+  colorToken?: string;
+  sortOrder?: number;
+  enabled?: boolean;
+  systemBuiltin?: boolean;
+}
+
 export interface PartyScoreRoomDetail {
   room: PartyScoreRoomListItem;
   members: PartyScoreRoomMember[];
@@ -87,6 +102,12 @@ export function getPartyScoreOverview(): Promise<PartyScoreOverview> {
 
 export function getPartyScoreCleanupStatus(): Promise<PartyScoreCleanupStatus> {
   return request<PartyScoreCleanupStatus>('/api/admin/party-score/cleanup', {
+    method: 'GET'
+  });
+}
+
+export function getMiniappDictionaryItems(appCode: string, groupCode: string): Promise<MiniappDictionaryItem[]> {
+  return request<MiniappDictionaryItem[]>(`/api/admin/miniapp-dictionaries/${appCode}/${groupCode}/items`, {
     method: 'GET'
   });
 }

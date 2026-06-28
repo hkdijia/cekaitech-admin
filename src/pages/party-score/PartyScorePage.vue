@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { InfoFilled } from '@element-plus/icons-vue';
 import {
+  getMiniappDictionaryItems,
   getPartyScoreCleanupStatus,
   getPartyScoreOverview,
   getPartyScoreRoomDetail,
@@ -43,7 +44,7 @@ const query = reactive({
   pageSize: 20
 });
 
-const roomStatusMetas = [
+const fallbackRoomStatusMetas = [
   {
     label: '进行中',
     value: 'playing',
@@ -70,10 +71,29 @@ const roomStatusMetas = [
   }
 ];
 
-const statusOptions = [
+const roomStatusMetas = ref(fallbackRoomStatusMetas);
+
+const statusOptions = computed(() => [
   { label: '全部状态', value: '' },
-  ...roomStatusMetas.map((item) => ({ label: item.label, value: item.value }))
-];
+  ...roomStatusMetas.value.map((item) => ({ label: item.label, value: item.value }))
+]);
+
+async function loadDictionaryMetas() {
+  try {
+    const items = await getMiniappDictionaryItems('party-scorekeeper-miniapp', 'party_score_room_status');
+    if (items.length === 0) {
+      return;
+    }
+    roomStatusMetas.value = items.map((item) => ({
+      label: item.itemLabel,
+      value: item.itemValue || item.itemCode,
+      tagType: item.tagType || 'info',
+      description: item.description
+    }));
+  } catch (error) {
+    roomStatusMetas.value = fallbackRoomStatusMetas;
+  }
+}
 
 async function loadData() {
   loading.value = true;
@@ -172,7 +192,7 @@ function handleEventSizeChange(pageSize: number) {
 }
 
 function statusText(status: string) {
-  const meta = roomStatusMetas.find((item) => item.value === status);
+  const meta = roomStatusMetas.value.find((item) => item.value === status);
   if (meta) {
     return meta.label;
   }
@@ -180,7 +200,7 @@ function statusText(status: string) {
 }
 
 function statusTagType(status: string) {
-  const meta = roomStatusMetas.find((item) => item.value === status);
+  const meta = roomStatusMetas.value.find((item) => item.value === status);
   if (meta) {
     return meta.tagType;
   }
@@ -259,6 +279,7 @@ function eventSummary(event: PartyScoreRoomEvent) {
 }
 
 onMounted(() => {
+  loadDictionaryMetas();
   loadData();
 });
 </script>

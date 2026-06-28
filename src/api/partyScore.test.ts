@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  getMiniappDictionaryItems,
   getPartyScoreCleanupStatus,
   getPartyScoreOverview,
   getPartyScoreRoomDetail,
@@ -55,6 +56,32 @@ describe('party score api', () => {
     });
     expect(result.archiveEligibleRooms).toBe(2);
     expect(result.historyVisibleDays).toBe(7);
+  });
+
+  it('gets miniapp dictionary items for party score status metadata', async () => {
+    const fetchMock = mockSuccess([
+      {
+        itemCode: 'playing',
+        itemLabel: '进行中',
+        itemValue: 'playing',
+        description: '房间仍在计分或等待结算，玩家可继续提交计分。',
+        tagType: 'success'
+      }
+    ]);
+
+    const result = await getMiniappDictionaryItems('party-scorekeeper-miniapp', 'party_score_room_status');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/admin/miniapp-dictionaries/party-scorekeeper-miniapp/party_score_room_status/items',
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    expect(result[0].itemCode).toBe('playing');
+    expect(result[0].itemLabel).toBe('进行中');
   });
 
   it('posts party score room page query to readonly page endpoint', async () => {
