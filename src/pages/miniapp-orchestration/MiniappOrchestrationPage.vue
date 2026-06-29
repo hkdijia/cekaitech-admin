@@ -10,10 +10,12 @@ import {
 } from '../../api/miniappOrchestration';
 import MiniappIconPicker from '../../components/miniapp-icon-picker/MiniappIconPicker.vue';
 import { useAuthStore } from '../../stores/auth';
-
-const APP_CODE = 'lawsuit-material-assistant';
+import { useWorkspaceStore } from '../../stores/workspace';
+import { resolveCurrentAppCode } from '../../utils/miniappAppContext';
 
 const auth = useAuthStore();
+const workspace = useWorkspaceStore();
+const currentAppCode = computed(() => resolveCurrentAppCode(undefined, workspace.currentWorkspace.appCode));
 const loading = ref(false);
 const submitting = ref(false);
 const loadError = ref('');
@@ -325,7 +327,7 @@ async function loadTree() {
   loading.value = true;
   loadError.value = '';
   try {
-    const loadedTree = await loadMiniappOrchestrationTree(APP_CODE, includeDisabled.value);
+    const loadedTree = await loadMiniappOrchestrationTree(currentAppCode.value, includeDisabled.value);
     tree.value = loadedTree;
     collapsedKeys.value = new Set(collectDefaultCollapsedKeys(loadedTree));
     selectedNode.value = selectedNode.value

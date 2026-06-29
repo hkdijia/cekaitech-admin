@@ -9,6 +9,7 @@ import {
   type MiniappOrchestrationNode
 } from '../../api/miniappOrchestration';
 import { useAuthStore } from '../../stores/auth';
+import { useWorkspaceStore } from '../../stores/workspace';
 import MiniappOrchestrationPage from './MiniappOrchestrationPage.vue';
 
 vi.mock('../../api/miniappOrchestration', () => ({
@@ -295,6 +296,15 @@ function mountPage(permissions: string[] = [
   });
 }
 
+function setWorkspaceApp(appCode: string, code = 'scorekeeper') {
+  const workspace = useWorkspaceStore();
+  workspace.currentCode = code;
+  workspace.options = [
+    { id: 0, code: 'global', name: '全局后台', appCode: 'global', status: 'enabled' },
+    { id: 4, code, name: '朋友局计分', appCode, status: 'enabled' }
+  ];
+}
+
 async function flushAsyncUpdates() {
   for (let index = 0; index < 5; index += 1) {
     await Promise.resolve();
@@ -332,6 +342,31 @@ describe('MiniappOrchestrationPage', () => {
     expect(wrapper.find('.menu-tree-shell').exists()).toBe(true);
     expect(wrapper.find('.tree-node-accent').exists()).toBe(true);
     expect(wrapper.text()).toContain('2 项');
+  });
+
+  it('loads current workspace app menu tree instead of hardcoded legal app', async () => {
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    const auth = useAuthStore();
+    auth.token = 'token';
+    auth.operator = {
+      id: 'admin-1',
+      name: '管理员',
+      roleCode: 'operator',
+      roleName: '运营',
+      permissions: ['admin:miniapp-home-config:view']
+    };
+    setWorkspaceApp('party-scorekeeper-miniapp');
+
+    mount(MiniappOrchestrationPage, {
+      global: {
+        plugins: [pinia, ElementPlus]
+      }
+    });
+
+    await flushAsyncUpdates();
+
+    expect(loadMiniappOrchestrationTreeMock).toHaveBeenCalledWith('party-scorekeeper-miniapp', false);
   });
 
   it('initially expands parent groups but keeps leaf feature lists collapsed', async () => {

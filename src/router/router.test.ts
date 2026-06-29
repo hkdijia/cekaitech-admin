@@ -117,6 +117,13 @@ describe('admin routes', () => {
     expect(route?.meta?.permissionCode).toBe('admin:miniapp-access-list:view');
   });
 
+  it('declares miniapp dictionary route permission', () => {
+    const route = routes.find((item) => item.path === '/miniapp-dictionary');
+
+    expect(adminMenuItems.some((item) => item.path === '/miniapp-dictionary')).toBe(false);
+    expect(route?.meta?.permissionCode).toBe('admin:miniapp-dictionary:view');
+  });
+
   it('declares order operations menu and route permission', () => {
     const menuItem = adminMenuItems.find((item) => item.path === '/order-operations');
     const route = routes.find((item) => item.path === '/order-operations');

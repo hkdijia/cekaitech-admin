@@ -11,6 +11,7 @@ import {
   pageMiniappAccessListEntries
 } from '../../api/miniappAccessList';
 import { useAuthStore } from '../../stores/auth';
+import { useWorkspaceStore } from '../../stores/workspace';
 import MiniappAccessListPage from './MiniappAccessListPage.vue';
 
 vi.mock('../../api/miniappAccessList', () => ({
@@ -64,6 +65,15 @@ function mountPage(permissions: string[] = ['admin:miniapp-access-list:view', 'a
       plugins: [pinia, ElementPlus]
     }
   });
+}
+
+function setWorkspaceApp(appCode: string, code = 'scorekeeper') {
+  const workspace = useWorkspaceStore();
+  workspace.currentCode = code;
+  workspace.options = [
+    { id: 0, code: 'global', name: '全局后台', appCode: 'global', status: 'enabled' },
+    { id: 4, code, name: '朋友局计分', appCode, status: 'enabled' }
+  ];
 }
 
 async function flushAsyncUpdates() {
@@ -126,6 +136,33 @@ describe('MiniappAccessListPage', () => {
     expect(wrapper.text()).toContain('lma-abcd1234');
     expect(wrapper.text()).toContain('允许');
     expect(wrapper.text()).toContain('生效中');
+  });
+
+  it('loads current workspace app access list instead of hardcoded legal app', async () => {
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    const auth = useAuthStore();
+    auth.token = 'token';
+    auth.operator = {
+      id: 'admin-1',
+      name: '管理员',
+      roleCode: 'operator',
+      roleName: '运营',
+      permissions: ['admin:miniapp-access-list:view']
+    };
+    setWorkspaceApp('party-scorekeeper-miniapp');
+
+    mount(MiniappAccessListPage, {
+      global: {
+        plugins: [pinia, ElementPlus]
+      }
+    });
+
+    await flushAsyncUpdates();
+
+    expect(pageMiniappAccessListEntriesMock).toHaveBeenCalledWith(expect.objectContaining({
+      appCode: 'party-scorekeeper-miniapp'
+    }));
   });
 
   it('creates manual access list entry from dialog form', async () => {

@@ -12,8 +12,13 @@ import {
   type MiniappAccessListEntry
 } from '../../api/miniappAccessList';
 import { useAuthStore } from '../../stores/auth';
+import { useWorkspaceStore } from '../../stores/workspace';
+import { isWorkspaceAppLocked, resolveCurrentAppCode } from '../../utils/miniappAppContext';
 
 const auth = useAuthStore();
+const workspace = useWorkspaceStore();
+const currentAppCode = computed(() => resolveCurrentAppCode(undefined, workspace.currentWorkspace.appCode));
+const appCodeLocked = computed(() => isWorkspaceAppLocked(workspace.currentWorkspace.appCode));
 const loading = ref(false);
 const actionLoading = ref(false);
 const loadError = ref('');
@@ -29,7 +34,7 @@ const selectedCandidates = ref<MiniappAccessListCandidate[]>([]);
 const query = reactive({
   pageNo: 1,
   pageSize: 10,
-  appCode: 'lawsuit-material-assistant',
+  appCode: currentAppCode.value,
   capabilityCode: 'legal_credit_query',
   listType: '',
   status: 'active',
@@ -52,7 +57,8 @@ const candidateQuery = reactive({
 });
 
 const appOptions = [
-  { label: '阳律通', value: 'lawsuit-material-assistant' }
+  { label: '阳律通', value: 'lawsuit-material-assistant' },
+  { label: '朋友局计分', value: 'party-scorekeeper-miniapp' }
 ];
 
 const capabilityOptions = [
@@ -132,6 +138,9 @@ function formatTime(value: string | null | undefined) {
 }
 
 async function loadEntries() {
+  if (appCodeLocked.value) {
+    query.appCode = currentAppCode.value;
+  }
   loading.value = true;
   loadError.value = '';
   try {
@@ -164,7 +173,7 @@ function searchEntries() {
 
 function resetFilters() {
   query.pageNo = 1;
-  query.appCode = 'lawsuit-material-assistant';
+  query.appCode = currentAppCode.value;
   query.capabilityCode = 'legal_credit_query';
   query.listType = '';
   query.status = 'active';
@@ -337,7 +346,7 @@ onMounted(() => {
           </el-select>
         </el-form-item>
         <el-form-item label="小程序">
-          <el-select v-model="query.appCode" class="app-select">
+          <el-select v-model="query.appCode" class="app-select" :disabled="appCodeLocked">
             <el-option v-for="item in appOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>

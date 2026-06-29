@@ -26,11 +26,14 @@ import {
 } from '../../api/miniappHomeConfig';
 import MiniappIconPicker from '../../components/miniapp-icon-picker/MiniappIconPicker.vue';
 import { useAuthStore } from '../../stores/auth';
+import { useWorkspaceStore } from '../../stores/workspace';
+import { resolveCurrentAppCode } from '../../utils/miniappAppContext';
 
-const APP_CODE = 'lawsuit-material-assistant';
 const PAGE_SIZE = 50;
 
 const auth = useAuthStore();
+const workspace = useWorkspaceStore();
+const currentAppCode = computed(() => resolveCurrentAppCode(undefined, workspace.currentWorkspace.appCode));
 const activeTab = ref('modules');
 const loading = ref(false);
 const menuLoading = ref(false);
@@ -47,7 +50,7 @@ const submitting = ref(false);
 
 const moduleForm = reactive<MiniappHomeModulePayload>({
   id: 0,
-  appCode: APP_CODE,
+  appCode: currentAppCode.value,
   moduleKey: '',
   title: '',
   description: '',
@@ -77,7 +80,7 @@ const menuItemForm = reactive<MiniappHomeMenuItemPayload>({
 
 const bannerForm = reactive<MiniappHomeBannerPayload>({
   id: 0,
-  appCode: APP_CODE,
+  appCode: currentAppCode.value,
   bannerKey: '',
   title: '',
   subtitle: '',
@@ -143,7 +146,7 @@ async function loadModules() {
   loadError.value = '';
   try {
     const result = await pageMiniappHomeModules({
-      appCode: APP_CODE,
+      appCode: currentAppCode.value,
       pageNo: 1,
       pageSize: PAGE_SIZE
     });
@@ -188,7 +191,7 @@ async function loadBanners() {
   loadError.value = '';
   try {
     const result = await pageMiniappHomeBanners({
-      appCode: APP_CODE,
+      appCode: currentAppCode.value,
       pageNo: 1,
       pageSize: PAGE_SIZE
     });
@@ -204,7 +207,7 @@ async function loadBanners() {
 function openModuleDialog(row?: MiniappHomeModuleItem) {
   Object.assign(moduleForm, {
     id: row?.id ?? 0,
-    appCode: APP_CODE,
+    appCode: currentAppCode.value,
     moduleKey: row?.moduleKey ?? '',
     title: row?.title ?? '',
     description: row?.description ?? '',
@@ -274,7 +277,7 @@ async function submitMenuItem() {
 function openBannerDialog(row?: MiniappHomeBannerItem) {
   Object.assign(bannerForm, {
     id: row?.id ?? 0,
-    appCode: APP_CODE,
+    appCode: currentAppCode.value,
     bannerKey: row?.bannerKey ?? '',
     title: row?.title ?? '',
     subtitle: row?.subtitle ?? '',

@@ -15,6 +15,7 @@ import {
   saveMiniappHomeModule
 } from '../../api/miniappHomeConfig';
 import { useAuthStore } from '../../stores/auth';
+import { useWorkspaceStore } from '../../stores/workspace';
 import MiniappHomeConfigPage from './MiniappHomeConfigPage.vue';
 
 vi.mock('../../api/miniappHomeConfig', () => ({
@@ -109,6 +110,15 @@ function mountPage(permissions: string[] = ['admin:miniapp-home-config:view', 'a
   });
 }
 
+function setWorkspaceApp(appCode: string, code = 'scorekeeper') {
+  const workspace = useWorkspaceStore();
+  workspace.currentCode = code;
+  workspace.options = [
+    { id: 0, code: 'global', name: '全局后台', appCode: 'global', status: 'enabled' },
+    { id: 4, code, name: '朋友局计分', appCode, status: 'enabled' }
+  ];
+}
+
 async function flushAsyncUpdates() {
   for (let index = 0; index < 4; index += 1) {
     await Promise.resolve();
@@ -167,6 +177,40 @@ describe('MiniappHomeConfigPage', () => {
     expect(wrapper.text()).toContain('工具类');
     expect(wrapper.text()).toContain('全量展示');
     expect(wrapper.text()).toContain('试运行公告');
+  });
+
+  it('loads current workspace app home config instead of hardcoded legal app', async () => {
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    const auth = useAuthStore();
+    auth.token = 'token';
+    auth.operator = {
+      id: 'admin-1',
+      name: '管理员',
+      roleCode: 'operator',
+      roleName: '运营',
+      permissions: ['admin:miniapp-home-config:view', 'admin:miniapp-home-config:manage']
+    };
+    setWorkspaceApp('party-scorekeeper-miniapp');
+
+    mount(MiniappHomeConfigPage, {
+      global: {
+        plugins: [pinia, ElementPlus]
+      }
+    });
+
+    await flushAsyncUpdates();
+
+    expect(pageMiniappHomeModulesMock).toHaveBeenCalledWith({
+      appCode: 'party-scorekeeper-miniapp',
+      pageNo: 1,
+      pageSize: 50
+    });
+    expect(pageMiniappHomeBannersMock).toHaveBeenCalledWith({
+      appCode: 'party-scorekeeper-miniapp',
+      pageNo: 1,
+      pageSize: 50
+    });
   });
 
   it('saves module form through backend and refreshes modules', async () => {
